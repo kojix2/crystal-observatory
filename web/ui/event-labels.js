@@ -1,0 +1,57 @@
+import { messages } from '../i18n/messages.js';
+import { t } from '../i18n/index.js';
+export const shortVisitor = (name) =>
+  (name || '').replace(/^Crystal::/, '').replace(/^Observatory::/, '');
+export const eventLabel = (kind) => (messages[`event.${kind}`] ? t(`event.${kind}`) : kind || '—');
+export function explanation(event) {
+  if (!event) return t('explain.empty');
+  const visitor = shortVisitor(event.visitor);
+  const values = {
+    visitor,
+    node: event.node_id,
+    related: event.related_id,
+    before: event.before || t('unknown'),
+    after: event.after || t('unknown'),
+    phase: event.phase,
+  };
+  if (event.kind === 'type' && visitor.includes('TopLevelVisitor') && event.after === 'Nil')
+    return t('explain.declaration');
+  if (['type', 'bind', 'unbind', 'expand', 'dispatch', 'rewrite', 'ir'].includes(event.kind))
+    return t(`explain.${event.kind}`, values);
+  if (['phase_enter', 'phase_leave'].includes(event.kind))
+    return event.detail || t('explain.phase', values);
+  if (event.kind === 'visit_enter') return t('explain.visit', values);
+  if (event.kind.endsWith('_leave')) return t('explain.leave', values);
+  if (event.kind === 'transform_enter') return t('explain.transform', values);
+  if (event.kind === 'complete') return t('explain.complete');
+  return event.detail || t('explain.phase', values);
+}
+
+export const sourceFiles = {
+  MainVisitor: 'semantic/main_visitor.cr',
+  TopLevelVisitor: 'semantic/top_level_visitor.cr',
+  Normalizer: 'semantic/normalizer.cr',
+  CleanupTransformer: 'semantic/cleanup_transformer.cr',
+  FixMissingTypes: 'semantic/fix_missing_types.cr',
+  TypeGuessVisitor: 'semantic/type_guess_visitor.cr',
+  TypeDeclarationVisitor: 'semantic/type_declaration_visitor.cr',
+  RestrictionsAugmenter: 'semantic/restrictions_augmenter.cr',
+  InstanceVarsInitializerVisitor: 'semantic/instance_vars_initializer_visitor.cr',
+  CodeGenVisitor: 'codegen/codegen.cr',
+  ASTNode: 'semantic/bindings.cr',
+  Call: 'semantic/call.cr',
+  ExpandableNode: 'semantic/ast.cr',
+  MacroInterpreter: 'macros/interpreter.cr',
+  ToSVisitor: 'syntax/to_s.cr',
+  HasSelfVisitor: 'semantic/type_guess_visitor.cr',
+  ClassVarsInitializerVisitor: 'semantic/class_vars_initializer_visitor.cr',
+};
+
+export const visitorKey = (name) => shortVisitor(name).split(/::|#/)[0];
+export function visitorRole(event) {
+  if (!event) return '—';
+  const name = visitorKey(event.visitor);
+  return t(
+    !name ? 'visitor.stage' : messages[`visitor.${name}`] ? `visitor.${name}` : 'visitor.unknown',
+  );
+}

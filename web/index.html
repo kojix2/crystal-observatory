@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Crystal Observatory</title>
+  <meta name="description" data-i18n-content="app.description" content="Crystal compiler explorer">
+  <meta name="theme-color" content="#111113">
+  <link rel="icon" href="./mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header id="chrome">
+  <div class="command-row">
+    <div class="brand"><img class="mark" src="./mark.svg" alt="" width="24" height="28"><h1>CRYSTAL <span>OBSERVATORY</span></h1></div>
+    <nav class="commands" data-i18n-aria="commands">
+      <button id="compile-run" class="primary" data-i18n="run" data-i18n-title="run.title">▶ Compile &amp; run</button>
+      <button id="compile-only" data-i18n="compile" data-i18n-title="compile.title">Compile → IR</button>
+      <button id="analyze" class="quiet" data-i18n="syntax" data-i18n-title="syntax.title">Parse only</button>
+      <button id="cancel-job" data-i18n="cancel" disabled>■ Stop</button>
+    </nav>
+    <div class="status-message" role="status"><button id="notice" data-i18n-title="status.detail" aria-haspopup="dialog"></button></div>
+    <div class="header-actions">
+      <select id="language" data-i18n-aria="language" data-i18n-title="language"><option value="en">EN</option><option value="ja">JA</option></select>
+      <button id="reset-layout" class="quiet icon-button" data-i18n-title="reset" data-i18n-aria="reset">↺</button>
+      <button id="guideButton" class="quiet icon-button" data-i18n-title="help" data-i18n-aria="help">?</button>
+    </div>
+  </div>
+</header>
+<main id="app">
+  <div class="workbench-scroll">
+  <section class="workbench" id="workbench" data-i18n-aria="workspace">
+    <section class="timeline panel" id="timeline">
+      <div class="panel-head"><h2 data-i18n="trace">History</h2><span id="filter-count" class="subtle"></span><button id="toggle-trace" class="quiet icon-button" data-i18n-aria="trace.collapse" data-i18n-title="trace.collapse" aria-expanded="true" aria-controls="trace-content">‹</button></div>
+      <div class="record-tools"><button id="import" data-i18n="import">Open trace…</button><button id="export" data-i18n="export" disabled>Save trace JSON</button><input id="file" type="file" accept=".json,.gz,application/json" hidden></div>
+      <div class="playback"><button id="first" class="quiet" data-i18n-title="first" data-i18n-aria="first">|◀</button><button id="prev" class="quiet" data-i18n-title="prev" data-i18n-aria="prev">◀</button><button id="play" class="play" data-i18n-aria="play">▶</button><button id="next" class="quiet" data-i18n-title="next" data-i18n-aria="next">▶|</button><select id="speed" data-i18n-aria="speed"><option value="700" data-i18n="slow">Slow</option><option value="220" selected data-i18n="normal">Normal</option><option value="55" data-i18n="fast">Fast</option></select><span id="position">0 / 0</span></div>
+      <div class="seek-bar"><input id="scrubber" type="range" min="0" max="1" value="0" data-i18n-aria="position"></div>
+      <div class="jump-tools"><button id="next-type" data-i18n="next.type">Next type</button><button id="next-rewrite" data-i18n="next.rewrite">Next rewrite</button><button id="next-phase" data-i18n="next.phase">Next stage</button></div>
+      <div id="phase-status" class="phase-status"></div>
+      <div class="trace-tools"><input id="search" data-i18n-placeholder="event.search" data-i18n-aria="event.search"><select id="kind" data-i18n-aria="event.kind"><option value="" data-i18n="event.all">All events</option><option value="visit_enter" data-i18n="event.visit_enter">Visit →</option><option value="type" data-i18n="event.type">Type change</option><option value="bind" data-i18n="event.bind">Bind</option><option value="rewrite" data-i18n="event.rewrite">Rewrite</option><option value="expand" data-i18n="event.expand">Expand</option><option value="dispatch" data-i18n="event.dispatch">Resolve call</option><option value="ir" data-i18n="event.ir">IR position</option><option value="phase_enter" data-i18n="event.phase_enter">Stage start</option></select><button id="clear-filter" class="quiet" data-i18n="clear">Clear</button></div>
+      <div class="table-wrap" id="trace-content"><table><thead><tr><th>#</th><th data-i18n="event.column">Visitor / node</th><th data-i18n="result.column">Event / result</th></tr></thead><tbody id="events"></tbody></table></div>
+      <div class="table-footer"><button id="page-prev" class="quiet" data-i18n-aria="prev">←</button><span id="page-state"></span><button id="page-next" class="quiet" data-i18n-aria="next">→</button><span class="spacer"></span><span data-i18n="keys">← → step · Space play</span></div>
+    </section>
+    <div class="splitter" id="timeline-splitter" role="separator" tabindex="0" data-i18n-aria="split.trace" aria-orientation="vertical" aria-controls="timeline graph-panel"></div>
+    <article class="panel graph-panel" id="graph-panel">
+      <div class="panel-head"><div class="tabs" role="tablist" data-i18n-aria="views">
+        <button class="active" id="tab-source" data-view="source" role="tab" aria-selected="true" aria-controls="source-view" data-i18n="source">Source</button>
+        <button id="tab-ast" data-view="ast" role="tab" aria-selected="false" aria-controls="graph">AST</button>
+        <button data-view="types" role="tab" aria-selected="false" data-i18n="types">Types</button>
+        <button data-view="tokens" role="tab" aria-selected="false">Tokens</button>
+        <button data-view="ir" role="tab" aria-selected="false">LLVM IR</button>
+        <button data-view="run" role="tab" aria-selected="false" data-i18n="execution">Output</button>
+      </div><button id="maximize-graph" class="quiet icon-button" data-i18n-aria="maximize" data-i18n-title="maximize" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 2H2v4m8-4h4v4M2 10v4h4m8-4v4h-4"/></svg></button></div>
+      <div class="source-panel" id="source-view" role="tabpanel" aria-labelledby="tab-source">
+      <div class="source-tools"><label for="example" data-i18n="sample">Initial code</label><select id="example" data-i18n-aria="sample"></select><button id="recorded" data-i18n="recorded" data-i18n-title="recorded.title" disabled>Example trace</button></div>
+      <div class="source-wrap"><div id="highlight"></div><pre id="source-colors" aria-hidden="true"></pre><div class="line-gutter" aria-hidden="true"><pre id="line-numbers"></pre></div><textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" data-i18n-aria="source.input" wrap="off"></textarea></div>
+      <div class="source-foot"><span id="dirty"></span><span id="source-location"></span><button id="restore" class="link-button" data-i18n="restore" data-i18n-title="restore.title">Restore</button></div>
+    </div>
+      <div class="view-tools"><select id="snapshot" data-i18n-aria="snapshot"></select><label data-i18n-title="follow.title"><input id="follow" type="checkbox" checked><span data-i18n="follow">Follow</span></label><button id="expand" class="quiet" data-i18n="expand" data-i18n-title="expand.title">Expand</button></div>
+      <div id="graph" class="graph-scroll" tabindex="0" data-i18n-aria="ast"></div>
+      <div id="types" class="graph-scroll" hidden></div>
+      <div id="token-view" class="graph-scroll" hidden></div>
+      <div id="ir-view" class="ir-view" hidden><div class="ir-tools"><input id="ir-search" data-i18n-placeholder="ir.search" data-i18n-aria="ir.search"><select id="ir-function" data-i18n-aria="ir.function"></select><button id="download-ir" class="quiet" data-i18n-title="ir.download">.ll ↓</button></div><pre id="ir-code"></pre></div>
+      <div id="run-view" class="run-view" hidden>
+        <div class="run-tools"><span id="run-state"></span><span class="spacer"></span><button id="rerun" data-i18n="rerun" disabled>Run again</button><button id="download-wasm" data-i18n-title="wasm.download" disabled>.wasm ↓</button></div>
+        <div class="run-inputs"><label><span data-i18n="stdin">Standard input</span><textarea id="stdin" rows="3" spellcheck="false" data-i18n-placeholder="stdin.hint"></textarea></label><label><span data-i18n="args">Arguments (JSON array)</span><input id="runtime-args" value="[]" spellcheck="false" data-i18n-aria="args"><span class="tiny" data-i18n="args.hint">Example: [&quot;hello&quot;, &quot;42&quot;] · 10 s limit</span></label></div>
+        <pre id="console" class="console" data-i18n-aria="output"></pre>
+      </div>
+      <div class="panel-foot" id="graph-caption"></div>
+    </article>
+    <div class="splitter" id="inspector-splitter" role="separator" tabindex="0" data-i18n-aria="split.inspector" aria-orientation="vertical" aria-controls="graph-panel inspector-panel"></div>
+    <aside class="inspector-panel" id="inspector-panel">
+      <section class="panel detail-panel" id="node-panel" aria-labelledby="node-heading">
+        <div class="panel-head"><h2 id="node-heading" data-i18n="node.details">Node details</h2><span id="node-id" class="tiny">—</span></div>
+        <div class="inspect-scroll">
+          <h3 id="node-title">—</h3><p id="node-location" class="tiny"></p><p id="node-summary"></p>
+          <div id="type-card" class="type-card"><span data-i18n="inferred">INFERRED TYPE</span><strong id="node-type"></strong></div>
+          <div class="inspector-actions"><button id="node-prev" class="quiet" data-i18n="node.prev">← Previous visit</button><button id="node-next" class="quiet" data-i18n="node.next">Next visit →</button><button id="node-filter" class="quiet" data-i18n="node.filter">Only this node</button></div>
+          <h4 data-i18n="node.source">NODE / SOURCE</h4><pre id="node-code" class="crystal-code"></pre>
+        </div>
+      </section>
+      <div class="splitter horizontal" id="detail-splitter" role="separator" tabindex="0" data-i18n-aria="split.details" aria-orientation="horizontal" aria-controls="node-panel event-panel"></div>
+      <section class="panel detail-panel" id="event-panel" aria-labelledby="event-heading">
+        <div class="panel-head"><h2 id="event-heading" data-i18n="event.details">Visitor &amp; operation</h2><span id="event-id" class="tiny">—</span></div>
+        <div class="inspect-scroll">
+          <div id="event-kind" class="event-kind"></div><h3 id="visitor-title">—</h3>
+          <h4 data-i18n="visitor.role">ROLE</h4><p id="visitor-role"></p>
+          <h4 data-i18n="event.operation">THIS OPERATION</h4><p id="explanation"></p>
+          <button id="event-node" class="link-button"></button><p id="event-phase" class="tiny"></p>
+          <div id="change"><h4 data-i18n="before">BEFORE</h4><pre id="before" class="crystal-code"></pre><h4 data-i18n="after">AFTER</h4><pre id="after" class="crystal-code"></pre></div>
+          <details id="raw-event"><summary data-i18n="event.raw">Recorded detail</summary><pre id="event-detail"></pre></details>
+          <h4><span data-i18n="stack">VISIT STACK</span> <span data-i18n="user.only">User source only</span></h4><div id="stack"></div>
+          <h4 data-i18n="compiler.source">COMPILER SOURCE</h4><div id="compiler-link"></div>
+        </div>
+      </section>
+    </aside>
+
+
+  </section>
+  </div>
+  <footer><span id="engine"></span><span id="meta"></span><span class="spacer"></span><span id="versions"></span><a href="https://github.com/crystal-lang/crystal" target="_blank" rel="noreferrer">Crystal ↗</a></footer>
+</main>
+<dialog id="status-dialog"><button id="close-status" class="close" data-i18n-aria="close">×</button><h2 data-i18n="status.detail">Status and diagnostics</h2><pre id="notice-detail"></pre></dialog>
+<dialog id="guide"><button id="close-guide" class="close" data-i18n-aria="close">×</button><h2 data-i18n="guide.title">Explore the compiler with your own code</h2><p data-i18n="guide.intro">Edit the Source tab and choose Compile &amp; run. The actual Crystal compiler and LLVM run in your browser; LLD links the WASM program before execution.</p><ol><li data-i18n="guide.step1">Choose initial code in Source, or write your own. Example trace opens a saved recording for the selected example.</li><li data-i18n="guide.step2">Choose Compile &amp; run, Compile → IR, or Parse only.</li><li data-i18n="guide.step3">Select an event in History. Inspect its AST in the center, its node at the upper right, and the visitor role and operation below.</li><li data-i18n="guide.step4">Open or save traces in History. Set stdin and arguments, or rerun a compiled program, in Output.</li></ol><h3 data-i18n="guide.layout.title">Layout and language</h3><p data-i18n="guide.layout">Drag the column dividers or the horizontal inspector divider. Focus a divider and use arrow keys, or Home to reset it. Escape exits maximized view. English is the default; an explicit JA / EN preference is saved.</p><h3 data-i18n="guide.runtime.title">Runtime</h3><p data-i18n="guide.runtime">The first run loads the compiler, LLVM, LLD and standard library. A static HTTP server or GitHub Pages is enough. Source code is not uploaded. The browser must support WebAssembly exception handling.</p><p data-i18n="guide.limits">Programs target WASI. OS processes, sockets, native shards and host files are unavailable. Program memory is limited to 256 MiB and execution to 10 seconds.</p><h3 data-i18n="guide.reading.title">Reading the trace</h3><p data-i18n="guide.reading">ASTs are snapshots taken after stages, expansions and call resolution. Type dependencies and the visitor stack reflect the selected event. IR insertion positions include instructions emitted by children. Recorded traces are historical measurements; Syntax uses a separate lightweight engine. Code, compiler diagnostics and internal identifiers remain unchanged.</p></dialog>
+<script src="./vendor/prismjs/prism-core.min.js" data-manual></script>
+<script src="./vendor/prismjs/prism-clike.min.js"></script>
+<script src="./vendor/prismjs/prism-ruby.min.js"></script>
+<script src="./vendor/prismjs/prism-crystal.min.js"></script>
+<script type="module" src="./app.js"></script>
+</body></html>

@@ -1,0 +1,34 @@
+{
+  "crystal-syntax": {
+    "group": "syntax",
+    "repository": "https://github.com/crystal-lang/crystal",
+    "revision": "25b1e80df925f4b7a003f7455d79a1eccc39874f",
+    "version": "1.23.0-dev",
+    "url": "https://codeload.github.com/crystal-lang/crystal/zip/25b1e80df925f4b7a003f7455d79a1eccc39874f",
+    "sha256": "d3e57da87485f1d086f1cc16d37c57b0ac645c526d569f6b5b742cccf112e7ea",
+    "prefix": "crystal-25b1e80df925f4b7a003f7455d79a1eccc39874f/src/",
+    "destination": "vendor/crystal-src"
+  },
+  "crystal-browser": {
+    "group": "browser",
+    "repository": "https://github.com/crystal-lang/crystal",
+    "revision": "39f3f4d08f70c3678b579f85dc6f8b7be69c7956",
+    "version": "1.22.0",
+    "url": "https://codeload.github.com/crystal-lang/crystal/zip/refs/tags/1.22.0",
+    "sha256": "342f6c3b69e614a10aac84785c0d03fec8c8bed30acad165d3b833132745ffb7",
+    "prefix": "crystal-1.22.0/src/",
+    "destination": "vendor/crystal-browser-src"
+  },
+  "browser-port": {
+    "group": "browser",
+    "repository": "https://github.com/live-codes/browser-crystal",
+    "revision": "daf9e56bfba0724e6fc689eff83f0e2415fab254",
+    "url": "https://codeload.github.com/live-codes/browser-crystal/zip/daf9e56bfba0724e6fc689eff83f0e2415fab254",
+    "sha256": "1a9a7723ecdbaa42362f2be0a84d23e13a107a3f46969ca4e44f04b6de7f8c7c",
+    "prefix": "browser-crystal-daf9e56bfba0724e6fc689eff83f0e2415fab254/build/crystal-wasm/",
+    "files": [
+      "apply-patches.py"
+    ],
+    "destination": ".cache/sources/browser-port"
+  }
+}

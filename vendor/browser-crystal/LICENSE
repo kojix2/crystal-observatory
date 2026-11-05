@@ -1,0 +1,41 @@
+MIT License
+
+Copyright (c) 2026 Hatem Hosny
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+The programs the page compiles, and the payload it ships, embed Crystal's runtime
+and standard library, which are Apache-2.0:
+
+- Crystal compiler and standard library: Apache-2.0
+- wasi-libc (linked into every program): MIT OR Apache-2.0 WITH LLVM-exception
+- PCRE2 (linked in when a program uses `Regex`): BSD-3-Clause
+- LLVM (linked into the compiler, and into the linker the page runs): Apache-2.0
+  WITH LLVM-exception
+
+The toolchain that produces them lives in `build/crystal-wasm/` — patched sources and
+scripts, not redistributed here: Crystal 1.17.0 from the official distribution, wasi-sdk 33
+for `wasm-ld` and the WASI sysroot, and PCRE2 built from source for wasm. The libLLVM the
+compiler links against is built by the
+[`llvm-wasm`](https://github.com/live-codes/llvm-wasm) repository. The one third-party
+component vendored into the package is `@bjorn3/browser_wasi_shim`, under
+`packages/crystal-wasm/vendor/` with its own licence files; the package's
+THIRD-PARTY-NOTICES.md is the authoritative list of what it ships.

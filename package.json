@@ -1,0 +1,24 @@
+{
+  "name": "crystal-observatory",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-wasm-exnref --test spec/*.test.mjs",
+    "lint": "eslint web",
+    "format": "prettier --write 'web/**/*.js' '!web/vendor/**' '!web/runtime/asset-receipts.js' 'spec/*.mjs' 'scripts/*.mjs'",
+    "format:check": "prettier --check 'web/**/*.js' '!web/vendor/**' '!web/runtime/asset-receipts.js' 'spec/*.mjs' 'scripts/*.mjs'",
+    "web:deps": "node scripts/prepare-web.mjs",
+    "pretest": "npm run web:deps",
+    "presamples": "npm run web:deps",
+    "samples": "node --experimental-wasm-exnref scripts/export-samples.mjs"
+  },
+  "devDependencies": {
+    "eslint": "9.39.1",
+    "prettier": "3.6.2"
+  },
+  "dependencies": {
+    "@bjorn3/browser_wasi_shim": "0.4.2",
+    "prismjs": "1.30.0"
+  }
+}

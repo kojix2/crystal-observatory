@@ -1,0 +1,51 @@
+// Pinned assets. compiler.wasm.gz is the Observatory instrumented build.
+export const ASSET_RECEIPTS = {
+  "compiler.wasm.gz": {
+    "bytes": 14761509,
+    "sha256": "9935ff25d9113e2ce335e53a20c115122487a9b99487e67ec2ff7bf93695e7cb"
+  },
+  "lib/eh/libc++abi.a.gz": {
+    "bytes": 472129,
+    "sha256": "b22cf869f358e6f86059b18e499e1c9dd30da0d41a81e327f7aec8fd513af038"
+  },
+  "lib/eh/libunwind.a.gz": {
+    "bytes": 5276,
+    "sha256": "f915679e5b6c02d523d5434f9779d668c4d05ac66e74ad2bc94642e0416c3808"
+  },
+  "lib/libc.a.gz": {
+    "bytes": 1052478,
+    "sha256": "fa31613c4e41a5ffe8df0014a1f5b1852c2f795d0247a00cefd43b26c82e09a4"
+  },
+  "lib/libclang_rt.builtins.a.gz": {
+    "bytes": 128218,
+    "sha256": "7b31d03abe78fd9964fa56ccb64380cd7292179ce5c977fd3dff51322c44cc07"
+  },
+  "lib/libpcre2-8.a.gz": {
+    "bytes": 107368,
+    "sha256": "1a3788fc4b3ddfd5c61c4d830c707f05bd29b3738469ad88dbb79696a45b7ce8"
+  },
+  "lib/libwasi-emulated-getpid.a.gz": {
+    "bytes": 845,
+    "sha256": "9af07fa000b22106974a79bc0704466582e878eb63fc47ab0130dc3207048429"
+  },
+  "lib/libwasi-emulated-mman.a.gz": {
+    "bytes": 2715,
+    "sha256": "0236ea0a757e4bf0cbccc905248962dd995890d2a5ba54a6e5d29880b16cd0d5"
+  },
+  "lib/libwasi-emulated-process-clocks.a.gz": {
+    "bytes": 3376,
+    "sha256": "fe2cbb92594dbb2a28b51fd1c8b916fa13ad6ce470a24b558a7d1cbc8520fa9c"
+  },
+  "lib/libwasi-emulated-signal.a.gz": {
+    "bytes": 5278,
+    "sha256": "42a696e6c26f3e674be5d3b2705f2591b162ed4a0c5c7649fc66d05870763093"
+  },
+  "lld.wasm.gz": {
+    "bytes": 7837837,
+    "sha256": "f842a9b5df3c6d326f0260bfd313c11c2e22bc8b8ae0387deede9a4af55779cd"
+  },
+  "stdlib.json.gz": {
+    "bytes": 1453383,
+    "sha256": "087eb817ce0535a3fcb7a6eb186d6ff4a7354d267908941d4e584751f774b4c9"
+  }
+};

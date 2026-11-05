@@ -1,0 +1,31 @@
+name: Browser WASM
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: make web-deps
+      - run: npm run lint && npm run format:check
+      - run: make samples
+      - run: make test
+  syntax-wasm:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: 1.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: sudo apt-get update && sudo apt-get install -y lld-18
+      - run: |
+          export PATH="/usr/lib/llvm-18/bin:$PATH"
+          make wasm
+      - run: node --experimental-wasm-exnref --test spec/web.test.mjs

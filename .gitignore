@@ -1,0 +1,35 @@
+# Dependencies: restore with make web-deps / make syntax-deps / make browser-deps.
+# Commit lockfiles instead of fetched source trees.
+/node_modules/
+/vendor/.source-*/
+/vendor/crystal-src/
+/vendor/crystal-browser-src/
+/web/vendor/prismjs/
+/web/vendor/browser_wasi_shim/
+/web/vendor/browser_wasi_shim.staging/
+
+# Download caches, toolchains, intermediate LLVM files and host build tools.
+/.cache/
+/build/
+/dist/
+__pycache__/
+*.py[cod]
+*.log
+
+# Sample generation scratch space and legacy uncompressed fixtures.
+/web/traces/.samples-*/
+/web/traces/0*.json
+
+# Keep the checked-in prebuilt web WASM, runtime archives and gzip traces.
+# They let a fresh clone run without rebuilding Crystal and LLVM; do not use
+# blanket *.wasm, *.gz or vendor/ rules here.
+
+# Local editor / OS state.
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+/.idea/
+/.vscode/
+.env
+.env.local
