@@ -9,10 +9,10 @@ A browser app for compiling Crystal source, observing the compiler's Visitors an
 [日本語の説明・操作ガイド](README_JA.md)
 
 - Actual **Crystal 1.22.0 + WASI/EH patches, LLVM 20.1.8 and LLD** run inside Web Workers. Source code stays in your browser.
-- History on the left; Source, AST, types, tokens, IR and output tabs in the center; node details above visitor/operation details on the right. Resize column widths and the stacked details.
+- History on the left; Source, AST, types, declarations, tokens, IR and output tabs in the center; node details above visitor/operation details on the right. Resize column widths and the stacked details.
 - Crystal syntax highlighting while editing and in node/rewrite details. English by default, with a persistent JA/EN switch.
-- Observe Visitor entry/exit, transformations, type dependencies, macro expansion, specialized methods, and LLVM insertion points. Export/import trace JSON.
-- Eight examples and recordings produced by the same WASM compiler. A separate lightweight Crystal 1.23.0-dev syntax engine handles Lexer/Parser-only inspection.
+- Observe Visitor entry/exit, declaration registration, transformations, type dependencies, macro expansion, specialized methods, and LLVM insertion points. Export/import trace JSON.
+- Nine examples and recordings produced by the same WASM compiler. A separate lightweight Crystal 1.23.0-dev syntax engine handles Lexer/Parser-only inspection.
 
 ## Run locally
 
@@ -30,6 +30,8 @@ Open <http://127.0.0.1:8000/> in a browser with standardized WebAssembly excepti
 Choose initial code in the **Source** tab, or edit freely. **Compile & run** compiles and executes; **Compile → IR** compiles and links without execution; **Parse only** uses the lightweight syntax engine. The **Output** tab accepts stdin and a JSON array of arguments.
 
 **Open trace…** and **Save trace JSON** manage recordings in History. **Example trace** in Source opens the selected example's bundled recording; compilation always analyzes the current editor contents. Select a history event to inspect its visitor's role, measured operation, before/after values and visit stack. Selecting a different AST node changes the upper details without replacing the selected event's explanation below.
+
+Example **09** uses **Declarations** and **Next declaration** to link observed registration state to source, AST and history. Rewinding restores earlier state. This is not a complete symbol table; older and parse-only traces report declarations as unobserved.
 
 Programs target WASI: host processes, sockets, host files and arbitrary C libraries are unavailable. Generated programs have no GC, and run in a separate Worker with a 10-second deadline, 256 MiB memory limit and 256 KiB output limit. Compilation has a 120-second deadline. Full limits and observation boundaries are in [the architecture guide](docs/ARCHITECTURE_JA.md).
 

@@ -46,5 +46,11 @@
     "lesson": "コンパイル失敗までの足跡を追う。",
     "trace": "./traces/08_type_error.json.gz",
     "source": "# 型エラーになる直前までの処理も保存する。\nanswer = 42\nanswer + \"crystal\"\n"
+  },
+  {
+    "title": "09 · Declarations and type hierarchy",
+    "lesson": "Observe creation, reopening, inheritance and method registration.",
+    "trace": "./traces/09_declarations.json.gz",
+    "source": "# Follow declaration operations in the Declarations tab.\nmodule Named\n  def label\n    \"instance\"\n  end\nend\n\nmodule FactoryLabel\n  def label\n    \"class\"\n  end\nend\n\nclass Parent\nend\n\nclass Child < Parent\n  include Named\n  extend FactoryLabel\n\n  def value(x : Int32)\n    x\n  end\n\n  def self.value(x : Int32)\n    x\n  end\nend\n\nclass Child\n  def value(x : String)\n    x\n  end\nend\n\nmacro make_type(name)\n  class {{name.id}}\n    def value\n      42\n    end\n  end\nend\n\nmake_type Generated\n\nputs Child.new.label\nputs Child.label\nputs Child.new.value(7)\nputs Child.value(8)\nputs Child.new.value(\"nine\")\nputs Generated.new.value\n"
   }
 ]

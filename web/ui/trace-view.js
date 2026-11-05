@@ -2,18 +2,20 @@ import { t } from '../i18n/index.js';
 import { text } from './language.js';
 import { $, notify, download } from './dom.js';
 import { eventLabel, shortVisitor } from './event-labels.js';
-import { TraceModel } from '../core/trace-model.js';
+import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
 import { renderInspector } from './inspector.js';
 import { renderTokens } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
+import { renderDeclarations } from './declarations.js';
 
 // Selection/playback is a presentation concern. This class never starts Workers.
 export class TraceView {
   constructor(editor) {
     this.editor = editor;
     this.selected = 0;
+    this.selectedType = 0;
     this.snapshot = 0;
     this.view = 'source';
     this.collapsed = new Set();
@@ -33,6 +35,7 @@ export class TraceView {
     this.stop();
     this.model = model;
     this.selected = 0;
+    this.selectedType = 0;
     this.snapshot = 0;
     this.collapsed.clear();
     this.editor.setRecord(trace.source, preserveEdits, trace.mode !== 'empty');
@@ -119,6 +122,7 @@ export class TraceView {
     this.model.seek(index);
     const event = this.model.event;
     this.selected = event?.node_id || this.selected;
+    if (event?.kind === 'declaration') this.selectedType = event.type_id;
     if ($('follow').checked) {
       this.snapshot = this.model.snapshotAt();
       $('snapshot').value = this.snapshot;
@@ -129,15 +133,56 @@ export class TraceView {
     this.events.follow();
     if (this.view === 'ir') this.ir.follow(event?.llvm_function);
     this.renderSelection();
+    if (this.view === 'declarations' && event?.kind === 'declaration')
+      $('declarations')
+        .querySelector('.declaration-details .declaration-changed')
+        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
   selectNode(id) {
     this.selected = id;
+    const declaration = this.trace.events.findLast(
+      (event) =>
+        event.index <= this.model.index && event.kind === 'declaration' && event.node_id === id,
+    );
+    if (declaration) this.selectedType = declaration.type_id;
     this.renderSelection();
+  }
+  selectType(id) {
+    this.selectedType = id;
+    const state = this.model.declarations.get(id);
+    const site = state?.declarations.at(-1);
+    if (site) this.selected = site.node_id;
+    this.setView('declarations');
+    this.renderSelection();
+  }
+  selectDeclarationNode(id, view = 'source') {
+    if (view === 'ast') {
+      const snapshot = this.model.snapshotForNode(id, this.snapshot);
+      if (snapshot >= 0) {
+        if (snapshot !== this.snapshot) {
+          this.snapshot = snapshot;
+          $('snapshot').value = snapshot;
+          $('follow').checked = false;
+        }
+        revealASTNode(this.trace.snapshots[snapshot], id, this.collapsed);
+      }
+    }
+    this.selectNode(id);
+    this.setView(view);
+    if (view === 'ast')
+      $('graph')
+        .querySelector(`.node[data-node="${id}"]`)
+        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
   renderSelection() {
     if (!this.model) return;
     this.renderObservation();
-    renderInspector(this.model, this.selected, (id) => this.selectNode(id));
+    renderInspector(
+      this.model,
+      this.selected,
+      (id) => this.selectNode(id),
+      (id) => this.selectType(id),
+    );
     this.editor.highlight(this.model.nodes.get(this.selected));
   }
   renderObservation() {
@@ -158,6 +203,17 @@ export class TraceView {
     }
     if (this.view === 'tokens') {
       $('graph-caption').textContent = t('graph.tokenCaption');
+      return;
+    }
+    if (this.view === 'declarations') {
+      renderDeclarations(this.model, this.selectedType, {
+        onType: (id) => this.selectType(id),
+        onNode: (id, view) => this.selectDeclarationNode(id, view),
+        onSeek: (index) => {
+          this.stop();
+          this.seek(index);
+        },
+      });
       return;
     }
     renderGraph(
@@ -181,6 +237,7 @@ export class TraceView {
       source: 'source-view',
       ast: 'graph',
       types: 'types',
+      declarations: 'declarations',
       tokens: 'token-view',
       ir: 'ir-view',
       run: 'run-view',
@@ -239,8 +296,12 @@ export class TraceView {
       ['next-type', 'type'],
       ['next-rewrite', 'rewrite'],
       ['next-phase', 'phase_enter'],
+      ['next-declaration', 'declaration'],
     ])
-      $(id).onclick = () => this.nextKind(kind);
+      $(id).onclick = () => {
+        if (kind === 'declaration') this.setView('declarations');
+        this.nextKind(kind);
+      };
     $('snapshot').onchange = () => {
       this.snapshot = Number($('snapshot').value);
       $('follow').checked = false;

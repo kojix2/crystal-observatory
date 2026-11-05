@@ -2,6 +2,7 @@ import { t } from '../i18n/index.js';
 import { $, esc, brief } from './dom.js';
 import { eventLabel, shortVisitor, visitorKey } from './event-labels.js';
 import { groupEvents, eventRows } from '../core/event-groups.js';
+import { declarationSummary } from './declarations.js';
 const PAGE_SIZE = 70;
 
 export class EventList {
@@ -65,12 +66,12 @@ export class EventList {
         (!kind || event.kind === kind) &&
         (!node || event.node_id === node) &&
         (!query ||
-          `${event.visitor} ${event.node_id} ${this.model.nodes.get(event.node_id)?.kind || ''} ${event.after} ${event.phase}`
+          `${event.visitor} ${event.node_id} ${this.model.nodes.get(event.node_id)?.kind || ''} ${this.result(event)} ${event.phase}`
             .toLowerCase()
             .includes(query)),
     );
     this.matchingIndices = new Set(this.filtered.map((event) => event.index));
-    this.rows = eventRows(this.filtered, this.groups, this.expanded);
+    this.rows = eventRows(this.filtered, kind === 'declaration' ? [] : this.groups, this.expanded);
     this.page = 0;
     this.render();
   }
@@ -131,7 +132,12 @@ export class EventList {
               });
       return `<tr class="event-group ${active ? 'active' : ''}" aria-current="${active ? 'step' : 'false'}"><td>${group.start}–<wbr>${group.end}</td><td title="${esc(event.visitor)}"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-label="${esc(label)}" title="${esc(label)}"><span class="event-group-arrow" aria-hidden="true">${expanded ? '▼' : '▶'}</span><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(visitor)}</span></button>${this.renderNode(event)}</td><td><span class="event-label">${esc(summary)}</span>${containsCurrent ? `<span class="event-result">${esc(t('event.group.current', { index: this.model.index }))}</span>` : ''}</td></tr>`;
     }
-    return `<tr class="${event.index === this.model.index ? 'active' : ''} ${esc(event.kind)}" data-index="${event.index}" tabindex="0" aria-current="${event.index === this.model.index ? 'step' : 'false'}"><td>${event.index}</td><td title="${esc(event.visitor)}"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(shortVisitor(event.visitor) || event.phase)}</span>${this.renderNode(event)}</td><td><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-result" title="${esc(event.after || event.detail)}">${esc(brief(event.after || event.detail, 130))}</span></td></tr>`;
+    return `<tr class="${event.index === this.model.index ? 'active' : ''} ${esc(event.kind)}" data-index="${event.index}" tabindex="0" aria-current="${event.index === this.model.index ? 'step' : 'false'}"><td>${event.index}</td><td title="${esc(event.visitor)}"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(shortVisitor(event.visitor) || event.phase)}</span>${this.renderNode(event)}</td><td><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-result" title="${esc(this.result(event))}">${esc(brief(this.result(event), 130))}</span></td></tr>`;
+  }
+  result(event) {
+    return event.kind === 'declaration'
+      ? declarationSummary(event, this.model)
+      : event.after || event.detail;
   }
   renderNode(event) {
     return `<span class="event-node">${event.node_id ? `#${event.node_id} ${esc(this.model.nodes.get(event.node_id)?.kind || '')}` : '—'}</span>`;

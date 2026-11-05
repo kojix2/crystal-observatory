@@ -99,3 +99,67 @@ test('node IR follows selection independently of playback and keeps all codegen 
     setLocale('en');
   }
 });
+
+test('a replaced method still links its historical node to the observed owner', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const model = new TraceModel({
+    schema_version: 1,
+    declarations_version: 1,
+    compiler_version: 'WASI',
+    source: 'def value; end',
+    nodes: [
+      { id: 1, kind: 'Def', text: 'def value; 1; end' },
+      { id: 2, kind: 'Def', text: 'def value; 2; end' },
+    ],
+    semantic_types: [{ id: 1, name: 'Owner', kind: 'class' }],
+    definitions: [1, 2].map((id) => ({
+      id,
+      node_id: id,
+      owner_id: 1,
+      name: 'value',
+      signature: 'value()',
+      class_method: false,
+    })),
+    snapshots: [],
+    events: [1, 2].map((id, index) => ({
+      index,
+      kind: 'declaration',
+      declaration_action: 'method',
+      node_id: id,
+      type_id: 1,
+      related_type_id: 0,
+      definition_id: id,
+      replaced_definition_id: index ? 1 : 0,
+      implicit: false,
+      visitor: 'Crystal::TopLevelVisitor',
+      phase: 'Semantic (top level)',
+    })),
+  });
+  try {
+    setLocale('en');
+    model.seek(1);
+    let selectedType;
+    renderInspector(
+      model,
+      1,
+      () => {},
+      (id) => (selectedType = id),
+    );
+    assert.equal(get('node-declarations').children.length, 1);
+    get('node-declarations').children[0].onclick();
+    assert.equal(selectedType, 1);
+    assert.match(get('explanation').textContent, /replaces a previous definition/);
+    assert.equal(model.index, 1);
+    model.seek(-1);
+    renderInspector(model, 1, () => {});
+    assert.equal(get('node-declarations').children.length, 0);
+  } finally {
+    delete globalThis.document;
+    setLocale('en');
+  }
+});

@@ -17,7 +17,7 @@ python3 "$ROOT/scripts/prepare-browser-source.py" "$OUT"
 export CRYSTAL_PATH="$OUT/src"
 mkdir -p "$OUT/bin"
 ${CXX:-c++} $("$LLVM_CONFIG" --cxxflags) -O2 -c "$OUT/src/llvm/ext/llvm_ext.cc" -o "$OUT/src/llvm/ext/llvm_ext.o"
-env -u LLVM_VERSION -u LLVM_TARGETS -u LLVM_LDFLAGS "$CRYSTAL" build "$OUT/src/compiler/crystal.cr" \
+env -u LLVM_VERSION -u LLVM_TARGETS -u LLVM_LDFLAGS "$CRYSTAL" build "$ROOT/scripts/browser-bitcode-compiler.cr" \
   -Di_know_what_im_doing -Dwithout_playground -Dwithout_docs -Dwithout_interpreter -Dwithout_openssl \
   --no-debug -o "$OUT/bin/crystal-host"
 export LLVM_VERSION=20.1.8 LLVM_TARGETS=WebAssembly LLVM_LDFLAGS=""

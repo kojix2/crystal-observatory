@@ -9,6 +9,7 @@ module Observatory
                  compiler_version : String, object_path : String) : Bundle
       rec = Recorder.new(source, filename, compiler_version)
       rec.bundle.mode = "full"
+      rec.bundle.declarations_version = 1
       rec.bundle.prelude = compiler.prelude
       rec.bundle.llvm_version = LLVM.version
       Observatory.recorder = rec

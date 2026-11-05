@@ -8,7 +8,8 @@ export function renderGraph({ model, selected, snapshot, view, collapsed }, onSe
     const type = $('follow').checked ? model.types.get(n.id) || '' : n.inferred_type || '';
     const changed = model.event?.kind === 'type' && model.event.node_id === n.id;
     const folded = collapsed.has(n.id);
-    const hasKids = n.children?.length || n.targets?.length || n.expanded;
+    const hasKids =
+      n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded;
     return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text><text x="${width - 9}" y="16" text-anchor="end" class="svg-id">${reference ? '↗ ' : ''}#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
   }
   function wireGraph(container) {
@@ -53,8 +54,15 @@ export function renderGraph({ model, selected, snapshot, view, collapsed }, onSe
           px = 20 + p.depth * 27 + 8,
           py = 16 + r.parent * 65 + 52;
         edges += `<path class="edge ${r.edge}" d="M ${px} ${py} V ${y + 27} H ${x}"/>`;
-        if (r.edge !== 'child')
-          nodes += `<text x="${x + 8}" y="${y - 4}" class="svg-id">${r.edge === 'target' ? 'typed method ↘' : 'expanded ↘'}</text>`;
+        if (r.edge !== 'child') {
+          const label =
+            r.edge === 'target'
+              ? 'typed method'
+              : r.edge === 'hook'
+                ? t('decl.hookExpansion')
+                : 'expanded';
+          nodes += `<text x="${x + 8}" y="${y - 4}" class="svg-id">${esc(label)} ↘</text>`;
+        }
       }
       nodes += svgNode(r.node, x, y, nodeWidth, r.reference);
     }

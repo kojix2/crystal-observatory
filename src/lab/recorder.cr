@@ -172,6 +172,7 @@ module Observatory
           case relation
           when "expanded" then parent.expanded = n
           when "target"   then parent.targets << n
+          when "hook"     then parent.hook_expansions << n
           else                 parent.children << n
           end
         else
@@ -188,6 +189,9 @@ module Observatory
           if node.is_a?(Crystal::Call)
             node.target_defs.try &.each { |target| walk(target, value, "target") }
             node.expanded.try { |expanded| walk(expanded, value, "expanded") }
+          end
+          if node.is_a?(Crystal::HookExpansionsContainer)
+            node.hook_expansions.try &.each { |expansion| walk(expansion, value, "hook") }
           end
         {% end %}
       end

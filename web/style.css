@@ -128,7 +128,7 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:#b5b5c1; }
 .node.changed .tile { fill: var(--type-bg); stroke: #a987ce; }
 .node.changed .accent { fill: #8e63bd; }
 .edge { stroke: #c8c8d3; stroke-width: 1.2; fill: none; }
-.edge.expanded { stroke: #9a77be; stroke-dasharray: 3 3; }
+.edge.expanded,.edge.hook { stroke: #9a77be; stroke-dasharray: 3 3; }
 .edge.target { stroke: #7d8aa7; stroke-dasharray: 4 3; }
 .svg-kind { font-size: 12px; fill: #292933; font-weight: 600; }
 .svg-code { font-size: 11px; fill: #858592; }
@@ -137,6 +137,21 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:#b5b5c1; }
 .fold { font-size: 13px; fill: #69697a; pointer-events: auto !important; cursor: pointer; }
 .dependency-path { stroke: #9691a9; fill: none; }
 .dependency-arrow { fill: #9691a9; }
+.declaration-note { padding:10px 12px; margin:0; font-size:11px; line-height:1.6; color:var(--muted); border-bottom:1px solid var(--line); }
+#declarations { background:#fff; }
+.declaration-layout { display:grid; grid-template-columns:minmax(125px, 32%) minmax(0, 1fr); align-items:start; }
+.declaration-layout nav { display:flex; flex-direction:column; padding:6px; gap:4px; }
+.declaration-type { text-align:left; white-space:normal; overflow-wrap:anywhere; }
+.declaration-type strong,.declaration-type span { display:block; }
+.declaration-type.selected { border-color:#285f98; background:#edf3fa; }
+.declaration-details { padding:12px; min-width:0; overflow-wrap:anywhere; }
+.declaration-details h3 { font:15px var(--mono); }
+.declaration-details h4 { margin-top:16px; }
+.declaration-details ul { list-style:none; padding:0; }
+.declaration-details li { padding:6px; margin-block:4px; border-left:2px solid var(--line); font-size:12px; }
+.declaration-details button { font-size:11px; white-space:normal; text-align:left; }
+.declaration-changed { background:#eee8f6; border-left-color:#8e63bd !important; }
+#node-declarations button { display:block; font-size:11px; }
 .inspect-scroll { padding: 10px 13px; overflow: auto; flex: 1; min-height: 0; }
 .event-kind { font:11px var(--mono); color: #7e5aa4; margin-bottom: 7px; }
 .inspect-scroll p { font-size: 12px; line-height: 1.8; color: #72727e; margin: 9px 0; }

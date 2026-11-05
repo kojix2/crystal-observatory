@@ -1,4 +1,5 @@
 import { UIError } from '../i18n/index.js';
+import { applyDeclaration, validateDeclarations } from './declarations.js';
 
 export function validateTrace(t) {
   if (
@@ -33,13 +34,18 @@ export function validateTrace(t) {
         (n) =>
           !Array.isArray(n.children) ||
           !Array.isArray(n.targets) ||
-          [...n.children, ...n.targets, ...(n.expanded ? [n.expanded] : [])].some(
-            (id) => !local.has(id),
-          ),
+          (n.hook_expansions != null && !Array.isArray(n.hook_expansions)) ||
+          [
+            ...n.children,
+            ...n.targets,
+            ...(n.hook_expansions || []),
+            ...(n.expanded ? [n.expanded] : []),
+          ].some((id) => !local.has(id)),
       )
     )
       throw new UIError('error.traceEdge');
   }
+  validateDeclarations(t);
   return t;
 }
 
@@ -47,6 +53,10 @@ export class TraceModel {
   constructor(trace) {
     this.trace = validateTrace(trace);
     this.nodes = new Map(trace.nodes.map((n) => [n.id, n]));
+    this.semanticTypes = new Map((trace.semantic_types || []).map((type) => [type.id, type]));
+    this.definitions = new Map(
+      (trace.definitions || []).map((definition) => [definition.id, definition]),
+    );
     this.initialTypes = new Map(trace.nodes.map((n) => [n.id, n.inferred_type || '']));
     const seen = new Set();
     for (const e of trace.events)
@@ -63,9 +73,11 @@ export class TraceModel {
       this.types = new Map(this.initialTypes);
       this.edges = new Map();
       this.stack = [];
+      this.declarations = new Map();
     }
     for (let i = this.index + 1; i <= index; i++) {
       const e = this.trace.events[i];
+      if (e.kind === 'declaration') applyDeclaration(this, e);
       if (e.kind === 'type') this.types.set(e.node_id, e.after);
       if (e.kind === 'bind')
         this.edges.set(`${e.related_id}:${e.node_id}`, [e.related_id, e.node_id]);
@@ -83,6 +95,19 @@ export class TraceModel {
       if (s.at_event <= index + 1) found = i;
     });
     return found;
+  }
+  snapshotForNode(id, current = this.snapshotAt()) {
+    if (this.trace.snapshots[current]?.nodes.some((node) => node.id === id)) return current;
+    let before = -1,
+      after = -1;
+    this.trace.snapshots.forEach((snapshot, index) => {
+      if (!snapshot.nodes.some((node) => node.id === id)) return;
+      if (snapshot.at_event <= this.index + 1) {
+        if (before < 0 || snapshot.at_event > this.trace.snapshots[before].at_event) before = index;
+      } else if (after < 0 || snapshot.at_event < this.trace.snapshots[after].at_event)
+        after = index;
+    });
+    return before >= 0 ? before : after;
   }
   next(kind, from = this.index) {
     return this.trace.events.findIndex((e) => e.index > from && e.kind === kind);
@@ -109,10 +134,20 @@ export function flattenAST(snapshot, collapsed = new Set()) {
     if (collapsed.has(id)) return;
     for (const child of node.children) walk(child, depth + 1, row, 'child');
     if (node.expanded) walk(node.expanded, depth + 1, row, 'expanded');
+    for (const hook of node.hook_expansions || []) walk(hook, depth + 1, row, 'hook');
     for (const target of node.targets) walk(target, depth + 1, row, 'target');
   }
   for (const id of snapshot.roots) walk(id, 0, -1, 'root');
   return rows;
+}
+
+export function revealASTNode(snapshot, id, collapsed) {
+  const rows = flattenAST(snapshot);
+  let index = rows.findIndex((row) => row.node.id === id);
+  while (index >= 0) {
+    collapsed.delete(rows[index].node.id);
+    index = rows[index].parent;
+  }
 }
 
 export function indexIR(ir) {

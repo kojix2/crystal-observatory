@@ -1,10 +1,17 @@
 import { messages } from '../i18n/messages.js';
 import { t } from '../i18n/index.js';
+import { declarationSummary } from './declarations.js';
 export const shortVisitor = (name) =>
   (name || '').replace(/^Crystal::/, '').replace(/^Observatory::/, '');
-export const eventLabel = (kind) => (messages[`event.${kind}`] ? t(`event.${kind}`) : kind || '—');
-export function explanation(event) {
+export const eventLabel = (kind) =>
+  kind === 'declaration'
+    ? t('decl.operation')
+    : messages[`event.${kind}`]
+      ? t(`event.${kind}`)
+      : kind || '—';
+export function explanation(event, model) {
   if (!event) return t('explain.empty');
+  if (event.kind === 'declaration' && model) return declarationSummary(event, model);
   const visitor = shortVisitor(event.visitor);
   const values = {
     visitor,

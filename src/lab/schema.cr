@@ -18,6 +18,7 @@ module Observatory
     property children = [] of Int32
     property expanded : Int32? = nil
     property targets = [] of Int32
+    property hook_expansions = [] of Int32
 
     def initialize(@id, @kind, @label, @text)
     end
@@ -38,8 +39,38 @@ module Observatory
     property detail : String = ""
     property llvm_function : String = ""
     property llvm_block : String = ""
+    property declaration_action : String = ""
+    property type_id : Int32 = 0
+    property related_type_id : Int32 = 0
+    property definition_id : Int32 = 0
+    property replaced_definition_id : Int32 = 0
+    property origin_id : Int32 = 0
+    property implicit : Bool = false
 
     def initialize(@kind, @phase)
+    end
+  end
+
+  class SemanticTypeInfo
+    include JSON::Serializable
+    property id : Int32
+    property name : String
+    property kind : String
+
+    def initialize(@id, @name, @kind)
+    end
+  end
+
+  class DefinitionInfo
+    include JSON::Serializable
+    property id : Int32
+    property owner_id : Int32
+    property node_id : Int32
+    property name : String
+    property signature : String
+    property class_method : Bool
+
+    def initialize(@id, @owner_id, @node_id, @name, @signature, @class_method)
     end
   end
 
@@ -78,6 +109,9 @@ module Observatory
     property llvm_ir = ""
     property errors = [] of String
     property truncated = false
+    property declarations_version : Int32? = nil
+    property semantic_types : Array(SemanticTypeInfo) = [] of SemanticTypeInfo
+    property definitions : Array(DefinitionInfo) = [] of DefinitionInfo
     property limits = "40000 events; 8000 nodes; user source and attached dependencies only"
 
     def initialize(@source = "", @filename = "input.cr")

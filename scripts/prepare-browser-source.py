@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from instrument_declarations import apply as instrument_declarations
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -18,6 +19,8 @@ def prepare(output):
     fingerprint = {
         'crystal': sources['crystal-browser']['sha256'],
         'patch': hashlib.sha256(patch.read_bytes()).hexdigest(),
+        'declarations': hashlib.sha256(
+            (ROOT / 'scripts/instrument_declarations.py').read_bytes()).hexdigest(),
     }
     target = output / 'src'
     receipt = output / 'source-inputs.json'
@@ -31,6 +34,7 @@ def prepare(output):
         tree = Path(temporary) / 'src'
         shutil.copytree(upstream, tree, symlinks=True)
         subprocess.run(['python3', str(patch), str(tree)], check=True)
+        instrument_declarations(tree)
         tree.rename(target)
     receipt.write_text(json.dumps(fingerprint, indent=2) + '\n')
     return target

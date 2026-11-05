@@ -12,7 +12,7 @@ const load = (name) =>
 
 test('real compiler traces have coherent references, balanced visits, and verified IR', () => {
   const files = fs.readdirSync(path.join(root, 'web/traces')).filter((f) => f.endsWith('.json.gz'));
-  assert.equal(files.length, 8);
+  assert.equal(files.length, 9);
   for (const f of files) {
     const t = validateTrace(
       JSON.parse(gunzipSync(fs.readFileSync(path.join(root, 'web/traces', f)))),

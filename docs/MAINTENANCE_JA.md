@@ -31,6 +31,8 @@
 | 全工程コンパイル | `src/lab/compilation.cr` | Recorderの寿命、意味解析、LLVM検証・出力・診断 |
 | WASIの入出力と設定 | `src/browser_trace.cr` | 入力・ターゲット設定・結果の書き出し |
 | 観測フック | `src/lab/hooks.cr`, `full_hooks.cr` | `previous_def`で元の動作を保ち、結果を記録 |
+| 宣言操作 | `scripts/instrument_declarations.py`, `src/lab/full_hooks.cr` | 固定版の変更成功地点を計測。ASTの式型とは別の型ID・登録先を記録 |
+| 宣言の再生・表示 | `web/core/declarations.js`, `web/ui/declarations.js` | イベント時点の状態のみを表示。型・ノードの手動選択で再生位置を変更しない |
 
 ## 非同期処理の約束
 
@@ -79,7 +81,7 @@ npm test               # 実際のWASMコンパイラも使用
 収録記録と依存取得の検証：
 
 ```sh
-make samples       # ブラウザと同じWASMコンパイラで8例を解析・リンク
+make samples # ブラウザと同じWASMコンパイラで9例を解析・リンク
 make test-sources  # 固定アーカイブのハッシュ・安全な展開・上書き防止
 ```
 

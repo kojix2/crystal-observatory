@@ -135,7 +135,8 @@ test('all bundled traces expand back to the original event order with no nested 
     group = groupEvents(cleanup.events).find(
       (group) => group.event.visitor === 'Crystal::CleanupTransformer',
     );
-  assert.deepEqual([group.start, group.end], [141, 151]);
+  assert.equal(cleanup.events[group.start].kind, 'transform_enter');
+  assert.equal(cleanup.events[group.end].kind, 'transform_leave');
 });
 
 // Keep paging/filtering tests independent of browser setup; this small fixture
@@ -162,20 +163,25 @@ function withList(trace, run) {
 
 test('opening, closing, filtering and localizing keep playback position and expanded state', () => {
   withList(load('06_cleanup'), (list, element, seeks) => {
-    list.model.seek(150);
+    const cleanupGroup = list.groups.find(
+      (group) => group.event.visitor === 'Crystal::CleanupTransformer',
+    );
+    const current = cleanupGroup.end - 1;
+    list.model.seek(current);
     list.follow();
-    assert.equal(list.rows.length, 39);
+    const collapsedRows = list.rows.length;
     assert.equal(element('page-state').textContent, '1 / 1');
-    assert.match(element('events').innerHTML, /Current: #150/);
-    assert(!element('events').innerHTML.includes('data-index="150"'));
+    assert(element('events').innerHTML.includes(`Current: #${current}`));
+    assert(!element('events').innerHTML.includes(`data-index="${current}"`));
 
-    const button = { dataset: { group: '141' } },
+    const button = { dataset: { group: String(cleanupGroup.start) } },
       target = { closest: (selector) => (selector === '[data-group]' ? button : null) };
     element('events').onclick({ target });
-    assert(list.expanded.has(141));
-    assert.match(element('events').innerHTML, /data-index="150"/);
+    assert(list.expanded.has(cleanupGroup.start));
+    assert(list.rows.length > collapsedRows);
+    assert(element('events').innerHTML.includes(`data-index="${current}"`));
     assert.match(element('events').innerHTML, /aria-expanded="true"/);
-    assert.equal(list.model.index, 150);
+    assert.equal(list.model.index, current);
     assert.deepEqual(seeks, []);
 
     element('kind').value = 'rewrite';
@@ -186,11 +192,11 @@ test('opening, closing, filtering and localizing keep playback position and expa
     setLocale('ja');
     list.render();
     assert.match(element('events').innerHTML, /11件中1件が一致/);
-    assert.equal(list.model.index, 150);
-    assert(list.expanded.has(141));
-    list.toggle(141);
+    assert.equal(list.model.index, current);
+    assert(list.expanded.has(cleanupGroup.start));
+    list.toggle(cleanupGroup.start);
     assert.equal(list.rows.length, 1);
-    assert.equal(list.model.index, 150);
+    assert.equal(list.model.index, current);
     assert.deepEqual(seeks, []);
 
     list.load(new TraceModel(load('01_specialization')));
@@ -223,25 +229,48 @@ test('node/search filters retain parent context, while original event rows still
   });
 });
 
+test('declaration filtering exposes operations directly and searches relationships by name', () => {
+  withList(load('09_declarations'), (list, element, seeks) => {
+    element('kind').value = 'declaration';
+    element('kind').onchange();
+    assert(list.rows.length > 0);
+    assert(list.rows.every((row) => row.event?.kind === 'declaration'));
+    element('search').value = 'FactoryLabel';
+    element('search').oninput();
+    assert(list.filtered.some((event) => event.declaration_action === 'extend'));
+    const operation = list.filtered.find((event) => event.declaration_action === 'extend');
+    assert(element('events').innerHTML.includes('Extend (class side)'));
+    const target = {
+      closest: (selector) =>
+        selector === '[data-index]' ? { dataset: { index: String(operation.index) } } : null,
+    };
+    element('events').onclick({ target });
+    assert.deepEqual(seeks, [operation.index]);
+  });
+});
+
 test('paging follows visible rows and a collapsed group tracks its hidden current event', () => {
   withList(load('07_struct'), (list, element) => {
-    assert.equal(list.rows.length, 99);
-    assert.equal(element('page-state').textContent, '1 / 2');
-    list.toggle(393);
-    list.model.seek(570);
+    assert(list.rows.length > 70);
+    const group = list.groups.find((group) => group.end - group.start > 100 && group.start > 100);
+    assert(group);
+    const current = group.start + 1;
+    list.toggle(group.start);
+    list.model.seek(current);
     list.follow();
     assert.equal(
       list.page,
-      Math.floor(list.rows.findIndex((row) => row.event?.index === 570) / 70),
+      Math.floor(list.rows.findIndex((row) => row.event?.index === current) / 70),
     );
-    assert.match(element('events').innerHTML, /data-index="570"/);
-    list.toggle(393);
-    assert.equal(list.model.index, 570);
-    assert.match(element('events').innerHTML, /Current: #570/);
+    assert(element('events').innerHTML.includes(`data-index="${current}"`));
+    list.toggle(group.start);
+    assert.equal(list.model.index, current);
+    assert(element('events').innerHTML.includes(`Current: #${current}`));
     assert.equal(element('page-state').textContent, '1 / 2');
-    list.model.seek(1169);
+    const last = list.groups.at(-1).start + 1;
+    list.model.seek(last);
     list.follow();
     assert.equal(element('page-state').textContent, '2 / 2');
-    assert.match(element('events').innerHTML, /Current: #1169/);
+    assert(element('events').innerHTML.includes(`Current: #${last}`));
   });
 });

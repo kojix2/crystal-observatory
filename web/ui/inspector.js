@@ -13,7 +13,7 @@ import {
 
 // Node selection can move independently of playback. The lower inspector always
 // describes model.event, even when another node is clicked in the graph or stack.
-export function renderInspector(model, selected, onSelect) {
+export function renderInspector(model, selected, onSelect, onDeclaration = () => {}) {
   const node = model.nodes.get(selected),
     event = model.event,
     nodeEvents = node ? model.eventsFor(selected) : [];
@@ -26,6 +26,26 @@ export function renderInspector(model, selected, onSelect) {
   $('type-card').hidden = !node;
   $('node-type').textContent = model.types.get(selected) || t('unknown');
   renderCrystal($('node-code'), node?.text || '—');
+  const declarations = [...model.declarations.values()].filter(
+    (state) =>
+      state.declarations.some((event) => event.node_id === selected) ||
+      nodeEvents.some(
+        (event) =>
+          event.index <= model.index &&
+          event.kind === 'declaration' &&
+          event.declaration_action === 'method' &&
+          event.type_id === state.info.id,
+      ),
+  );
+  $('node-declarations').replaceChildren(
+    ...declarations.map((state) => {
+      const button = document.createElement('button');
+      button.className = 'link-button';
+      button.textContent = `${t('decl.title')}: ${state.info.name}`;
+      button.onclick = () => onDeclaration(state.info.id);
+      return button;
+    }),
+  );
   renderNodeIR(node, nodeEvents);
   for (const id of ['node-prev', 'node-next', 'node-filter']) $(id).disabled = !node;
 
@@ -36,7 +56,10 @@ export function renderInspector(model, selected, onSelect) {
   $('visitor-title').dataset.visitor = visitorKey(event?.visitor);
   $('visitor-role').textContent = visitorRole(event);
   $('event-kind').textContent = eventLabel(event?.kind);
-  $('explanation').textContent = explanation(event);
+  $('explanation').textContent = explanation(event, model);
+  $('event-declaration').hidden = event?.kind !== 'declaration';
+  $('event-declaration').textContent = t('decl.title');
+  $('event-declaration').onclick = () => onDeclaration(event.type_id);
   const target = model.nodes.get(event?.node_id);
   $('event-node').hidden = !target;
   $('event-node').textContent = target

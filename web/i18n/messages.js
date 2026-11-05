@@ -1,5 +1,8 @@
 // Application-owned text only; compiler output and source stay unchanged.
+import { declarationMessages } from './declaration-messages.js';
+
 export const messages = {
+  ...declarationMessages,
   'app.title': {
     ja: 'Crystal Observatory — コンパイラを観察',
     en: 'Crystal Observatory — Compiler explorer',
