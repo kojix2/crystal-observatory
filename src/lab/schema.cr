@@ -46,6 +46,9 @@ module Observatory
     property replaced_definition_id : Int32 = 0
     property origin_id : Int32 = 0
     property implicit : Bool = false
+    property activity : String = ""
+    property reason : String = ""
+    property parent_visitor : String = ""
 
     def initialize(@kind, @phase)
     end
@@ -90,6 +93,10 @@ module Observatory
     include JSON::Serializable
   end
 
+  record ActivityCoverage, visitor : String, node_kinds : Array(String), activities : Array(String) do
+    include JSON::Serializable
+  end
+
   class Bundle
     include JSON::Serializable
     property schema_version = 1
@@ -112,6 +119,7 @@ module Observatory
     property declarations_version : Int32? = nil
     property semantic_types : Array(SemanticTypeInfo) = [] of SemanticTypeInfo
     property definitions : Array(DefinitionInfo) = [] of DefinitionInfo
+    property activity_coverage = [] of ActivityCoverage
     property limits = "40000 events; 8000 nodes; user source and attached dependencies only"
 
     def initialize(@source = "", @filename = "input.cr")

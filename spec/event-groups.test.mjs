@@ -188,10 +188,11 @@ test('opening, closing, filtering and localizing keep playback position and expa
     element('search').value = 'CleanupTransformer';
     element('kind').onchange();
     assert.equal(list.rows.length, 2);
-    assert.match(element('events').innerHTML, /1 of 11 events match/);
+    const groupSize = cleanupGroup.end - cleanupGroup.start + 1;
+    assert(element('events').innerHTML.includes(`1 of ${groupSize} events match`));
     setLocale('ja');
     list.render();
-    assert.match(element('events').innerHTML, /11件中1件が一致/);
+    assert(element('events').innerHTML.includes(`${groupSize}件中1件が一致`));
     assert.equal(list.model.index, current);
     assert(list.expanded.has(cleanupGroup.start));
     list.toggle(cleanupGroup.start);

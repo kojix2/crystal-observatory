@@ -29,6 +29,26 @@ Events record actual entries into `ASTNode#accept`. The original `Visitor#visit_
 
 Not every compiler operation is a Visitor. Helper type lookups and code paths that call `visit` directly without going through `accept` are not fully observed. Individual return values from `visit_any` and `visit` are not recorded either. The UI presents observed nesting and side effects such as type changes, dependencies, and expansions.
 
+### Per-node activities
+
+The optional schema-1 `activity` events and `activity_coverage` describe actual
+decisions and mutations separately from visits. The inventory, success boundaries,
+and deliberately incomplete coverage are documented in [ACTIVITIES.md](ACTIVITIES.md).
+`scripts/instrument_activities.py` uses checked source fragments in the generated
+build tree; its hash participates in the source fingerprint. Reopened hooks use
+`previous_def`. Neither approach replaces the compiler's algorithms.
+
+Activity values are serialized under Recorder muting. An actual-dispatch pointer
+is restored on exit even for unrecorded visits, preventing helper operations in
+library code from being attributed to an outer user node. Activities retain full
+Visitor names, evidence/output node links, and helper context when known.
+
+History summaries and both inspectors use recorded facts. The node activity index
+includes target and related nodes independently of playback, while direct missing-
+type assignments also participate in rewind. Coverage is capability metadata, not
+proof that a stage or branch ran. Old/syntax-only traces without coverage are
+unmeasured; empty covered lists and incomplete recordings have distinct labels.
+
 `SyntaxWalkVisitor` is an Observatory-defined Visitor for displaying syntax trees. Unlike MainVisitor and Normalizer, it is not part of the compiler’s semantic-analysis pipeline. The UI displays it in a separate mode.
 
 ### Declaration operations are observed separately from visits
@@ -54,6 +74,12 @@ The tool records `set_type` and observer additions/removals along these implemen
 ## 5. Relating AST nodes to LLVM IR
 
 At the end of each CodeGenVisitor visit, the Recorder captures the Builder insertion block, its parent function, and up to the last six instructions in the block. The generated module is then verified by LLVM’s verifier, and the complete IR is saved.
+
+Activity-enabled traces additionally compare instruction identities present in
+the entry function with those in the final insertion block and record newly
+observed instructions. This includes children and is not a complete multi-block
+diff. Function-signature creation is separately linked to its typed Def and LLVM
+name. The nested well-known-functions selector has its own identity and role.
 
 This does not mean “one AST node produces one instruction.” A parent’s record includes instructions emitted by its children, and control flow can change the Builder’s insertion point. Use the records to navigate functions and inspect IR. LLVM optimization passes, instruction selection, and internal LLD activity are not recorded. The browser build does generate, link, and run a real WASM object.
 

@@ -52,5 +52,35 @@
     "lesson": "Observe creation, reopening, inheritance and method registration.",
     "trace": "./traces/09_declarations.json.gz",
     "source": "# Follow declaration operations in the Declarations tab.\nmodule Named\n  def label\n    \"instance\"\n  end\nend\n\nmodule FactoryLabel\n  def label\n    \"class\"\n  end\nend\n\nclass Parent\nend\n\nclass Child < Parent\n  include Named\n  extend FactoryLabel\n\n  def value(x : Int32)\n    x\n  end\n\n  def self.value(x : Int32)\n    x\n  end\nend\n\nclass Child\n  def value(x : String)\n    x\n  end\nend\n\nmacro make_type(name)\n  class {{name.id}}\n    def value\n      42\n    end\n  end\nend\n\nmake_type Generated\n\nputs Child.new.label\nputs Child.label\nputs Child.new.value(7)\nputs Child.value(8)\nputs Child.new.value(\"nine\")\nputs Generated.new.value\n"
+  },
+  {
+    "title": "10 · Initializer selection",
+    "lesson": "Observe replacement, literal-first typing, automatic casts and generic deferral.",
+    "trace": "./traces/10_initializers.json.gz",
+    "source": "LIMIT = 3\n\nclass Counters\n  @@seed = 1\n  @@seed = 7\n  @@derived : Int32 = @@seed + 1\n  @wide : Int64 = 2\n\n  def value\n    @@seed + @@derived + @wide + LIMIT\n  end\nend\n\nclass Deferred(T)\n  @value = 1\nend\n\nputs Counters.new.value\n"
+  },
+  {
+    "title": "11 · Argument restrictions",
+    "lesson": "Compare unconditional assignments, conditional assignments and reassigned arguments.",
+    "trace": "./traces/11_restrictions.json.gz",
+    "source": "class Restricted\n  @value : Int32\n\n  def initialize(@value)\n  end\n\n  def conditional(value)\n    if ARGC_UNSAFE > 0\n      @value = value\n    end\n  end\n\n  def reassigned(value)\n    value = 9\n    @value = value\n  end\n\n  def value\n    @value\n  end\nend\n\nitem = Restricted.new(3)\nitem.conditional(4)\nitem.reassigned(5)\nputs item.value\n"
+  },
+  {
+    "title": "12 · Type guesses and self",
+    "lesson": "Follow merged type guesses and the evidence used to collect initialization assignments.",
+    "trace": "./traces/12_guess_and_self.json.gz",
+    "source": "class Guessed\n  def initialize\n    @value = 1\n  end\n\n  def initialize(text : String)\n    @value = nil\n    kind = self.class\n    ignored = self.probe\n    @value = 2.5\n  end\n\n  def probe\n    self\n  end\n\n  def value\n    @value\n  end\nend\n\nputs Guessed.new.value\nputs Guessed.new(\"second\").value\n"
+  },
+  {
+    "title": "13 · Missing types and function selection",
+    "lesson": "Observe unused block types, Proc pointers and runtime-function selection.",
+    "trace": "./traces/13_missing_types.json.gz",
+    "source": "def ignore(&block)\n  7\nend\n\ndef stop(status : Int32)\n  exit(status)\nend\n\ndef early_return\n  return 5\n  99\nend\n\npointer = ->stop(Int32)\nputs ignore { 1 }\nputs typeof(pointer)\nputs early_return\n\nfun observatory_identity(value : Int32) : Int32\n  value\nend\n"
+  },
+  {
+    "title": "14 · Macro control flow",
+    "lesson": "Follow macro argument binding, branches, iterations and emitted source.",
+    "trace": "./traces/14_macro_control.json.gz",
+    "source": "macro repeated(enabled)\n  {% if enabled %}\n    {% for value, index in [2, 4, 6] %}\n      puts {{value}} + {{index}}\n    {% end %}\n  {% else %}\n    puts 0\n  {% end %}\nend\n\nrepeated(true)\n"
   }
 ]

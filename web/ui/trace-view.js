@@ -85,6 +85,7 @@ export class TraceView {
   localize() {
     this.renderPhase();
     this.events.render();
+    this.events.localizeActivities();
     if (this.trace) renderTokens(this.trace, (node) => this.editor.highlight(node));
     this.renderSelection();
   }
@@ -131,7 +132,7 @@ export class TraceView {
     $('position').textContent = `${this.model.index + 1} / ${this.trace.events.length}`;
     this.renderPhase();
     this.events.follow();
-    if (this.view === 'ir') this.ir.follow(event?.llvm_function);
+    if (this.view === 'ir') this.ir.follow(event?.llvm_function, event?.llvm_block);
     this.renderSelection();
     if (this.view === 'declarations' && event?.kind === 'declaration')
       $('declarations')
@@ -182,6 +183,20 @@ export class TraceView {
       this.selected,
       (id) => this.selectNode(id),
       (id) => this.selectType(id),
+      (index) => {
+        this.stop();
+        const selected = this.selected;
+        this.seek(index);
+        this.selectNode(selected);
+      },
+      (event) => {
+        if (!this.ir.functions.some((fn) => fn.name === event.llvm_function)) {
+          notify(() => t('ir.noMatch'), 'warning');
+          return;
+        }
+        this.setView('ir');
+        this.ir.follow(event.llvm_function, event.llvm_block);
+      },
     );
     this.editor.highlight(this.model.nodes.get(this.selected));
   }
@@ -222,6 +237,12 @@ export class TraceView {
       (id) => {
         this.collapsed.has(id) ? this.collapsed.delete(id) : this.collapsed.add(id);
         this.renderObservation();
+      },
+      (index) => {
+        this.stop();
+        const selected = this.selected;
+        this.seek(index);
+        this.selectNode(selected);
       },
     );
   }
@@ -297,6 +318,7 @@ export class TraceView {
       ['next-rewrite', 'rewrite'],
       ['next-phase', 'phase_enter'],
       ['next-declaration', 'declaration'],
+      ['next-activity', 'activity'],
     ])
       $(id).onclick = () => {
         if (kind === 'declaration') this.setView('declarations');

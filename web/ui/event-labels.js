@@ -1,6 +1,7 @@
 import { messages } from '../i18n/messages.js';
 import { t } from '../i18n/index.js';
 import { declarationSummary } from './declarations.js';
+import { coverageFor } from '../core/activities.js';
 export const shortVisitor = (name) =>
   (name || '').replace(/^Crystal::/, '').replace(/^Observatory::/, '');
 export const eventLabel = (kind) =>
@@ -12,6 +13,7 @@ export const eventLabel = (kind) =>
 export function explanation(event, model) {
   if (!event) return t('explain.empty');
   if (event.kind === 'declaration' && model) return declarationSummary(event, model);
+  if (event.kind === 'activity') return activitySummary(event);
   const visitor = shortVisitor(event.visitor);
   const values = {
     visitor,
@@ -45,6 +47,7 @@ export const sourceFiles = {
   RestrictionsAugmenter: 'semantic/restrictions_augmenter.cr',
   InstanceVarsInitializerVisitor: 'semantic/instance_vars_initializer_visitor.cr',
   CodeGenVisitor: 'codegen/codegen.cr',
+  'CodeGenVisitor::CodegenWellKnownFunctions': 'codegen/codegen.cr',
   ASTNode: 'semantic/bindings.cr',
   Call: 'semantic/call.cr',
   ExpandableNode: 'semantic/ast.cr',
@@ -54,11 +57,22 @@ export const sourceFiles = {
   ClassVarsInitializerVisitor: 'semantic/class_vars_initializer_visitor.cr',
 };
 
-export const visitorKey = (name) => shortVisitor(name).split(/::|#/)[0];
-export function visitorRole(event) {
+export const visitorKey = (name) => shortVisitor(name).split('#')[0];
+export function activityLabel(activity) {
+  return messages[`activity.${activity}`] ? t(`activity.${activity}`) : activity;
+}
+export function activitySummary(event) {
+  return `${activityLabel(event.activity)}${event.after ? `: ${event.after}` : ''}`;
+}
+export function visitorRole(event, model) {
   if (!event) return '—';
   const name = visitorKey(event.visitor);
-  return t(
+  const role = t(
     !name ? 'visitor.stage' : messages[`visitor.${name}`] ? `visitor.${name}` : 'visitor.unknown',
   );
+  const node = model?.nodes.get(event.node_id);
+  const covered = node ? coverageFor(model.trace, event.visitor, node.kind) : [];
+  return covered.length
+    ? `${role}\n${node.kind} · ${t('activity.coverage', { activities: [...new Set(covered.flatMap((entry) => entry.activities))].map(activityLabel).join(', ') })}`
+    : role;
 }

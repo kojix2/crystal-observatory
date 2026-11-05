@@ -31,6 +31,38 @@ async function execute(result, stdin = '', args = []) {
   return run.stdout;
 }
 
+test('activity instrumentation preserves initialization and unused-block behavior', async () => {
+  for (const [name, output] of [
+    ['10_initializers', '20\n'],
+    ['11_restrictions', '9\n'],
+    ['12_guess_and_self', '1\n2.5\n'],
+    ['13_missing_types', '7\nProc(Int32, NoReturn)\n5\n'],
+    ['14_macro_control', '2\n5\n8\n'],
+  ]) {
+    const source = await readFile(new URL(`../examples/${name}.cr`, import.meta.url), 'utf8');
+    const result = await compile(source);
+    assert.equal(await execute(result), output, name);
+    assert.equal(result.trace.truncated, false, name);
+    assert(result.trace.activity_coverage.length > 0, name);
+  }
+});
+
+test('failed declaration resolution and type guesses are not reported as successes', async () => {
+  for (const [source, reason] of [
+    ['class Broken\n @x : Missing\nend\n', 'resolution_failed'],
+    ['class Broken\n @x = missing_method\nend\n', 'unresolved_or_forbidden_type'],
+  ]) {
+    const result = await compile(source);
+    assert(result.trace.errors.length > 0);
+    assert.equal(result.wasm, undefined);
+    assert(
+      result.trace.events.some(
+        (e) => e.kind === 'activity' && e.reason === reason && e.after === '',
+      ),
+    );
+  }
+});
+
 test('arbitrary edited source drives actual semantics, LLVM, linking and execution', async () => {
   const source = 'def power_sum(x)\n  x * x + 13\nend\nputs power_sum(17)\nputs power_sum(2.5)\n';
   const result = await compile(source);

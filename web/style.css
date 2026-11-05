@@ -173,6 +173,14 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:#b5b5c1; }
 [data-visitor="Normalizer"] { --visitor-ink:#875c18; }
 [data-visitor="CleanupTransformer"] { --visitor-ink:#9a4968; }
 [data-visitor="CodeGenVisitor"] { --visitor-ink:#72509a; }
+[data-visitor="CodeGenVisitor::CodegenWellKnownFunctions"] { --visitor-ink:#944a88; }
+[data-visitor="ToSVisitor"] { --visitor-ink:#687078; }
+.activity-summary { display:block; font-size:11px; color:#246f63; overflow-wrap:anywhere; }
+tr.activity .event-label { color:#246f63; font-weight:600; }
+tr.activity { border-left:3px solid #599c83; }
+.activity-link { display:block; text-align:left; overflow-wrap:anywhere; color:var(--visitor-ink,inherit); }
+.activity-coverage { margin:4px 0; }
+.type-activities { padding:12px; }
 [data-visitor="TypeDeclarationVisitor"],[data-visitor="RestrictionsAugmenter"] { --visitor-ink:#565a9c; }
 [data-visitor="TypeGuessVisitor"],[data-visitor="HasSelfVisitor"] { --visitor-ink:#885638; }
 [data-visitor="InstanceVarsInitializerVisitor"],[data-visitor="ClassVarsInitializerVisitor"],[data-visitor="FixMissingTypes"] { --visitor-ink:#246d81; }
@@ -213,7 +221,10 @@ input[type=checkbox],input[type=range] { accent-color:#555163; }
 .splitter:hover,.splitter:focus-visible,.splitter.dragging { background:#d6cfdf; }
 .splitter::after { content:""; position:absolute; width:2px; height:28px; left:2px; top:calc(50% - 14px); border-radius:1px; background:#b8b8c4; }
 body.resizing { user-select:none; }
-.timeline { display:grid; grid-template-rows:28px 31px 30px 16px 25px 18px 54px minmax(0,1fr) 22px; }
+.timeline { display:grid; grid-template-rows:28px 31px 30px 16px 25px 18px 31px 54px minmax(0,1fr) 22px; }
+.activity-tools { display:flex; gap:4px; padding:4px 6px; min-width:0; }
+.activity-tools button,.activity-tools select { height:21px; font-size:11px; padding:1px 5px; }
+.activity-tools select { flex:1; min-width:0; }
 .record-tools { display:flex; gap:5px; padding:4px 6px; border-bottom:1px solid var(--line); }
 .record-tools button { flex:1; padding:1px 4px; font-size:11px; }
 .timeline .panel-head { padding-right:2px; }

@@ -9,11 +9,21 @@ import {
   explanation,
   visitorKey,
   visitorRole,
+  activitySummary,
+  activityLabel,
 } from './event-labels.js';
+import { activityVisitors, coverageFor } from '../core/activities.js';
 
 // Node selection can move independently of playback. The lower inspector always
 // describes model.event, even when another node is clicked in the graph or stack.
-export function renderInspector(model, selected, onSelect, onDeclaration = () => {}) {
+export function renderInspector(
+  model,
+  selected,
+  onSelect,
+  onDeclaration = () => {},
+  onSeek = () => {},
+  onIR = () => {},
+) {
   const node = model.nodes.get(selected),
     event = model.event,
     nodeEvents = node ? model.eventsFor(selected) : [];
@@ -47,6 +57,7 @@ export function renderInspector(model, selected, onSelect, onDeclaration = () =>
     }),
   );
   renderNodeIR(node, nodeEvents);
+  renderActivities(model, node, onSeek);
   for (const id of ['node-prev', 'node-next', 'node-filter']) $(id).disabled = !node;
 
   $('event-id').textContent = event ? `#${event.index}` : '—';
@@ -54,7 +65,7 @@ export function renderInspector(model, selected, onSelect, onDeclaration = () =>
     ? shortVisitor(event.visitor) || t('event.noVisitor')
     : '—';
   $('visitor-title').dataset.visitor = visitorKey(event?.visitor);
-  $('visitor-role').textContent = visitorRole(event);
+  $('visitor-role').textContent = visitorRole(event, model);
   $('event-kind').textContent = eventLabel(event?.kind);
   $('explanation').textContent = explanation(event, model);
   $('event-declaration').hidden = event?.kind !== 'declaration';
@@ -71,8 +82,31 @@ export function renderInspector(model, selected, onSelect, onDeclaration = () =>
   $('event-phase').textContent = event ? t('event.phase', { phase: event.phase }) : '';
   $('raw-event').hidden = !event?.detail;
   $('event-detail').textContent = event?.detail || '';
+  const activity = event?.kind === 'activity';
+  $('activity-details').hidden = !activity;
+  $('activity-observed').textContent = t('activity.observed');
+  $('activity-reason').textContent =
+    activity && event.reason ? `${t('activity.reason')}: ${event.reason}` : '';
+  $('activity-context').textContent =
+    activity && visitorKey(event.visitor) === 'HasSelfVisitor'
+      ? event.parent_visitor
+        ? t('activity.context', { visitor: shortVisitor(event.parent_visitor) })
+        : t('activity.contextUnknown')
+      : activity && visitorKey(event.visitor) === 'ToSVisitor'
+        ? `${t('activity.formatting')}${event.parent_visitor ? ` · ${shortVisitor(event.parent_visitor)}` : ''}`
+        : '';
+  $('activity-ir-note').hidden = !activity || event.activity !== 'emit_instructions';
+  $('activity-ir-note').textContent = t('activity.ir');
+  $('activity-related').hidden = !activity || !event.related_id;
+  $('activity-related').textContent = activity
+    ? t('activity.related', { id: event.related_id })
+    : '';
+  $('activity-related').onclick = () => onSelect(event.related_id);
+  $('activity-ir-link').hidden = !activity || !event.llvm_function;
+  $('activity-ir-link').textContent = t('activity.openIR');
+  $('activity-ir-link').onclick = () => onIR(event);
   $('change').hidden =
-    !event || !['type', 'rewrite', 'expand', 'dispatch', 'ir'].includes(event.kind);
+    !event || !['activity', 'type', 'rewrite', 'expand', 'dispatch', 'ir'].includes(event.kind);
   for (const [id, value] of [
     ['before', event?.before || t('unset')],
     ['after', event?.after || '—'],
@@ -98,9 +132,12 @@ export function renderInspector(model, selected, onSelect, onDeclaration = () =>
 function renderNodeIR(node, events) {
   // Like source, show the selected node's records from the whole compilation,
   // independently of the event currently being replayed in the lower inspector.
-  const entries = events.filter((event) => event.kind === 'ir');
+  const activities = events.filter(
+    (event) => event.kind === 'activity' && event.activity === 'emit_instructions',
+  );
+  const entries = activities.length ? activities : events.filter((event) => event.kind === 'ir');
   $('node-ir-note').hidden = entries.length === 0;
-  $('node-ir-note').textContent = t('node.irNote');
+  $('node-ir-note').textContent = t(activities.length ? 'activity.ir' : 'node.irNote');
   if (!entries.length) {
     $('node-ir').textContent = node ? t('node.irMissing') : '—';
     return;
@@ -120,6 +157,75 @@ function renderNodeIR(node, events) {
       return entry;
     }),
   );
+}
+export function renderActivities(
+  model,
+  node,
+  onSeek,
+  container = $('node-activities'),
+  typeOnly = false,
+) {
+  container.replaceChildren();
+  if (!node) return;
+  if (model.trace.truncated || model.trace.errors?.length) {
+    const note = document.createElement('p');
+    note.textContent = t('activity.incomplete');
+    container.append(note);
+  }
+  const events = (model.activities.get(node.id) || []).filter(
+    (event) =>
+      !typeOnly ||
+      [
+        'guess_type',
+        'merge_guess',
+        'declare_var',
+        'assign_type',
+        'fix_missing_type',
+        'narrow_type',
+        'autocast',
+      ].includes(event.activity),
+  );
+  const phases = new Map();
+  for (const event of events) {
+    const phase = event.phase || '';
+    if (!phases.has(phase)) phases.set(phase, []);
+    phases.get(phase).push(event);
+  }
+  for (const [phase, entries] of phases) {
+    const section = document.createElement('details');
+    section.open = entries.length <= 6;
+    const title = document.createElement('summary');
+    title.textContent = `${phase} (${entries.length})`;
+    section.append(title);
+    for (const event of entries) {
+      const button = document.createElement('button');
+      button.className = 'activity-link link-button';
+      button.dataset.index = String(event.index);
+      const helper = visitorKey(event.visitor) === 'HasSelfVisitor';
+      button.dataset.visitor = visitorKey(event.visitor);
+      button.textContent = `${helper ? '↳ ' : ''}${shortVisitor(helper && event.parent_visitor ? event.parent_visitor : event.visitor)}${helper ? ` / HasSelfVisitor` : ''} · #${event.node_id} ${activitySummary(event)}`;
+      button.title = `${t('activity.observed')} · ${event.reason || ''}`;
+      button.onclick = () => onSeek(event.index);
+      section.append(button);
+    }
+    container.append(section);
+  }
+  if (typeOnly) return;
+  for (const name of activityVisitors) {
+    const visitor = `Crystal::${name}`;
+    if (events.some((event) => event.visitor === visitor)) continue;
+    const covered = coverageFor(model.trace, visitor, node.kind);
+    const status = document.createElement('p');
+    status.className = 'activity-coverage tiny';
+    status.textContent = `${name} · ${t(covered.length ? 'activity.none' : 'activity.unmeasured')}`;
+    if (covered.length)
+      status.title = t('activity.coverage', {
+        activities: [...new Set(covered.flatMap((entry) => entry.activities))]
+          .map(activityLabel)
+          .join(', '),
+      });
+    container.append(status);
+  }
 }
 function renderLinks(trace, event) {
   const name = visitorKey(event?.visitor);

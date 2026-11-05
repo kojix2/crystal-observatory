@@ -304,6 +304,7 @@ test('hook expansion edges are labeled in every supported locale', () => {
       snapshots: [{ name: 'Semantic', roots: [1], nodes: [node(1, [2]), node(2)] }],
     },
     types: new Map(),
+    activities: new Map(),
   };
   try {
     for (const locale of locales) {

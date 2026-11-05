@@ -1,5 +1,6 @@
 import { UIError } from '../i18n/index.js';
 import { applyDeclaration, validateDeclarations } from './declarations.js';
+import { validateActivities } from './activities.js';
 
 export function validateTrace(t) {
   if (
@@ -46,6 +47,7 @@ export function validateTrace(t) {
       throw new UIError('error.traceEdge');
   }
   validateDeclarations(t);
+  validateActivities(t, ids);
   return t;
 }
 
@@ -53,6 +55,14 @@ export class TraceModel {
   constructor(trace) {
     this.trace = validateTrace(trace);
     this.nodes = new Map(trace.nodes.map((n) => [n.id, n]));
+    this.activities = new Map();
+    for (const event of trace.events) {
+      if (event.kind !== 'activity') continue;
+      for (const id of new Set([event.node_id, event.related_id].filter(Boolean))) {
+        if (!this.activities.has(id)) this.activities.set(id, []);
+        this.activities.get(id).push(event);
+      }
+    }
     this.semanticTypes = new Map((trace.semantic_types || []).map((type) => [type.id, type]));
     this.definitions = new Map(
       (trace.definitions || []).map((definition) => [definition.id, definition]),
@@ -60,7 +70,10 @@ export class TraceModel {
     this.initialTypes = new Map(trace.nodes.map((n) => [n.id, n.inferred_type || '']));
     const seen = new Set();
     for (const e of trace.events)
-      if (e.kind === 'type' && !seen.has(e.node_id)) {
+      if (
+        (e.kind === 'type' || (e.kind === 'activity' && e.activity === 'fix_missing_type')) &&
+        !seen.has(e.node_id)
+      ) {
         this.initialTypes.set(e.node_id, e.before);
         seen.add(e.node_id);
       }
@@ -79,6 +92,8 @@ export class TraceModel {
       const e = this.trace.events[i];
       if (e.kind === 'declaration') applyDeclaration(this, e);
       if (e.kind === 'type') this.types.set(e.node_id, e.after);
+      if (e.kind === 'activity' && e.activity === 'fix_missing_type')
+        this.types.set(e.node_id, e.after);
       if (e.kind === 'bind')
         this.edges.set(`${e.related_id}:${e.node_id}`, [e.related_id, e.node_id]);
       if (e.kind === 'unbind') this.edges.delete(`${e.related_id}:${e.node_id}`);

@@ -10,6 +10,7 @@ module Observatory
     property bundle : Bundle
     property phase = "Parse"
     property root : Crystal::ASTNode? = nil
+    property dispatch_node : Crystal::ASTNode? = nil
     @muted = 0
     @objects = {} of UInt64 => Int32
     @retained = [] of Crystal::ASTNode
@@ -104,6 +105,44 @@ module Observatory
       bundle.events << e
     end
 
+    def activity(activity : String, node : Crystal::ASTNode, visitor : String,
+                 before = "", after = "", reason = "", related : Crystal::ASTNode? = nil,
+                 detail = "", parent_visitor = "", llvm_function = "", llvm_block = "")
+      return unless active? && user_node?(node)
+      return if id(node) == 0
+      return if related && id(related) == 0
+      count = bundle.events.size
+      event("activity", node, visitor, before, after, related, detail)
+      return if bundle.events.size == count
+      e = bundle.events.last
+      e.activity, e.reason = activity, reason
+      e.parent_visitor = parent_visitor
+      e.llvm_function, e.llvm_block = llvm_function, llvm_block
+    end
+
+    def current_node : Crystal::ASTNode?
+      dispatch_node
+    end
+
+    def current_visitor : String
+      @stack.last?.try(&.[1]) || ""
+    end
+
+    def nested_visit?(visitor : String) : Bool
+      @stack.size > 1 && @stack[-2][1] == visitor
+    end
+
+    def parent_visitor(visitor : String) : String
+      @stack.reverse_each do |frame|
+        return frame[1] unless frame[1] == visitor
+      end
+      ""
+    end
+
+    def cover(visitor : String, nodes : Array(String), activities : Array(String))
+      bundle.activity_coverage << ActivityCoverage.new("Crystal::#{visitor}", nodes, activities)
+    end
+
     def enter(node : Crystal::ASTNode, visitor : String, kind = "visit_enter") : Bool
       return false unless active? && user_node?(node)
       event(kind, node, visitor, after: type_name(node))
@@ -119,7 +158,12 @@ module Observatory
     def type_changed(node : Crystal::ASTNode, before : String)
       return unless active? && user_node?(node)
       after = type_name(node)
-      event("type", node, @stack.last?.try(&.[1]) || "binding", before, after) unless before == after
+      unless before == after
+        visitor = current_visitor
+        visitor = "binding" if visitor.empty?
+        event("type", node, visitor, before, after)
+        activity("assign_type", node, visitor, before, after, "set_type")
+      end
     end
 
     def dependency(dependency : Crystal::ASTNode, observer : Crystal::ASTNode, remove = false)

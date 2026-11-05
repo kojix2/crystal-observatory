@@ -1,16 +1,43 @@
 import { t } from '../i18n/index.js';
 import { $, esc, brief } from './dom.js';
 import { flattenAST } from '../core/trace-model.js';
+import { renderActivities } from './inspector.js';
+
+const mutations = new Set([
+  'assign_type',
+  'fix_missing_type',
+  'autocast',
+  'add_restriction',
+  'rewrite',
+  'remove_dead_code',
+  'simplify_condition',
+  'replace_untyped',
+]);
 
 // A render takes one explicit trace selection; no compiler/job state lives here.
-export function renderGraph({ model, selected, snapshot, view, collapsed }, onSelect, onFold) {
+export function renderGraph(
+  { model, selected, snapshot, view, collapsed },
+  onSelect,
+  onFold,
+  onSeek = () => {},
+) {
   function svgNode(n, x, y, width = 270, reference = false) {
     const type = $('follow').checked ? model.types.get(n.id) || '' : n.inferred_type || '';
-    const changed = model.event?.kind === 'type' && model.event.node_id === n.id;
+    const activities = model.activities.get(n.id) || [];
+    const changed =
+      (model.event?.kind === 'type' && model.event.node_id === n.id) ||
+      activities.some(
+        (event) =>
+          event.node_id === n.id &&
+          mutations.has(event.activity) &&
+          event.index <= model.index &&
+          event.phase === model.event?.phase &&
+          event.visitor === model.event?.visitor,
+      );
     const folded = collapsed.has(n.id);
     const hasKids =
       n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded;
-    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text><text x="${width - 9}" y="16" text-anchor="end" class="svg-id">${reference ? '↗ ' : ''}#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
+    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text><text x="${width - 9}" y="16" text-anchor="end" class="svg-id">${activities.length ? '● ' : ''}${reference ? '↗ ' : ''}#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
   }
   function wireGraph(container) {
     container.querySelectorAll('[data-node]').forEach((el) => {
@@ -126,6 +153,10 @@ export function renderGraph({ model, selected, snapshot, view, collapsed }, onSe
         `<div class="dep-caption">${esc(t('graph.edges'))}</div><svg class="dep-svg" xmlns="http://www.w3.org/2000/svg" width="675" height="${height}"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" class="dependency-arrow"/></marker></defs>${paths}${nodes}</svg>`;
       wireGraph($('types'));
     }
+    const history = document.createElement('section');
+    history.className = 'type-activities';
+    renderActivities(model, model.nodes.get(selected), onSeek, history, true);
+    $('types').append(history);
     $('graph-caption').textContent = t('graph.edgeCount', {
       event: model.index + 1,
       count: model.edges.size,

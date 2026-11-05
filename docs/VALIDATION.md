@@ -1,5 +1,73 @@
 # Validation Record
 
+## Visitor activity validation — 2026-11-05
+
+The latest change adds actual activity observations for all fifteen recorded
+Visitor/Transformer identities, including the nested well-known-functions
+selector. This is representative coverage, not a claim that every internal
+operation is instrumented; see [ACTIVITIES.md](ACTIVITIES.md).
+
+| Check | Result |
+|---|---|
+| `make samples` | All 14 recordings regenerated; 13 linked and one retained its expected type diagnostic; none truncated |
+| `make test` | 62 Node tests and 8 Python tests passed |
+| `npm run lint` | Passed |
+| `npm run format:check` | Passed |
+| Compiler asset | Rebuilt through the existing build host and LLVM 20 O3 pipeline; `WebAssembly.compile`, integrity checks, linking and execution passed |
+| Coverage/source agreement | All recorded coverage entries exactly match the source declaration; checked by regression test |
+| Old recordings | All nine original HEAD recordings validated and replayed forwards/backwards without conversion |
+| Chromium | All fifteen activity identities displayed with corresponding node/history links; no page exceptions |
+
+Final recording sizes:
+
+| Example | Events | Nodes |
+|---|---:|---:|
+| 01_specialization | 345 | 27 |
+| 02_union_and_narrowing | 455 | 29 |
+| 03_macro_expansion | 322 | 23 |
+| 04_normalization | 691 | 47 |
+| 05_overloads | 523 | 47 |
+| 06_cleanup | 195 | 10 |
+| 07_struct | 1307 | 115 |
+| 08_type_error | 135 | 10 |
+| 09_declarations | 1496 | 101 |
+| 10_initializers | 12689 | 1724 |
+| 11_restrictions | 1471 | 122 |
+| 12_guess_and_self | 1516 | 134 |
+| 13_missing_types | 731 | 65 |
+| 14_macro_control | 592 | 49 |
+
+Additional verification:
+
+- Tests assert real restriction additions and conditional/reassigned-argument
+  skips, initializer replacement/casting/deferral, merged guesses, self detection
+  and self.class exclusion, macro branches/iterations/source, missing block types
+  and dead-code observations. Error-path tests preserve diagnostics without
+  producing a success event or executable.
+- The five new examples were compiled and executed by the browser WASM pipeline.
+  Their outputs were respectively `20`, `9`, `1 / 2.5`,
+  `7 / Proc(Int32, NoReturn) / 5`, and `2 / 5 / 8`.
+- Chromium checks covered every Visitor's measured activity, helper context,
+  distinct selector role, source-formatting warning, LLVM function navigation,
+  evidence-node selection and history navigation without replacing that node.
+- Activity-subtype filters produced matching collapsed summaries; switching all
+  seven locales preserved filter value and playback position. Importing an old
+  trace showed uninstrumented status and no invented activity rows.
+- Types history links and AST markers worked in Chromium. A grid-row shift caused
+  by the additional activity toolbar was found and fixed; at 1600×1000 the History
+  table retained more than 300 px of usable height and group buttons were clickable.
+- Live compilation and execution of example 11 in Chromium produced `9`.
+
+Build limitation: attempts to repeat the complete `make browser` target, including
+host regeneration, and some later LLVM object-generation retries were terminated
+with exit code 143 in this environment. A clean full rebuild is therefore not
+claimed as passing here. The distributed asset is the successful O3 build from
+the existing host, not an output from the interrupted retries or experimental
+lower-optimization commands. Its coverage declarations match the retained source,
+and the complete tests and browser checks above use that distributed asset.
+
+The earlier declaration-only validation record follows for historical context.
+
 Validated declaration instrumentation, replay at each event, and integration with the Declarations and type-hierarchy UI on 2026-11-05. Rebuilt the full compiler WASM and regenerated all nine recordings. The existing lightweight syntax WASM was retained.
 
 ## Environment and scope

@@ -1,4 +1,5 @@
 require "./hooks"
+require "./activity_hooks"
 
 class Crystal::ASTNode
   # These must remain distinct overloads to preserve upstream previous_def dispatch.
@@ -96,6 +97,8 @@ class Observatory::Recorder
           break
         end
       end
+      activity(action == "method" ? "declare_fun" : "declare_type", node, "Crystal::TopLevelVisitor",
+        after: e.after, reason: action)
     end
   end
 
@@ -147,9 +150,10 @@ class Observatory::Recorder
     count = bundle.events.size
     declaration("method", node, owner, definition_id: definition_id)
     if bundle.events.size > count
-      event = bundle.events.last
+      event = bundle.events[count]
       event.replaced_definition_id = previous_id
       event.after = bundle.definitions[definition_id - 1].signature
+      bundle.events.last.after = event.after
     end
   end
 
@@ -165,7 +169,15 @@ class Observatory::Recorder
     snapshot("Expansion ##{id(node)}")
   end
 
-  def codegen_position(node : Crystal::ASTNode, visitor : Crystal::CodeGenVisitor)
+  def codegen_before(visitor : Crystal::CodeGenVisitor)
+    block = visitor.builder.insert_block
+    return nil if block.to_unsafe.null?
+    function = block.parent
+    return nil unless function
+    function.basic_blocks.flat_map(&.instructions.to_a).map(&.to_unsafe.address).to_set
+  end
+
+  def codegen_position(node : Crystal::ASTNode, visitor : Crystal::CodeGenVisitor, before)
     return unless active? && user_node?(node)
     block = visitor.builder.insert_block
     return if block.to_unsafe.null?
@@ -179,6 +191,16 @@ class Observatory::Recorder
         e.llvm_function = function.name
         e.llvm_block = block.name || ""
       end
+    end
+    emitted = block.instructions.to_a
+    if before
+      emitted = emitted.reject { |instruction| before.includes?(instruction.to_unsafe.address) }
+    end
+    unless emitted.empty?
+      activity("emit_instructions", node, visitor.class.name, after: emitted.map(&.to_s).join("\n"),
+        reason: "final_insertion_block_delta",
+        detail: "Includes child emission; only the final insertion block is observed, not exclusive node attribution",
+        llvm_function: function.name, llvm_block: block.name || "")
     end
   end
 end
@@ -211,7 +233,10 @@ class Crystal::Call
         signature = "#{target.name}(#{target.args.map { |a| rec.type_name(a) }.join(", ")}) : #{rec.type_name(target)}"
         rec.event("dispatch", self, "Crystal::Call#recalculate", after: signature, related: target,
           detail: "Resolved typed method; one call can have multiple targets for union dispatch")
+        rec.activity("resolve_target", self, "Crystal::MainVisitor", after: signature, related: target,
+          reason: "recalculated_target")
       end
+
       rec.snapshot("Resolved call ##{rec.id(self)}")
     end
     result

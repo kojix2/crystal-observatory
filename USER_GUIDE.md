@@ -23,7 +23,7 @@ Open <http://127.0.0.1:8000/> in a browser. Use HTTP rather than opening the HTM
 1. Enter code in the editor and select **Compile & run**. The first run loads the compiler, LLVM, LLD, and related assets.
 2. Inspect standard output and the exit code in **Output**. You can provide stdin for `gets` and a JSON array of arguments for `ARGV`.
 3. Inspect the same compilation in **AST**, **Types**, and **LLVM IR**.
-4. Use **Next type** and **Next rewrite** to follow actual Visitor work.
+4. Use **Next activity**, **Next type**, and **Next rewrite** to follow actual Visitor work.
 5. **Compile → IR** analyzes and links without running the program. **Run again** executes the generated WASM in a fresh Worker.
 
 Selecting an **Example** puts its source in the editor; that source is compiled anew. Select **Example trace** only to inspect a bundled recording. **Parse only** uses the separate lightweight Lexer/Parser engine.
@@ -38,15 +38,15 @@ Programs target WASI. Threads, OS processes, sockets, host filesystem access, an
 
 The interface combines a dark header and code editor with a white observation area, inspired by the official Crystal website. Type changes use a light purple highlight to distinguish them from selection.
 
-- Four vertical panes appear from left to right: **Source / observation (AST, Types, Tokens, LLVM IR, Output) / details / History**. History is on the far right; each pane fills the remaining viewport height.
-- The header is 48 px high: a 28 px command row and a 20 px stage/status row. Click a truncated status or error to open its full text.
-- Drag any of the three vertical dividers to resize adjacent panes. Focus a divider with Tab and use the arrow keys to resize it; Shift moves it farther. Home or double-click resets the ratio of the two adjacent panes.
+- Three columns appear from left to right: **History / Source and observation / inspectors**. The right column has independent node and Visitor/operation inspectors.
+- Click a truncated status or error to open its full text.
+- Drag either vertical divider, or the horizontal divider between inspectors. Focus a divider with Tab and use the arrow keys to resize it; Shift moves it farther. Home or double-click resets its ratio.
 - Maximize the observation pane with its upper-right button and press Esc to restore the layout. Use **›** and **‹** in History to collapse and restore that pane.
 - Pane widths are saved by the browser. Use **↺** to restore the initial layout. The previous version’s saved History height is not carried over.
-- **JA / EN** in the upper-right switches the UI, descriptions, help, and status text. Source, selection, filters, and execution results are preserved, and the language choice is remembered. Source, compiler diagnostics, and internal identifiers are not translated.
-- All four columns remain available on narrow screens; scroll horizontally within the workspace. The top command row can also scroll horizontally while keeping the language selector visible.
+- The language selector supports Japanese, English, Spanish, Simplified Chinese, French, German and Russian. Source, selection, filters, and execution results are preserved, and the language choice is remembered. Source, compiler diagnostics, and internal identifiers are not translated.
+- All three columns remain available on narrow screens; scroll horizontally within the workspace.
 
-## Nine experiments
+## Fourteen experiments
 
 | Sample | What to observe |
 |---|---|
@@ -59,8 +59,43 @@ The interface combines a dark header and code editor with a white observation ar
 | 07_struct | Type declarations, `initialize`, generated `new`, and method calls |
 | 08_type_error | Events and diagnostics leading to a type error |
 | 09_declarations | Type creation/reopening, inheritance, include/extend, method registration, and macro generation |
+| 10_initializers | Last-initializer selection, discarded candidates, literal-first typing, automatic casting and generic deferral |
+| 11_restrictions | Argument restrictions added from assignments, or skipped for conditional assignments and reassigned arguments |
+| 12_guess_and_self | Merged type guesses, excluded `self.class`, detected `self`, and initialization assignment sets |
+| 13_missing_types | Unused block type completion, Proc pointers, dead code and well-known-function rejection |
+| 14_macro_control | Macro bindings, selected branches, iterations, evaluated values and emitted source |
 
 Do not confuse the `Nil` type on a `Def` declaration expression with the return type of calling that method. The former reflects TopLevelVisitor work; the latter is known when resolving a call target.
+
+### Follow what happened on a node
+
+**History** retains visit groups, but collapsed rows also summarize up to two
+recorded activity kinds and their results. Expand a group for chronological
+events. Choose **Activity** or an activity subtype to filter, or **Next activity**
+to jump to the next recorded decision/change.
+
+The upper **Visitor activities** section lists the selected node's activities,
+grouped by compiler phase. It includes evidence/output links as well as activities
+targeting the node directly. Selecting an activity moves History without replacing
+your manually selected node. HasSelfVisitor appears with its TypeGuessVisitor
+context; the nested CodegenWellKnownFunctions selector has a separate role.
+
+The lower inspector shows the observed operation, input/result, reason, and
+related node. Visitor role descriptions are supplemental; the listed instrumented
+operations are not assertions that all of them ran. Compiler-provided reason
+identifiers remain untranslated. ToSVisitor is source formatting, not semantic
+analysis.
+
+**Not instrumented** means the trace does not cover that Visitor/node-kind pair.
+**No covered activity recorded** does not mean the Visitor did nothing. Errors and
+truncation make the record incomplete. Older traces without coverage remain
+readable and show unmeasured status rather than invented activities.
+
+AST dots mark nodes with activity records. Types includes type-history links.
+An instruction activity can open its LLVM function/block: these instructions
+**include child emission**, cover only the final insertion block, and must not be
+interpreted as instructions produced exclusively by the selected node.
+See [the observation inventory](docs/ACTIVITIES.md) for precise coverage.
 
 ### Follow declarations and the type hierarchy
 
@@ -75,7 +110,7 @@ flowchart TD
   A["Crystal source in editor"] --> B["Compiler Worker: Crystal + LLVM"]
   B --> C["JSON: Visitors, AST, types, IR"]
   B --> D["LLD: link to WASM"]
-  C --> E["Observe and replay in four panes"]
+  C --> E["Observe and replay in three columns"]
   D --> F["Execution Worker: standard I/O"]
   F --> E
 ```
@@ -91,6 +126,7 @@ flowchart TD
 | `ProgressTracker#stage` | Start and end of compiler stages |
 | End of `CodeGenVisitor` visits | LLVM Builder function, basic block, and trailing instructions |
 | Successful TopLevelVisitor registration points | Type creation/reopening, inheritance, include/extend, and explicit method registration |
+| Checked activity hooks | Actual restrictions, guesses, initializer selection, missing-type completion, macro execution and LLVM instruction deltas |
 
 Most observation hooks are added through class reopening and `previous_def` in separate files. Declaration instrumentation is inserted at successful mutation points in the pinned TopLevelVisitor source during the build. It does not edit the upstream checkout; it applies to the generated build tree and fails if the expected source fragments do not match. This does not replace the compiler’s Visitors or semantic-analysis algorithms. Observation hooks are muted while serializing AST snapshots so that our own traversal does not appear as compiler work.
 

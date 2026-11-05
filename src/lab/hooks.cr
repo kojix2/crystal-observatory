@@ -5,20 +5,33 @@ require "./recorder"
 class Crystal::ASTNode
   def accept(visitor)
     rec = Observatory.recorder
+    old_dispatch = rec.try &.dispatch_node
+    rec.dispatch_node = self if rec
     entered = rec.try &.enter(self, visitor.class.name)
+    {% if flag?(:lab_full) %}
+      ir_before = entered && rec && visitor.is_a?(Crystal::CodeGenVisitor) ? rec.codegen_before(visitor) : nil
+    {% end %}
     result = previous_def
+    if entered && rec && visitor.is_a?(Crystal::ToSVisitor) && !rec.nested_visit?(visitor.class.name)
+      # Only report the root of each serialization, not every formatting step.
+      rec.activity("serialize_source", self, visitor.class.name, reason: "compiler_serialization",
+        parent_visitor: rec.parent_visitor(visitor.class.name))
+    end
     {% if flag?(:lab_full) %}
       if entered && rec && visitor.is_a?(Crystal::CodeGenVisitor)
-        rec.codegen_position(self, visitor)
+        rec.codegen_position(self, visitor, ir_before)
       end
     {% end %}
     result
   ensure
     rec.try &.leave(self, visitor.class.name) if entered
+    rec.dispatch_node = old_dispatch if rec
   end
 
   def transform(transformer)
     rec = Observatory.recorder
+    old_dispatch = rec.try &.dispatch_node
+    rec.dispatch_node = self if rec
     entered = rec.try &.enter(self, transformer.class.name, "transform_enter")
     before = entered ? rec.not_nil!.text(self) : ""
     result = previous_def
@@ -26,11 +39,14 @@ class Crystal::ASTNode
       after = result ? rec.text(result) : "∅"
       if before != after || !result.same?(self)
         rec.event("rewrite", self, transformer.class.name, before, after, result)
+        rec.activity("rewrite", self, transformer.class.name, before, after,
+          "transform_#{self.class.name.split("::").last}", result)
       end
     end
     result
   ensure
     rec.try &.leave(self, transformer.class.name, "transform_leave") if entered
+    rec.dispatch_node = old_dispatch if rec
   end
 end
 

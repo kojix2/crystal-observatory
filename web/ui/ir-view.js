@@ -22,11 +22,17 @@ export class IRView {
     $('ir-search').value = '';
     this.filter();
   }
-  follow(name) {
+  follow(name, block = '') {
     if (!name || !this.functions.some((fn) => fn.name === name)) return;
     this.selected = name;
     $('ir-search').value = '';
     this.filter();
+    if (block) {
+      const pre = $('ir-code');
+      const line = pre.textContent.split('\n').findIndex((line) => line.startsWith(`${block}:`));
+      if (line >= 0)
+        pre.scrollTop = line * (parseFloat(window.getComputedStyle(pre).lineHeight) || 18);
+    }
   }
   filter() {
     const term = $('ir-search').value.toLowerCase();
