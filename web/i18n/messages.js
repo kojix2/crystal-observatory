@@ -68,6 +68,10 @@ export const messages = {
     ja: '使い方',
     en: 'Help',
   },
+  github: {
+    ja: 'GitHub リポジトリ',
+    en: 'GitHub repository',
+  },
   language: {
     ja: '表示言語',
     en: 'Interface language',

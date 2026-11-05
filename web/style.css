@@ -52,8 +52,9 @@ h1 span { font-size:10px; font-weight:400; letter-spacing:.7px; color:#b5b5c1; }
 #cancel-job { background:#28282f; border-color:#41414d; color:#ccc; }
 #cancel-job:not(:disabled) { border-color:#d17a85; color:#ffd3db; }
 .header-actions { display:flex; flex-shrink:0; align-items:center; gap:2px; }
-.header-actions button { color:#d2d2dd; }
-.header-actions button:hover { color:#fff; background:#35353d; }
+.header-actions button,.header-actions a { color:#d2d2dd; }
+.header-actions a { border-radius:2px; }
+.header-actions button:hover,.header-actions a:hover { color:#fff; background:#35353d; }
 #language { font:10px var(--mono); height:23px; padding:1px 3px; color:#fff; background:#303039; border-color:#555561; }
 .status-message { flex:1; min-width:60px; overflow:hidden; }
 #notice { width:100%; border:0; padding:3px 8px; background:transparent; color:#b5b5c4; text-align:left; font:10px/20px var(--sans); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
