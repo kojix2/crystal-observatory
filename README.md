@@ -6,7 +6,7 @@
 
 A browser app for compiling Crystal source, observing the compiler's Visitors and type inference, generating LLVM IR, linking WebAssembly, and running it locally.
 
-[日本語の説明・操作ガイド](README_JA.md)
+[User guide](USER_GUIDE.md)
 
 - Actual **Crystal 1.22.0 + WASI/EH patches, LLVM 20.1.8 and LLD** run inside Web Workers. Source code stays in your browser.
 - History on the left; Source, AST, types, declarations, tokens, IR and output tabs in the center; node details above visitor/operation details on the right. Resize column widths and the stacked details.
@@ -33,7 +33,7 @@ Choose initial code in the **Source** tab, or edit freely. **Compile & run** com
 
 Example **09** uses **Declarations** and **Next declaration** to link observed registration state to source, AST and history. Rewinding restores earlier state. This is not a complete symbol table; older and parse-only traces report declarations as unobserved.
 
-Programs target WASI: host processes, sockets, host files and arbitrary C libraries are unavailable. Generated programs have no GC, and run in a separate Worker with a 10-second deadline, 256 MiB memory limit and 256 KiB output limit. Compilation has a 120-second deadline. Full limits and observation boundaries are in [the architecture guide](docs/ARCHITECTURE_JA.md).
+Programs target WASI: host processes, sockets, host files and arbitrary C libraries are unavailable. Generated programs have no GC, and run in a separate Worker with a 10-second deadline, 256 MiB memory limit and 256 KiB output limit. Compilation has a 120-second deadline. Full limits and observation boundaries are in [the architecture guide](docs/ARCHITECTURE.md).
 
 ## Develop and verify
 
@@ -47,7 +47,7 @@ npm run format:check
 
 The same verified compiler assets and JavaScript pipeline power browser compilation, recordings and integration tests. The CI checks these and rebuilds the lightweight syntax WASM.
 
-To rebuild WASM, install Crystal 1.22.0 and the toolchain described in [README_JA.md](README_JA.md):
+To rebuild WASM, install Crystal 1.22.0 and the toolchain described in the [user guide](USER_GUIDE.md):
 
 ```sh
 make wasm          # Syntax engine; requires wasm-ld on PATH
@@ -56,7 +56,7 @@ make samples
 make test
 ```
 
-Source archives are pinned by revision and SHA256 in `deps/sources.lock.json`. `make syntax-deps` restores the syntax sources; `make browser-deps` restores the complete compiler build inputs. npm dependencies use `package-lock.json`. Fetched source trees, caches and build tools are ignored by Git and excluded from source ZIPs. Prebuilt WASM and compressed recordings remain checked in. See [dependency management](docs/DEPENDENCIES_JA.md), [maintenance](docs/MAINTENANCE_JA.md), and [validation](docs/VALIDATION_JA.md).
+Source archives are pinned by revision and SHA256 in `deps/sources.lock.json`. `make syntax-deps` restores the syntax sources; `make browser-deps` restores the complete compiler build inputs. npm dependencies use `package-lock.json`. Fetched source trees, caches and build tools are ignored by Git and excluded from source ZIPs. Prebuilt WASM and compressed recordings remain checked in. See [dependency management](docs/DEPENDENCIES.md), [maintenance](docs/MAINTENANCE.md), and [validation](docs/VALIDATION.md).
 
 ## Hosting and licensing
 

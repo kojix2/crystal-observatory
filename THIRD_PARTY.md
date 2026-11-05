@@ -67,7 +67,7 @@ Observatory code. `web/assets/compiler/compiler.wasm.gz` is rebuilt from our
 instrumented entrypoint; `web/runtime/asset-receipts.js` records its new hash.
 Other binary assets retain their upstream hashes. Rebuild with
 `scripts/build-browser.sh`. Maintenance boundaries and workarounds are documented
-in `docs/MAINTENANCE_JA.md`.
+in `docs/MAINTENANCE.md`.
 
 Pinned download SHA256:
 
@@ -97,4 +97,4 @@ restored by `scripts/fetch_sources.py` using `deps/sources.lock.json`. The lock
 records source revisions, exact archive URLs, SHA256 digests and extraction
 paths. Previously bundled upstream sources and build documentation are no
 longer tracked. Licenses and prebuilt browser runtime assets remain included.
-See `docs/DEPENDENCIES_JA.md` for the complete ownership and update policy.
+See `docs/DEPENDENCIES.md` for the complete ownership and update policy.
