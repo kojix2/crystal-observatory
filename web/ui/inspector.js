@@ -1,6 +1,7 @@
 import { t } from '../i18n/index.js';
 import { $ } from './dom.js';
 import { renderCrystal } from '../core/crystal-highlight.js';
+import { renderLLVM } from '../core/llvm-highlight.js';
 import {
   eventLabel,
   sourceFiles,
@@ -14,18 +15,18 @@ import {
 // describes model.event, even when another node is clicked in the graph or stack.
 export function renderInspector(model, selected, onSelect) {
   const node = model.nodes.get(selected),
-    event = model.event;
+    event = model.event,
+    nodeEvents = node ? model.eventsFor(selected) : [];
   $('node-id').textContent = node ? `#${node.id}` : '—';
   $('node-title').textContent = node?.kind || t('node.empty');
   $('node-location').textContent = node?.line
     ? `${node.filename || model.trace.filename}:${node.line}:${node.column}`
     : '';
-  $('node-summary').textContent = node
-    ? t('node.summary', { count: model.eventsFor(selected).length })
-    : '';
+  $('node-summary').textContent = node ? t('node.summary', { count: nodeEvents.length }) : '';
   $('type-card').hidden = !node;
   $('node-type').textContent = model.types.get(selected) || t('unknown');
   renderCrystal($('node-code'), node?.text || '—');
+  renderNodeIR(node, nodeEvents);
   for (const id of ['node-prev', 'node-next', 'node-filter']) $(id).disabled = !node;
 
   $('event-id').textContent = event ? `#${event.index}` : '—';
@@ -70,6 +71,32 @@ export function renderInspector(model, selected, onSelect) {
   );
   if (!stack.length) $('stack').textContent = '—';
   renderLinks(model.trace, event);
+}
+function renderNodeIR(node, events) {
+  // Like source, show the selected node's records from the whole compilation,
+  // independently of the event currently being replayed in the lower inspector.
+  const entries = events.filter((event) => event.kind === 'ir');
+  $('node-ir-note').hidden = entries.length === 0;
+  $('node-ir-note').textContent = t('node.irNote');
+  if (!entries.length) {
+    $('node-ir').textContent = node ? t('node.irMissing') : '—';
+    return;
+  }
+  $('node-ir').replaceChildren(
+    ...entries.map((event) => {
+      const entry = document.createElement('section');
+      entry.className = 'node-ir-entry';
+      const location = document.createElement('p');
+      location.className = 'node-ir-location';
+      location.textContent = [event.llvm_function, event.llvm_block].filter(Boolean).join(' · ');
+      const code = document.createElement('pre');
+      code.className = 'llvm-code';
+      if (event.after) renderLLVM(code, event.after);
+      else code.textContent = t('node.irEmpty');
+      entry.append(location, code);
+      return entry;
+    }),
+  );
 }
 function renderLinks(trace, event) {
   const name = visitorKey(event?.visitor);

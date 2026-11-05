@@ -106,6 +106,14 @@ h1 span { font-size:10px; font-weight:400; letter-spacing:.7px; color:#b5b5c1; }
 .crystal-code .token.class-name,.crystal-code .token.constant { color:#8b621b; }
 .crystal-code .token.symbol,.crystal-code .token.regex { color:#a7436b; }
 .crystal-code .token.operator,.crystal-code .token.punctuation,.crystal-code .token.interpolation { color:#434451; }
+.llvm-code .token.comment { color:#70727f; }
+.llvm-code .token.keyword { color:#7f41a0; }
+.llvm-code .token.string { color:#347646; }
+.llvm-code .token.number,.llvm-code .token.boolean { color:#a75224; }
+.llvm-code .token.function,.llvm-code .token.variable { color:#226d8c; }
+.llvm-code .token.type { color:#8b621b; }
+.llvm-code .token.label { color:#a7436b; }
+.llvm-code .token.operator,.llvm-code .token.punctuation { color:#434451; }
 @media(forced-colors:active) { #source { color:CanvasText; -webkit-text-fill-color:CanvasText; } #source-colors { visibility:hidden; } }
 .graph-scroll { flex: 1; overflow: auto; min-height: 0; min-width: 0; position: relative; background: radial-gradient(#e4e4eb .65px,transparent .65px) 0 0/20px 20px #fdfdfd; }
 .panel-foot { max-height:43px; overflow:auto; flex-shrink: 0; font-size: 9px; line-height: 15px; color: var(--muted); padding: 5px 10px; border-top: 1px solid var(--line); }
@@ -138,6 +146,7 @@ h1 span { font-size:10px; font-weight:400; letter-spacing:.7px; color:#b5b5c1; }
 .inspector-actions { display: flex; gap: 2px; flex-wrap: wrap; }
 .inspector-actions button { font-size: 9px; padding: 3px 4px; color: #73737f; }
 .inspect-scroll pre { background: #f5f5f8; padding: 8px 10px; border: 1px solid #ededf2; font-size: 11px; max-height: 200px; overflow: auto; }
+.inspect-scroll .node-ir-location { font:10px/1.6 var(--mono); overflow-wrap:anywhere; margin-bottom:4px; }
 .stack-frame { display:block; max-width:100%; text-align:left; white-space:normal; border:0; font: 10px/1.6 var(--mono); padding: 5px 8px; margin: 3px 0; background: #f5f5f8; border-left: 2px solid #d6d6e0; cursor: pointer; overflow-wrap: anywhere; }
 .stack-frame:last-child { background: #ececf3; border-color: #777788; }
 #compiler-link { font-size:10px; }
