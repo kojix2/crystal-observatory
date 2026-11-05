@@ -1,3 +1,3 @@
-# 型エラーになる直前までの処理も保存する。
+# Preserve the operations leading up to a type error.
 answer = 42
 answer + "crystal"

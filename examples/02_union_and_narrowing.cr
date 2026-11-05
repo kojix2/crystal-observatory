@@ -1,4 +1,4 @@
-# 合流で Int32 | String、is_a? の分岐内で絞り込み。
+# Branches merge into Int32 | String; is_a? narrows the type within a branch.
 value = if ARGC_UNSAFE > 1
           42
         else

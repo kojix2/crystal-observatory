@@ -1,4 +1,4 @@
-# メソッドは呼ばれた引数の型で具体化される。
+# Methods are specialized for the argument types used at each call.
 def twice(x)
   x + x
 end

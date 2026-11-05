@@ -1,4 +1,4 @@
-# 意味解析後のCleanupTransformerと最終IRを比較。
+# Compare CleanupTransformer after semantic analysis with the final IR.
 def unused(x)
   x.this_method_does_not_exist
 end

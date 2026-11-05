@@ -1,4 +1,4 @@
-# 型宣言、initialize、新しいnewメソッド、具体化。
+# Observe the type declaration, initialize, generated new method, and specialization.
 struct Point
   getter x : Int32
   getter y : Int32

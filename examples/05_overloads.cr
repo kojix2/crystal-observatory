@@ -1,4 +1,4 @@
-# 同じ名前でも引数型が違えば別のDefが選ばれる。
+# Different argument types select different definitions of the same method.
 def scale(x : Int32)
   x * 2
 end
