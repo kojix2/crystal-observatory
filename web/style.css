@@ -143,6 +143,18 @@ h1 span { font-size:10px; font-weight:400; letter-spacing:.7px; color:#b5b5c1; }
 #compiler-link { font-size:10px; }
 #compiler-link a { display:block; margin-block:4px; overflow-wrap:anywhere; }
 #visitor-title { font:14px/1.5 var(--mono); color:#4d3a61; }
+/* Use the same visitor color in history, details and the visit stack. */
+[data-visitor="TopLevelVisitor"] { --visitor-ink:#285f98; }
+[data-visitor="MainVisitor"],[data-visitor="Call"] { --visitor-ink:#246f63; }
+[data-visitor="Normalizer"] { --visitor-ink:#875c18; }
+[data-visitor="CleanupTransformer"] { --visitor-ink:#9a4968; }
+[data-visitor="CodeGenVisitor"] { --visitor-ink:#72509a; }
+[data-visitor="TypeDeclarationVisitor"],[data-visitor="RestrictionsAugmenter"] { --visitor-ink:#565a9c; }
+[data-visitor="TypeGuessVisitor"],[data-visitor="HasSelfVisitor"] { --visitor-ink:#885638; }
+[data-visitor="InstanceVarsInitializerVisitor"],[data-visitor="ClassVarsInitializerVisitor"],[data-visitor="FixMissingTypes"] { --visitor-ink:#246d81; }
+[data-visitor="MacroInterpreter"],[data-visitor="ExpandableNode"] { --visitor-ink:#8a542c; }
+.event-visitor[data-visitor],#visitor-title[data-visitor],.stack-frame[data-visitor] { color:var(--visitor-ink,inherit); }
+.stack-frame[data-visitor] { border-left-color:var(--visitor-ink,#d6d6e0); }
 #node-location { overflow-wrap:anywhere; }
 #raw-event { margin-top:10px; color:var(--muted); font-size:10px; }
 #raw-event summary { cursor:pointer; }

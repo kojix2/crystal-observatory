@@ -32,6 +32,7 @@ export function renderInspector(model, selected, onSelect) {
   $('visitor-title').textContent = event
     ? shortVisitor(event.visitor) || t('event.noVisitor')
     : '—';
+  $('visitor-title').dataset.visitor = visitorKey(event?.visitor);
   $('visitor-role').textContent = visitorRole(event);
   $('event-kind').textContent = eventLabel(event?.kind);
   $('explanation').textContent = explanation(event);
@@ -60,6 +61,7 @@ export function renderInspector(model, selected, onSelect) {
     ...stack.map((frame, i) => {
       const button = document.createElement('button');
       button.className = 'stack-frame';
+      button.dataset.visitor = visitorKey(frame.visitor);
       button.style.marginLeft = `${i * 4}px`;
       button.textContent = `${shortVisitor(frame.visitor)} → #${frame.node_id}`;
       button.onclick = () => onSelect(frame.node_id);

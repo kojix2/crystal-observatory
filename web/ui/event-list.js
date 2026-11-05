@@ -1,6 +1,6 @@
 import { t } from '../i18n/index.js';
 import { $, esc, brief } from './dom.js';
-import { eventLabel, shortVisitor } from './event-labels.js';
+import { eventLabel, shortVisitor, visitorKey } from './event-labels.js';
 const PAGE_SIZE = 70;
 
 export class EventList {
@@ -73,7 +73,7 @@ export class EventList {
       .slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE)
       .map(
         (event) =>
-          `<tr class="${event.index === this.model.index ? 'active' : ''} ${esc(event.kind)}" data-index="${event.index}" tabindex="0" aria-current="${event.index === this.model.index ? 'step' : 'false'}"><td>${event.index}</td><td title="${esc(event.visitor)}"><span class="event-visitor">${esc(shortVisitor(event.visitor) || event.phase)}</span><span class="event-node">${event.node_id ? `#${event.node_id} ${esc(this.model.nodes.get(event.node_id)?.kind || '')}` : '—'}</span></td><td><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-result" title="${esc(event.after || event.detail)}">${esc(brief(event.after || event.detail, 130))}</span></td></tr>`,
+          `<tr class="${event.index === this.model.index ? 'active' : ''} ${esc(event.kind)}" data-index="${event.index}" tabindex="0" aria-current="${event.index === this.model.index ? 'step' : 'false'}"><td>${event.index}</td><td title="${esc(event.visitor)}"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(shortVisitor(event.visitor) || event.phase)}</span><span class="event-node">${event.node_id ? `#${event.node_id} ${esc(this.model.nodes.get(event.node_id)?.kind || '')}` : '—'}</span></td><td><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-result" title="${esc(event.after || event.detail)}">${esc(brief(event.after || event.detail, 130))}</span></td></tr>`,
       )
       .join('');
     $('filter-count').textContent =
