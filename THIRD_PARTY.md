@@ -83,8 +83,8 @@ wasi-sdk-33.0-x86_64-linux.tar.gz
 
 ## Syntax highlighting
 
-**Prism 1.30.0**, MIT, https://github.com/PrismJS/prism. The core, clike, Ruby and
-Crystal grammar components are copied without modifications from the locked npm
+**Prism 1.30.0**, MIT, https://github.com/PrismJS/prism. The core, clike, Ruby,
+Crystal and LLVM grammar components are copied without modifications from the locked npm
 package by `scripts/prepare-web.mjs`. The generated `web/vendor/prismjs/` includes
 the upstream LICENSE and is excluded from Git and source ZIPs. `make web-deps`
 restores it. No runtime CDN request is made. Observatory supplies the colors and

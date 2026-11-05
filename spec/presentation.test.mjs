@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createContext, runInContext } from 'node:vm';
 import { highlightCrystal } from '../web/core/crystal-highlight.js';
+import { highlightLLVM } from '../web/core/llvm-highlight.js';
 import { explanation, visitorRole, sourceFiles, visitorKey } from '../web/ui/event-labels.js';
 import { setLocale, t } from '../web/i18n/index.js';
 
@@ -40,6 +41,28 @@ test('the shipped Crystal grammar colors macros, annotations and interpolation w
 test('unavailable highlighting keeps code visible and escapes HTML', () => {
   const source = '<script>alert("&")</script>\n';
   assert.equal(highlightCrystal(source), '&lt;script&gt;alert("&amp;")&lt;/script&gt;\n');
+  assert.equal(highlightLLVM(source), '&lt;script&gt;alert("&amp;")&lt;/script&gt;\n');
+});
+
+test('the shipped LLVM grammar colors IR without changing text or interpreting HTML', () => {
+  const context = createContext({});
+  for (const name of ['core', 'llvm'])
+    runInContext(
+      readFileSync(new URL(`../web/vendor/prismjs/prism-${name}.min.js`, import.meta.url), 'utf8'),
+      context,
+    );
+  globalThis.Prism = context.Prism;
+  try {
+    const source =
+      'define i32 @square(i32 %x) {\nentry:\n  ; 結晶 <img src=x onerror=alert(1)> & </pre>\n  %result = mul i32 %x, 23\n  ret i32 %result\n}\n';
+    const html = highlightLLVM(source);
+    for (const token of ['keyword', 'type', 'variable', 'label', 'comment', 'number'])
+      assert.match(html, new RegExp(`class="token ${token}`));
+    assert.equal(uncolored(html), source);
+    assert(!html.includes('<img') && !html.includes('</pre>'));
+  } finally {
+    delete globalThis.Prism;
+  }
 });
 
 test('visitor roles stay distinct from the measured operation, including callbacks and unknown actors', () => {

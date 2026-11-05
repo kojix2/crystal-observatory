@@ -152,6 +152,8 @@ h1 span { font-size:10px; font-weight:400; letter-spacing:.7px; color:#b5b5c1; }
 .ir-tools button { font-size: 10px; padding: 4px; color: #dddde8; }
 .ir-tools button:hover { color: #fff; background: #45454f; }
 .ir-view pre { padding: 13px 15px; overflow: auto; flex: 1; white-space: pre; font: 12px/1.75 var(--mono); }
+.ir-view .token.variable { color:#9fd4ec; }
+.ir-view .token.label { color:#e3abbf; }
 #token-view table { background: #fff; }
 #token-view th:nth-child(1) { width: 14%; } #token-view th:nth-child(2) { width: 28%; } #token-view th:nth-child(3) { width: 37%; } #token-view th:nth-child(4) { width: 21%; }
 .dep-caption { padding: 9px 12px; font-size: 10px; color: var(--muted); background: #f8f8fa; }

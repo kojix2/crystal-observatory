@@ -1,6 +1,7 @@
 import { t } from '../i18n/index.js';
 import { $ } from './dom.js';
 import { indexIR } from '../core/trace-model.js';
+import { renderLLVM } from '../core/llvm-highlight.js';
 
 export class IRView {
   constructor() {
@@ -39,7 +40,8 @@ export class IRView {
   render(visible = this.visible) {
     this.visible = visible;
     const fn = this.functions.find((fn) => fn.name === this.selected);
-    $('ir-code').textContent = fn?.text || (this.hasIR ? t('ir.noMatch') : t('ir.none'));
+    if (fn) renderLLVM($('ir-code'), fn.text);
+    else $('ir-code').textContent = this.hasIR ? t('ir.noMatch') : t('ir.none');
     if (visible)
       $('graph-caption').textContent = fn
         ? t('ir.caption', { count: this.functions.length })
