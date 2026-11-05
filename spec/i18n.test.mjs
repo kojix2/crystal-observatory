@@ -9,17 +9,28 @@ import {
   UIError,
   errorPayload,
   errorText,
+  locales,
+  getLocale,
 } from '../web/i18n/index.js';
 import { WorkerClient } from '../web/runtime/worker-client.js';
 import { explanation, eventLabel } from '../web/ui/event-labels.js';
 const placeholders = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
-test('every UI message has matching JA/EN placeholders and English has no Japanese UI text', () => {
+test('every UI message covers all locales with matching placeholders', () => {
   for (const [key, value] of Object.entries(messages)) {
-    assert(value.ja?.trim() && value.en?.trim(), key);
-    assert.deepEqual(placeholders(value.ja), placeholders(value.en), key);
+    assert.deepEqual(Object.keys(value).sort(), [...locales].sort(), key);
+    for (const locale of locales) {
+      assert(value[locale]?.trim(), `${locale}/${key}`);
+      assert.deepEqual(placeholders(value[locale]), placeholders(value.en), `${locale}/${key}`);
+    }
     assert(!/[ぁ-んァ-ン一-龯]/.test(value.en), key);
   }
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const selector = html.match(/<select id="language"[^>]*>(.*?)<\/select>/s)[1];
+  assert.deepEqual(
+    [...selector.matchAll(/value="([^"]+)"/g)].map((m) => m[1]),
+    locales,
+  );
   const root = new URL('../web/', import.meta.url);
   const sources = readdirSync(root, { recursive: true }).filter(
     (file) => /\.(js|html)$/.test(file) && !file.startsWith('vendor/'),
@@ -32,6 +43,45 @@ test('every UI message has matching JA/EN placeholders and English has no Japane
       const key = match[1] || match[2] || match[3];
       assert(messages[key], `${file}: missing ${key}`);
     }
+  }
+});
+test('additional languages translate UI text and preserve compiler-provided values', () => {
+  const source = 'puts "結晶 <&>"';
+  const diagnostic = new Error('input.cr:1: undefined method あいう');
+  const event = {
+    kind: 'type',
+    visitor: 'Crystal::MainVisitor',
+    node_id: 3,
+    before: 'Int32',
+    after: 'Int32 | String',
+  };
+  const original = structuredClone(event);
+  try {
+    for (const [locale, history] of [
+      ['es', 'Historial'],
+      ['zh-CN', '历史'],
+      ['fr', 'Historique'],
+      ['de', 'Verlauf'],
+      ['ru', 'История'],
+    ]) {
+      setLocale(locale);
+      assert.equal(getLocale(), locale);
+      assert.equal(t('trace'), history);
+      assert.equal(eventLabel('type'), messages['event.type'][locale]);
+      assert.match(explanation(event), /Int32 \| String/);
+      assert(t('notice.recorded', { origin: source }).includes(source));
+      assert.equal(errorText(diagnostic), diagnostic.message);
+      const timeout = new UIError('error.timeout', { seconds: 10 });
+      assert.equal(
+        errorText(timeout),
+        messages['error.timeout'][locale].replace('{seconds}', '10'),
+      );
+      assert.deepEqual(event, original);
+      setLocale('unsupported');
+      assert.equal(getLocale(), locale);
+    }
+  } finally {
+    setLocale('en');
   }
 });
 test('locale switching retains compiler-provided values and raw diagnostics', () => {

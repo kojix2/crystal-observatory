@@ -1,5 +1,7 @@
 import { messages } from './messages.js';
 
+export const locales = ['en', 'ja', 'es', 'zh-CN', 'fr', 'de', 'ru'];
+
 // No DOM/storage dependencies here: workers and model tests use the same errors.
 let locale = 'en';
 const listeners = new Set();
@@ -10,7 +12,7 @@ export function t(key, values = {}) {
   return message.replace(/\{(\w+)\}/g, (_, name) => String(values[name] ?? `{${name}}`));
 }
 export function setLocale(value) {
-  if (!['ja', 'en'].includes(value)) return;
+  if (!locales.includes(value)) return;
   if (value === locale) return;
   locale = value;
   for (const listener of listeners) listener(locale);
