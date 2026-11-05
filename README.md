@@ -1,5 +1,7 @@
 # Crystal Observatory
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/2e0ee49e-7379-44a9-9201-d7e7f8ff58ec" />
+
 :warning: This project is a prototype created using code generation by Codex.
 
 A browser app for compiling Crystal source, observing the compiler's Visitors and type inference, generating LLVM IR, linking WebAssembly, and running it locally.
