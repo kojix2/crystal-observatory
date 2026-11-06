@@ -17,14 +17,16 @@ const mutations = new Set([
 
 // A render takes one explicit trace selection; no compiler/job state lives here.
 export function renderGraph(
-  { model, selected, snapshot, view, collapsed },
+  { model, selected, snapshot, view, collapsed, reveal = true },
   onSelect,
   onFold,
   onSeek = () => {},
 ) {
+  const caption = $(`${view}-caption`);
+  const liveTypes = view === 'types' || $('follow').checked;
   function svgNode(n, x, y, width = 270, reference = false) {
     const family = astFamily(n.kind);
-    const type = $('follow').checked ? model.types.get(n.id) || '' : n.inferred_type || '';
+    const type = liveTypes ? model.types.get(n.id) || '' : n.inferred_type || '';
     const activities = model.activities.get(n.id) || [];
     const changed =
       (model.event?.kind === 'type' && model.event.node_id === n.id) ||
@@ -38,7 +40,8 @@ export function renderGraph(
       );
     const folded = collapsed.has(n.id);
     const hasKids =
-      n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded;
+      view === 'ast' &&
+      (n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded);
     return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><title>${esc(t(`ast.family.${family}`))}</title><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text><text x="${width - 9}" y="16" text-anchor="end" class="svg-id">${activities.length ? '● ' : ''}${reference ? '↗ ' : ''}#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
   }
   function wireGraph(container) {
@@ -65,7 +68,7 @@ export function renderGraph(
     const s = model.trace.snapshots[snapshot];
     if (!s) {
       $('graph').innerHTML = `<p class="empty">${esc(t('graph.empty'))}</p>`;
-      $('graph-caption').textContent = t('graph.prompt');
+      caption.textContent = t('graph.prompt');
       return;
     }
     const rows = flattenAST(s, collapsed);
@@ -99,7 +102,7 @@ export function renderGraph(
       `<svg class="ast-svg" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${Math.max(390, rows.length * 65 + 28)}" aria-label="${esc(t('ast'))}">${edges}${nodes}</svg>`;
     wireGraph($('graph'));
     const activeNode = $('graph').querySelector('.node.selected');
-    if (activeNode && $('follow').checked) {
+    if (activeNode && $('follow').checked && reveal) {
       const nodeRect = activeNode.getBoundingClientRect(),
         area = $('graph').getBoundingClientRect();
       if (nodeRect.top < area.top || nodeRect.bottom > area.bottom)
@@ -107,7 +110,7 @@ export function renderGraph(
       if (nodeRect.left < area.left || nodeRect.right > area.right)
         $('graph').scrollLeft += nodeRect.left - area.left - 16;
     }
-    $('graph-caption').textContent = t('graph.caption', {
+    caption.textContent = t('graph.caption', {
       name: s.name,
       count: s.nodes.length,
       time: t($('follow').checked ? 'graph.eventTypes' : 'graph.snapshotTypes'),
@@ -159,7 +162,7 @@ export function renderGraph(
     history.className = 'type-activities';
     renderActivities(model, model.nodes.get(selected), onSeek, history, true);
     $('types').append(history);
-    $('graph-caption').textContent = t('graph.edgeCount', {
+    caption.textContent = t('graph.edgeCount', {
       event: model.index + 1,
       count: model.edges.size,
     });

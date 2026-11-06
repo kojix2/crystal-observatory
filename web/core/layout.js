@@ -12,34 +12,34 @@ export function paneWeights(value) {
   return value.map((n) => (n / total) * 100);
 }
 // Preserve proportions, fixing any undersized panes before sharing the rest.
-export function paneWidths(available, weights) {
+export function paneWidths(available, weights, minimums = MIN_PANES) {
   let remaining = Math.max(
     available,
-    MIN_PANES.reduce((a, b) => a + b, 0),
+    minimums.reduce((a, b) => a + b, 0),
   );
   const pending = new Set(DEFAULT_PANES.map((_, i) => i)),
     result = [];
   while (pending.size) {
     const total = [...pending].reduce((sum, i) => sum + weights[i], 0);
-    const small = [...pending].filter((i) => (remaining * weights[i]) / total < MIN_PANES[i]);
+    const small = [...pending].filter((i) => (remaining * weights[i]) / total < minimums[i]);
     if (!small.length) {
       for (const i of pending) result[i] = (remaining * weights[i]) / total;
       break;
     }
     for (const i of small) {
-      result[i] = MIN_PANES[i];
+      result[i] = minimums[i];
       remaining -= result[i];
       pending.delete(i);
     }
   }
   return result;
 }
-export function moveDivider(widths, index, delta) {
+export function moveDivider(widths, index, delta, minimums = MIN_PANES) {
   const result = [...widths],
     pair = widths[index] + widths[index + 1];
   result[index] = Math.max(
-    MIN_PANES[index],
-    Math.min(pair - MIN_PANES[index + 1], widths[index] + delta),
+    minimums[index],
+    Math.min(pair - minimums[index + 1], widths[index] + delta),
   );
   result[index + 1] = pair - result[index];
   return paneWeights(result);

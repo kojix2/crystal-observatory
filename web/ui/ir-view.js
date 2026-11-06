@@ -9,8 +9,13 @@ export class IRView {
     this.selected = '';
     this.hasIR = false;
     this.visible = false;
-    $('ir-search').oninput = () => this.filter();
+    this.following = true;
+    $('ir-search').oninput = () => {
+      this.following = false;
+      this.filter();
+    };
     $('ir-function').onchange = () => {
+      this.following = false;
       this.selected = $('ir-function').value;
       this.render();
     };
@@ -19,11 +24,17 @@ export class IRView {
     this.hasIR = Boolean(ir);
     this.functions = indexIR(ir);
     this.selected = '';
+    this.following = true;
+    this.renderedText = null;
+    $('ir-code').scrollTop = 0;
+    $('ir-code').scrollLeft = 0;
     $('ir-search').value = '';
     this.filter();
   }
-  follow(name, block = '') {
+  follow(name, block = '', force = false) {
+    if (!force && !this.following) return;
     if (!name || !this.functions.some((fn) => fn.name === name)) return;
+    this.following = true;
     this.selected = name;
     $('ir-search').value = '';
     this.filter();
@@ -46,10 +57,14 @@ export class IRView {
   render(visible = this.visible) {
     this.visible = visible;
     const fn = this.functions.find((fn) => fn.name === this.selected);
-    if (fn) renderLLVM($('ir-code'), fn.text);
-    else $('ir-code').textContent = this.hasIR ? t('ir.noMatch') : t('ir.none');
+    const content = fn?.text ?? t(this.hasIR ? 'ir.noMatch' : 'ir.none');
+    if (content !== this.renderedText) {
+      if (fn) renderLLVM($('ir-code'), content);
+      else $('ir-code').textContent = content;
+      this.renderedText = content;
+    }
     if (visible)
-      $('graph-caption').textContent = fn
+      $('ir-caption').textContent = fn
         ? t('ir.caption', { count: this.functions.length })
         : t('ir.prompt');
   }

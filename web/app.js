@@ -6,5 +6,7 @@ import { setupSettings } from './ui/settings.js';
 setupSettings();
 setupLanguage();
 const app = new Application();
-setupWorkspace(() => app.trace.renderObservation());
+app.trace.workspace = setupWorkspace(() => app.trace.renderObservation(), {
+  onReset: () => app.trace.endComparison(),
+});
 app.loadManifest();

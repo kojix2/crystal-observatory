@@ -3,12 +3,14 @@ import { declarationMessages } from './declaration-messages.js';
 import { activityMessages } from './activity-messages.js';
 import { settingsMessages } from './settings-messages.js';
 import { astMessages } from './ast-messages.js';
+import { comparisonMessages } from './comparison-messages.js';
 
 export const messages = {
   ...declarationMessages,
   ...activityMessages,
   ...settingsMessages,
   ...astMessages,
+  ...comparisonMessages,
   'app.title': {
     ja: 'Crystal Observatory — コンパイラを観察',
     en: 'Crystal Observatory — Compiler explorer',

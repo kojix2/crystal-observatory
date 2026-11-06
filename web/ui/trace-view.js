@@ -9,6 +9,18 @@ import { renderTokens } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
 import { renderDeclarations } from './declarations.js';
+import { ViewLayout, comparisonTargets, viewLabel, viewLabelKey } from '../core/view-layout.js';
+
+const scrollTargets = {
+  source: 'source',
+  ast: 'graph',
+  types: 'types',
+  declarations: 'declarations',
+  tokens: 'token-view',
+  ir: 'ir-code',
+  run: 'console',
+};
+const label = (view) => viewLabel(view) || t(viewLabelKey(view));
 
 // Selection/playback is a presentation concern. This class never starts Workers.
 export class TraceView {
@@ -18,6 +30,7 @@ export class TraceView {
     this.selectedType = 0;
     this.snapshot = 0;
     this.view = 'source';
+    this.scrollPositions = new Map();
     this.collapsed = new Set();
     this.events = new EventList((index) => {
       this.stop();
@@ -28,6 +41,13 @@ export class TraceView {
   }
   get trace() {
     return this.model?.trace;
+  }
+  get view() {
+    return this.layout?.primary || 'source';
+  }
+  set view(name) {
+    this.layout ??= new ViewLayout();
+    this.layout.show(name);
   }
 
   load(trace, { origin = () => t('origin.input'), preserveEdits = false, live = false } = {}) {
@@ -60,7 +80,9 @@ export class TraceView {
     this.ir.load(trace.llvm_ir || '');
     renderTokens(trace, (node) => this.editor.highlight(node));
     this.events.load(model);
-    this.setView(trace.mode === 'empty' ? 'source' : 'ast');
+    this.scrollPositions.clear();
+    if (!this.layout.secondary) this.view = trace.mode === 'empty' ? 'source' : 'ast';
+    this.applyLayout({ remember: false });
     const firstType = trace.events.findIndex(
       (event) => event.kind === 'type' && event.visitor.includes('MainVisitor'),
     );
@@ -83,11 +105,12 @@ export class TraceView {
   // Redraw presentation only. Do not seek: that would change a manually selected
   // node/snapshot, reset filters or move playback when switching languages.
   localize() {
+    this.renderComparisonControls();
     this.renderPhase();
     this.events.render();
     this.events.localizeActivities();
     if (this.trace) renderTokens(this.trace, (node) => this.editor.highlight(node));
-    this.renderSelection();
+    this.renderSelection({ reveal: false });
   }
   renderPhase() {
     const event = this.model?.event;
@@ -136,7 +159,7 @@ export class TraceView {
     $('position').textContent = `${this.model.index + 1} / ${this.trace.events.length}`;
     this.renderPhase();
     this.events.follow();
-    if (this.view === 'ir') this.ir.follow(event?.llvm_function, event?.llvm_block);
+    if (this.layout.has('ir')) this.ir.follow(event?.llvm_function, event?.llvm_block);
     this.renderSelection();
     if (this.view === 'declarations' && event?.kind === 'declaration')
       $('declarations')
@@ -179,9 +202,9 @@ export class TraceView {
         .querySelector(`.node[data-node="${id}"]`)
         ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
-  renderSelection() {
+  renderSelection({ reveal = true } = {}) {
     if (!this.model) return;
-    this.renderObservation();
+    this.renderObservation({ reveal });
     renderInspector(
       this.model,
       this.selected,
@@ -199,78 +222,155 @@ export class TraceView {
           return;
         }
         this.setView('ir');
-        this.ir.follow(event.llvm_function, event.llvm_block);
+        this.ir.follow(event.llvm_function, event.llvm_block, true);
       },
     );
     this.editor.highlight(this.model.nodes.get(this.selected));
   }
-  renderObservation() {
+  renderSourceCaption() {
+    $('source-caption').textContent = t(
+      this.editor.hasRecord && this.editor.dirty ? 'comparison.sourceStale' : 'source.caption',
+    );
+  }
+  renderObservation({ reveal = false } = {}) {
     if (!this.model) return;
-    this.ir.visible = this.view === 'ir';
-    if (this.ir.visible) {
-      this.ir.render();
-      return;
+    this.ir.visible = this.layout.has('ir');
+    for (const view of this.layout.views) {
+      const root = $(`${view}-view`);
+      const focused = document.activeElement?.closest?.('[data-node]');
+      const focusedNode = focused && root.contains(focused) ? focused.dataset.node : null;
+      this.renderView(view, reveal);
+      if (focusedNode)
+        root.querySelector(`[data-node="${focusedNode}"]`)?.focus({ preventScroll: true });
     }
-    if (this.view === 'source') {
-      $('graph-caption').textContent = t('source.caption');
+  }
+  renderView(view, reveal) {
+    if (view === 'source') {
+      this.renderSourceCaption();
       this.editor.scroll();
-      return;
-    }
-    if (this.view === 'run') {
-      $('graph-caption').textContent = t('graph.runCaption');
-      return;
-    }
-    if (this.view === 'tokens') {
-      $('graph-caption').textContent = t('graph.tokenCaption');
-      return;
-    }
-    if (this.view === 'declarations') {
+    } else if (view === 'ir') {
+      this.ir.render();
+    } else if (view === 'run' || view === 'tokens') {
+      $(`${view}-caption`).textContent = t(
+        view === 'run' ? 'graph.runCaption' : 'graph.tokenCaption',
+      );
+    } else if (view === 'declarations') {
       renderDeclarations(this.model, this.selectedType, {
         onType: (id) => this.selectType(id),
-        onNode: (id, view) => this.selectDeclarationNode(id, view),
+        onNode: (id, target) => this.selectDeclarationNode(id, target),
         onSeek: (index) => {
           this.stop();
           this.seek(index);
         },
       });
-      return;
+    } else {
+      renderGraph(
+        {
+          model: this.model,
+          selected: this.selected,
+          snapshot: this.snapshot,
+          view,
+          collapsed: this.collapsed,
+          reveal,
+        },
+        (id) => this.selectNode(id),
+        (id) => {
+          this.collapsed.has(id) ? this.collapsed.delete(id) : this.collapsed.add(id);
+          this.renderObservation();
+        },
+        (index) => {
+          this.stop();
+          const selected = this.selected;
+          this.seek(index);
+          this.selectNode(selected);
+        },
+      );
     }
-    renderGraph(
-      this,
-      (id) => this.selectNode(id),
-      (id) => {
-        this.collapsed.has(id) ? this.collapsed.delete(id) : this.collapsed.add(id);
-        this.renderObservation();
-      },
-      (index) => {
-        this.stop();
-        const selected = this.selected;
-        this.seek(index);
-        this.selectNode(selected);
-      },
-    );
   }
-  setView(name) {
-    this.view = name;
+  rememberScroll() {
+    for (const [view, id] of Object.entries(scrollTargets)) {
+      if ($(`${view}-view`).hidden) continue;
+      const element = $(id);
+      this.scrollPositions.set(view, [element.scrollLeft, element.scrollTop]);
+    }
+  }
+  renderComparisonControls() {
+    const comparing = Boolean(this.layout.secondary);
+    for (const view of Object.keys(scrollTargets))
+      $(`${view}-view`).setAttribute('aria-label', label(view));
+    $('compare-view').replaceChildren(
+      new Option(t(comparing ? 'comparison.close' : 'comparison.open'), ''),
+      ...comparisonTargets(this.view).map((view) => new Option(label(view), view)),
+    );
+    $('compare-view').value = this.layout.secondary || '';
+    $('compare-view').disabled = !comparisonTargets(this.view).length;
+    $('comparison-title').textContent = comparing
+      ? `${label(this.view)} / ${label(this.layout.secondary)}`
+      : '';
+  }
+  applyLayout({ remember = true } = {}) {
+    if (remember) this.rememberScroll();
+    const comparing = Boolean(this.layout.secondary);
+    $('app').classList.toggle('comparing', comparing);
+    $('view-tabs').hidden = comparing;
+    $('comparison-title').hidden = !comparing;
+    $('comparison-splitter').hidden = !comparing;
     document.querySelectorAll('[data-view]').forEach((button) => {
-      const active = button.dataset.view === name;
+      const active = button.dataset.view === this.view;
       button.classList.toggle('active', active);
       button.setAttribute('aria-selected', active);
       button.tabIndex = active ? 0 : -1;
     });
-    for (const [view, id] of Object.entries({
-      source: 'source-view',
-      ast: 'graph',
-      types: 'types',
-      declarations: 'declarations',
-      tokens: 'token-view',
-      ir: 'ir-view',
-      run: 'run-view',
-    }))
-      $(id).hidden = view !== name;
-    document.querySelector('.view-tools').style.display = name === 'ast' ? 'flex' : 'none';
-    $('node-color-key').hidden = name !== 'ast' && name !== 'types';
+    for (const view of Object.keys(scrollTargets)) {
+      const root = $(`${view}-view`);
+      root.hidden = !this.layout.has(view);
+      root.dataset.slot = view === this.layout.secondary ? 'secondary' : 'primary';
+      root.setAttribute('role', comparing ? 'region' : 'tabpanel');
+      if (comparing) root.removeAttribute('aria-labelledby');
+      else root.setAttribute('aria-labelledby', `tab-${view}`);
+    }
+    if (comparing)
+      $('comparison-splitter').setAttribute(
+        'aria-controls',
+        `${this.view}-view ${this.layout.secondary}-view`,
+      );
+    this.renderComparisonControls();
+    this.workspace?.refresh();
+    if (this.layout.has('ir') && !this.ir.visible)
+      this.ir.follow(this.model?.event?.llvm_function, this.model?.event?.llvm_block);
     this.renderObservation();
+    for (const view of this.layout.views) {
+      const scroll = this.scrollPositions.get(view);
+      if (scroll) {
+        $(scrollTargets[view]).scrollLeft = scroll[0];
+        $(scrollTargets[view]).scrollTop = scroll[1];
+      }
+    }
+  }
+  beginComparison(view) {
+    if (!comparisonTargets(this.view).includes(view)) return;
+    if (!this.layout.secondary) this.workspaceBeforeComparison = this.workspace?.capture();
+    this.layout.compare(view);
+    this.applyLayout();
+  }
+  endComparison({ focus = true } = {}) {
+    if (!this.layout.secondary) return;
+    this.layout.close();
+    this.applyLayout();
+    if (this.workspaceBeforeComparison) this.workspace?.restore(this.workspaceBeforeComparison);
+    this.workspaceBeforeComparison = null;
+    if (focus) $(`tab-${this.view}`).focus({ preventScroll: true });
+  }
+  setView(name) {
+    if (this.layout.secondary && this.layout.has(name)) {
+      const target = name === 'source' ? $('source') : $(scrollTargets[name]);
+      target.tabIndex = name === 'source' ? target.tabIndex : -1;
+      target.focus({ preventScroll: true });
+      return;
+    }
+    if (this.layout.secondary) this.endComparison({ focus: false });
+    this.layout.show(name);
+    this.applyLayout();
   }
   nextKind(kind) {
     if (!this.model) return;
@@ -296,6 +396,10 @@ export class TraceView {
     }
   }
   bindControls() {
+    $('compare-view').onchange = (event) => {
+      if (event.target.value) this.beginComparison(event.target.value);
+      else this.endComparison();
+    };
     for (const [id, index] of [
       ['first', () => 0],
       ['prev', () => this.model.index - 1],

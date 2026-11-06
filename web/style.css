@@ -79,6 +79,19 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:var(--head
 .workbench { width:100%; min-width:892px; min-height:390px; height:100%; display:grid; grid-template-columns:var(--pane-columns,25fr 6px 47fr 6px 28fr); }
 .panel { background:var(--paper); border:1px solid var(--line); border-radius:2px; overflow:hidden; min-width:0; min-height:0; }
 .source-panel,.graph-panel,.detail-panel { display:flex; flex-direction:column; }
+#observation-scroll { flex:1; min-height:0; min-width:0; overflow:auto; }
+#observation-views { display:grid; grid-template-columns:minmax(0,1fr); height:100%; min-height:0; }
+.observation-view { display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden; grid-row:1; grid-column:1; }
+.observation-title { display:none; flex-shrink:0; padding:4px 8px; border-bottom:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:11px; font-weight:600; }
+.comparing .workbench { min-width:1178px; }
+.comparing #observation-views { grid-template-columns:var(--comparison-columns,320px 6px 320px); min-width:646px; }
+.comparing [data-slot="secondary"] { grid-column:3; }
+.comparing .observation-title { display:block; }
+.comparing .source-tools { flex-wrap:wrap; }
+.source-panel>.panel-foot,.ir-view>.panel-foot { color:var(--editor-ink); }
+#comparison-splitter { grid-column:2; grid-row:1; }
+#compare-view { flex-shrink:0; max-width:140px; height:22px; padding:1px 3px; font-size:11px; }
+#comparison-title { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }
 .inspector-panel { display:grid; grid-template-rows:minmax(150px,42fr) 6px minmax(190px,58fr); min-height:0; min-width:0; }
 .panel-head { flex:0 0 28px; height:28px; display:flex; align-items:center; justify-content:space-between; gap:5px; padding:0 8px; border-bottom:1px solid var(--line); }
 .panel-head h2 { letter-spacing:.2px; white-space:nowrap; }
@@ -304,7 +317,7 @@ footer a { text-decoration:none; }
 .trace-collapsed .workbench>.splitter { pointer-events:none; }
 .trace-collapsed .workbench>.splitter::after { display:none; }
 .graph-maximized .workbench { grid-template-columns:minmax(0,1fr)!important; min-width:0; }
-.graph-maximized .inspector-panel,.graph-maximized .timeline,.graph-maximized .splitter { display:none; }
+.graph-maximized .inspector-panel,.graph-maximized .timeline,.graph-maximized .workbench>.splitter { display:none; }
 dialog { border:1px solid var(--line); border-radius:3px; width:min(660px,calc(100vw - 24px)); max-height:85dvh; overflow:auto; padding:25px; color:var(--ink); background:var(--paper); box-shadow:0 16px 80px #0004; }
 dialog::backdrop { background:#14141c80; }
 dialog h2 { font-size:21px; margin-bottom:12px; }

@@ -56,6 +56,8 @@ export class SourceEditor {
     this.scroll();
   }
   scroll() {
+    $('source-location').textContent =
+      this.line && !this.dirty ? `L${this.line}:${this.column}` : '';
     $('source-colors').style.transform =
       `translate(${-$('source').scrollLeft}px, ${-$('source').scrollTop}px)`;
     $('line-numbers').style.transform = `translateY(${-$('source').scrollTop}px)`;
@@ -63,9 +65,10 @@ export class SourceEditor {
     $('highlight').style.top = `${14 + (this.line - 1) * 21 - $('source').scrollTop}px`;
   }
   highlight(node) {
+    const changed = this.line !== (node?.line || 0);
     this.line = node?.line || 0;
-    $('source-location').textContent = this.line ? `L${this.line}:${node.column}` : '';
-    if (this.line && !this.dirty) {
+    this.column = node?.column || 0;
+    if (changed && this.line && !this.dirty && !$('source-view').hidden) {
       const y = (this.line - 1) * 21;
       if (y < $('source').scrollTop || y > $('source').scrollTop + $('source').clientHeight - 45)
         $('source').scrollTop = Math.max(0, y - 55);

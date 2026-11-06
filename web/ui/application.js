@@ -22,6 +22,7 @@ export class Application {
     this.editor = new SourceEditor(() => {
       if (this.editor.dirty) $('example').value = '';
       this.updateControls();
+      this.trace?.renderSourceCaption();
     });
     this.trace = new TraceView(this.editor);
     this.session = new WorkSession({ onState: () => this.updateControls() });

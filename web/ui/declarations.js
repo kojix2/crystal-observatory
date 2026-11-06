@@ -15,7 +15,7 @@ export function renderDeclarations(model, selectedType, { onType, onNode, onSeek
   const root = $('declarations');
   const warning = model.trace.truncated ? ` ${t('notice.truncated')}` : '';
   const note = `${t('decl.coverage')}${warning}`;
-  $('graph-caption').textContent =
+  $('declarations-caption').textContent =
     `${t('decl.caption', { count: model.declarations.size })}${warning}`;
   if (model.trace.declarations_version !== 1) {
     root.innerHTML = `<p class="empty">${esc(t('decl.unobserved'))}</p>`;

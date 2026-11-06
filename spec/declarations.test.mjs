@@ -288,7 +288,7 @@ test('hook expansion edges are labeled in every supported locale', () => {
     querySelector: () => null,
     querySelectorAll: () => [],
   };
-  const elements = { graph, follow: { checked: false }, 'graph-caption': {} };
+  const elements = { graph, follow: { checked: false }, 'ast-caption': {} };
   const oldDocument = globalThis.document;
   globalThis.document = { getElementById: (id) => elements[id] };
   const node = (id, hook_expansions = []) => ({

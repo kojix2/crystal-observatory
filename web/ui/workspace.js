@@ -1,5 +1,6 @@
 import { $ } from './dom.js';
 import { t } from '../i18n/index.js';
+import { comparisonRatio, comparisonWidths } from '../core/view-layout.js';
 import {
   DEFAULT_PANES,
   MIN_PANES,
@@ -55,14 +56,16 @@ function range(handle, value, min, max) {
   handle.setAttribute('aria-valuenow', Math.round(value));
   handle.setAttribute('aria-valuetext', `${Math.round(value)}px`);
 }
-export function setupWorkspace(onResize) {
+export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   const app = $('app'),
     bench = $('workbench');
   const handles = ['timeline-splitter', 'inspector-splitter'].map($);
   // v2 had four columns in a different order; do not reinterpret those settings.
   const key = 'crystal-observatory.workspace.v3';
+  const comparisonKey = 'crystal-observatory.comparison.v1';
   let weights = [...DEFAULT_PANES],
     detailRatio = 0.42,
+    compareRatio = 0.5,
     resizeFrame;
   try {
     const saved = JSON.parse(localStorage.getItem(key));
@@ -72,14 +75,31 @@ export function setupWorkspace(onResize) {
   } catch {
     /* Optional preference. */
   }
+  try {
+    compareRatio = comparisonRatio(JSON.parse(localStorage.getItem(comparisonKey))?.ratio);
+  } catch {
+    /* Optional preference. */
+  }
+  const comparing = () => app.classList.contains('comparing');
+  const minimums = () => (comparing() ? [250, 646, 270] : MIN_PANES);
   const persist = () => {
+    if (comparing()) return;
     try {
       localStorage.setItem(key, JSON.stringify({ weights, detailRatio }));
     } catch {
       /* Private browsing. */
     }
   };
-  const widths = () => paneWidths(bench.clientWidth - 12, weights);
+  const widths = () => paneWidths(bench.clientWidth - 12, weights, minimums());
+  const compareWidths = () =>
+    comparisonWidths($('observation-scroll').clientWidth - 6, compareRatio);
+  const persistComparison = () => {
+    try {
+      localStorage.setItem(comparisonKey, JSON.stringify({ ratio: compareRatio }));
+    } catch {
+      /* Private browsing. */
+    }
+  };
   const heights = () => detailHeights($('inspector-panel').clientHeight - 6, detailRatio);
   function apply() {
     const panes = widths();
@@ -89,11 +109,16 @@ export function setupWorkspace(onResize) {
     }
     bench.style.setProperty('--pane-columns', panes.map((n) => `${n}px`).join(' 6px '));
     handles.forEach((handle, i) =>
-      range(handle, panes[i], MIN_PANES[i], panes[i] + panes[i + 1] - MIN_PANES[i + 1]),
+      range(handle, panes[i], minimums()[i], panes[i] + panes[i + 1] - minimums()[i + 1]),
     );
     const [top, bottom] = heights();
     $('inspector-panel').style.gridTemplateRows = `${top}px 6px ${bottom}px`;
     range($('detail-splitter'), top, 150, top + bottom - 190);
+    if (comparing()) {
+      const [left, right] = compareWidths();
+      $('observation-views').style.setProperty('--comparison-columns', `${left}px 6px ${right}px`);
+      range($('comparison-splitter'), left, 320, left + right - 320);
+    }
   }
   const enabled = () => !app.classList.contains('graph-maximized');
   handles.forEach((handle, i) =>
@@ -103,7 +128,7 @@ export function setupWorkspace(onResize) {
       measure: widths,
       persist,
       move: (panes, delta) => {
-        weights = moveDivider(panes, i, delta);
+        weights = moveDivider(panes, i, delta, minimums());
         apply();
       },
       reset: () => {
@@ -113,11 +138,27 @@ export function setupWorkspace(onResize) {
           panes,
           i,
           (pair * DEFAULT_PANES[i]) / (DEFAULT_PANES[i] + DEFAULT_PANES[i + 1]) - panes[i],
+          minimums(),
         );
         apply();
       },
     }),
   );
+  bindDivider($('comparison-splitter'), {
+    axis: 'x',
+    enabled: comparing,
+    measure: compareWidths,
+    persist: persistComparison,
+    move: ([left, right], delta) => {
+      const total = left + right;
+      compareRatio = Math.max(320, Math.min(total - 320, left + delta)) / total;
+      apply();
+    },
+    reset: () => {
+      compareRatio = 0.5;
+      apply();
+    },
+  });
   bindDivider($('detail-splitter'), {
     axis: 'y',
     enabled,
@@ -158,11 +199,14 @@ export function setupWorkspace(onResize) {
   $('maximize-graph').onclick = () => maximize(!app.classList.contains('graph-maximized'));
   $('toggle-trace').onclick = () => collapse(!app.classList.contains('trace-collapsed'));
   $('reset-layout').onclick = () => {
+    onReset();
     weights = [...DEFAULT_PANES];
     detailRatio = 0.42;
+    compareRatio = 0.5;
     maximize(false);
     collapse(false);
     persist();
+    persistComparison();
   };
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !document.querySelector('dialog[open]')) maximize(false);
@@ -171,6 +215,27 @@ export function setupWorkspace(onResize) {
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(apply);
   });
-  new ResizeObserver(() => requestAnimationFrame(onResize)).observe($('graph-panel'));
+  let renderFrame;
+  const observer = new ResizeObserver(() => {
+    cancelAnimationFrame(renderFrame);
+    renderFrame = requestAnimationFrame(onResize);
+  });
+  document.querySelectorAll('[data-observation]').forEach((element) => observer.observe(element));
   apply();
+  return {
+    refresh: apply,
+    capture: () => ({
+      weights: [...weights],
+      detailRatio,
+      maximized: app.classList.contains('graph-maximized'),
+      collapsed: app.classList.contains('trace-collapsed'),
+    }),
+    restore: (saved) => {
+      weights = [...saved.weights];
+      detailRatio = saved.detailRatio;
+      collapse(saved.collapsed);
+      maximize(saved.maximized);
+      persist();
+    },
+  };
 }
