@@ -1,198 +1,47 @@
-# Crystal Observatory
+# User guide
 
-**A browser-based tool for compiling, inspecting, linking, and running Crystal code.**
+For local setup, see [README.md](README.md). Use HTTP rather than opening files
+directly, and use a browser supporting standardized WebAssembly exception handling.
+To serve the prebuilt app without Crystal, use
+`ruby -run -e httpd web -p 8000 --bind-address=127.0.0.1` (requires WEBrick).
 
-Rather than merely drawing an AST, Crystal Observatory records and replays Visitor entry and exit, type changes, type dependencies, macro expansions, method specialization, and LLVM IR insertion points. It does not imitate the compiler in JavaScript for teaching purposes.
+## Compile and inspect
 
-The browser version uses **Crystal 1.22.0 with WASI/exception-handling patches, LLVM 20.1.8, and LLD**. It displays observations from compiling the submitted source with the real compiler. Source is not sent to a local compiler service or an external API. The port is based on [live-codes/browser-crystal](https://github.com/live-codes/browser-crystal) and [live-codes/llvm-wasm](https://github.com/live-codes/llvm-wasm).
+Enter Crystal in **Source** and choose **Compile & run**, or **Compile → IR** to
+compile without execution. **Output** accepts stdin and a JSON array of arguments.
+**Parse only** uses a separate lightweight lexer/parser, without semantic analysis.
 
-## Try the browser app
+Selecting an example loads its source; **Example trace** opens its bundled
+recording. **Open trace…** and **Save trace JSON** import and export recordings.
+Compilation always analyzes the current editor contents.
 
-Unzip the project and run these commands from the `crystal-observatory` directory. Node 24 and npm prepare the JavaScript WASI host. `make serve` uses Crystal to serve the prebuilt files; LLVM and a compiler rebuild are not required.
+**Compare…** shows two views of the same recording. AST snapshots and history
+playback can refer to different times; Types follows the selected history event.
+Editing source does not update an existing AST or IR. Escape exits maximization;
+**End comparison** returns to one view.
 
-```sh
-npm ci --ignore-scripts
-npm run web:deps
-make serve
-```
+## Read observations
 
-Use `make serve PORT=8080` to choose another port, or `crystal run scripts/serve.cr -- --port 8080` directly. To serve without installing Crystal, use `ruby -run -e httpd web -p 8000 --bind-address=127.0.0.1`; install WEBrick with `gem install webrick` if needed.
+History selects an event; the node inspector independently follows the selected
+node. Selecting a node does not replace the operation being inspected. Rewinding
+replays observed types and declarations, not a complete AST history.
 
-Open <http://127.0.0.1:8000/> in a browser. Use HTTP rather than opening the HTML through `file://`, which restricts Workers and sample loading.
+Activities record measured decisions and changes. **Not instrumented** and
+**No covered activity recorded** have different meanings; neither proves that
+the compiler did nothing. Errors and truncation make observations incomplete.
 
-1. Enter code in the editor and select **Compile & run**. The first run loads the compiler, LLVM, LLD, and related assets.
-2. Inspect standard output and the exit code in **Output**. You can provide stdin for `gets` and a JSON array of arguments for `ARGV`.
-3. Inspect the same compilation in **AST**, **Types**, and **LLVM IR**.
-4. Use **Next activity**, **Next type**, and **Next rewrite** to follow actual Visitor work.
-5. **Compile → IR** analyzes and links without running the program. **Run again** executes the generated WASM in a fresh Worker.
+Declarations show observed registrations rather than a complete symbol table.
+A `Def` declaration's `Nil` type is not its method's return type. LLVM instruction
+observations can include child emission and are not exclusive output of one node.
+See [observation semantics](docs/ARCHITECTURE.md) for the interpretation rules.
 
-Selecting an **Example** puts its source in the editor; that source is compiled anew. Select **Example trace** only to inspect a bundled recording. **Parse only** uses the separate lightweight Lexer/Parser engine.
+## Runtime and hosting
 
-Source stays in your browser. The compressed compiler assets total about 26 MB on first load. The app reuses the compiled WebAssembly module for later analyses in the same page. Use a recent browser that supports standardized WebAssembly exception handling. Node tests use Node 24 with `--experimental-wasm-exnref`.
+Generated programs target WASI. Native processes, sockets, host files, OS threads
+and arbitrary native libraries are unavailable, including macros that need
+`run` or `system`. Generated programs have no GC and are unsuitable for long runs.
+Stop terminates the active Worker; oversized input, output or execution is limited.
 
-Limits are 256 KiB of input, 40,000 trace events, 8,000 AST nodes, and 120 seconds per compilation. Program execution is limited to 10 seconds, 256 MiB of memory, and 256 KiB of output. Stop terminates the Worker. Traces indicate when their contents have been truncated.
-
-Programs target WASI. Threads, OS processes, sockets, host filesystem access, and native C libraries required by shards are unavailable. The WASM runtime has no GC and is unsuitable for long-running programs. The app is intended for ordinary Crystal syntax, types, macros, collections, regular expressions, standard I/O, and exception handling.
-
-## Web interface layout
-
-The interface combines a dark header and code editor with a white observation area, inspired by the official Crystal website. Type changes use a light purple highlight to distinguish them from selection.
-
-- Three columns appear from left to right: **History / Source and observation / inspectors**. The right column has independent node and Visitor/operation inspectors.
-- Click a truncated status or error to open its full text.
-- Drag either vertical divider, or the horizontal divider between inspectors. Focus a divider with Tab and use the arrow keys to resize it; Shift moves it farther. Home or double-click resets its ratio.
-- Maximize the observation pane with its upper-right button and press Esc to restore the layout. Use **›** and **‹** in History to collapse and restore that pane.
-- Use **Compare…** beside the tabs to open a second view on the right: Source with AST or LLVM IR, or AST with Types. Choose **End comparison** in the same selector to return to the left view and restore the previous outer layout. The editor, selection, playback position, and each view’s scroll position are retained. The maximization button expands both views together; Escape restores their surrounding panes while keeping the comparison open.
-- Drag the comparison divider, or focus it and use Left/Right (Shift for larger steps). Home or double-click restores an even split. Only the split ratio is saved; a page reload starts in the normal tab layout. Narrow screens keep the horizontal comparison with scrolling.
-- Comparison shares one trace and selected node. AST snapshot controls belong to AST; Types always uses the selected history event. Each view shows its own caption. Edited source is marked as newer than the AST/IR and its source-location highlight is suspended. IR follows recorded functions and blocks until you search or choose a function manually; opening an explicit IR link resumes following. Navigating to a view outside the pair returns to normal tabs.
-- Pane widths are saved by the browser. Use **↺** to restore the initial layout. The previous version’s saved History height is not carried over.
-- The language selector supports Japanese, English, Spanish, Simplified Chinese, French, German and Russian. Source, selection, filters, and execution results are preserved, and the language choice is remembered. Source, compiler diagnostics, and internal identifiers are not translated.
-- Open **Settings** with the small gear at the top right to customize interface, code, graph, type, and Visitor colors. Changes apply immediately and are saved in this browser. **Restore default colors** resets the palette; your source, trace, language, and layout stay as they are.
-- AST nodes use a narrow color band and a faint tint for values, references, operations, control flow, definitions, and macros. Containers and unfamiliar nodes stay neutral. Selection has a dark outline; type and semantic changes retain their purple background, with both visible when a changed node is selected. The legend names the families, and node kinds remain readable without color. **Settings → AST node colors** changes the palette; **Color AST nodes by kind** turns this coloring off. These colors describe syntax, independently of the Visitor colors and inferred types.
-- All three columns remain available on narrow screens; scroll horizontally within the workspace.
-
-## Fourteen experiments
-
-| Sample | What to observe |
-|---|---|
-| 01_specialization | Method specialization by argument type and return types |
-| 02_union_and_narrowing | A union at a branch merge and narrowing with `is_a?` |
-| 03_macro_expansion | A macro and the AST produced by its expansion |
-| 04_normalization | Normalization of `+=`, `unless`, and `until` |
-| 05_overloads | Choosing between `Int32` and `Float64` overloads |
-| 06_cleanup | Unused methods, constant conditions, and `CleanupTransformer` |
-| 07_struct | Type declarations, `initialize`, generated `new`, and method calls |
-| 08_type_error | Events and diagnostics leading to a type error |
-| 09_declarations | Type creation/reopening, inheritance, include/extend, method registration, and macro generation |
-| 10_initializers | Last-initializer selection, discarded candidates, literal-first typing, automatic casting and generic deferral |
-| 11_restrictions | Argument restrictions added from assignments, or skipped for conditional assignments and reassigned arguments |
-| 12_guess_and_self | Merged type guesses, excluded `self.class`, detected `self`, and initialization assignment sets |
-| 13_missing_types | Unused block type completion, Proc pointers, dead code and well-known-function rejection |
-| 14_macro_control | Macro bindings, selected branches, iterations, evaluated values and emitted source |
-
-Do not confuse the `Nil` type on a `Def` declaration expression with the return type of calling that method. The former reflects TopLevelVisitor work; the latter is known when resolving a call target.
-
-### Follow what happened on a node
-
-**History** retains visit groups, but collapsed rows also summarize up to two
-recorded activity kinds and their results. Expand a group for chronological
-events. Choose **Activity** or an activity subtype to filter, or **Next activity**
-to jump to the next recorded decision/change.
-
-The upper **Visitor activities** section lists the selected node's activities,
-grouped by compiler phase. It includes evidence/output links as well as activities
-targeting the node directly. Selecting an activity moves History without replacing
-your manually selected node. HasSelfVisitor appears with its TypeGuessVisitor
-context; the nested CodegenWellKnownFunctions selector has a separate role.
-
-The lower inspector shows the observed operation, input/result, reason, and
-related node. Visitor role descriptions are supplemental; the listed instrumented
-operations are not assertions that all of them ran. Compiler-provided reason
-identifiers remain untranslated. ToSVisitor is source formatting, not semantic
-analysis.
-
-**Not instrumented** means the trace does not cover that Visitor/node-kind pair.
-**No covered activity recorded** does not mean the Visitor did nothing. Errors and
-truncation make the record incomplete. Older traces without coverage remain
-readable and show unmeasured status rather than invented activities.
-
-AST dots mark nodes with activity records. Types includes type-history links.
-An instruction activity can open its LLVM function/block: these instructions
-**include child emission**, cover only the final insertion block, and must not be
-interpreted as instructions produced exclusively by the selected node.
-See [the observation inventory](docs/ACTIVITIES.md) for precise coverage.
-
-### Follow declarations and the type hierarchy
-
-Open the recording for example 09 and use the **Declarations** tab and **Next declaration**. The type list shows observed declaration sites, relationships, and methods, with links to source, AST, and history. `#` denotes an instance method; `.` denotes a class method. Selecting a type or node does not change the playback position. If a macro-generated AST node appears only in a later snapshot, its AST link switches snapshots and disables follow mode to show it.
-
-The view shows observed state up to the selected event; rewinding removes later registrations. It is not a complete symbol table. It excludes complete standard-library contents, generated `new` methods, constants, aliases, enums, FFI declarations, and other declaration kinds. Older and parse-only traces report declarations as unobserved, distinct from a new trace before its first declaration.
-
-## How observations are produced
-
-```mermaid
-flowchart TD
-  A["Crystal source in editor"] --> B["Compiler Worker: Crystal + LLVM"]
-  B --> C["JSON: Visitors, AST, types, IR"]
-  B --> D["LLD: link to WASM"]
-  C --> E["Observe and replay in three columns"]
-  D --> F["Execution Worker: standard I/O"]
-  F --> E
-```
-
-| Observation point | Recorded information |
-|---|---|
-| `ASTNode#accept` | Actual Visitor name, entry/exit, nesting, and node ID |
-| `ASTNode#transform` | Transformer, before/after code, and replacement node ID |
-| `ASTNode#set_type` | Type before and after the change |
-| `add_observer` / `remove_observer` | Added or removed type dependencies |
-| `Call#recalculate` | Changes to the call’s typed `Def` targets |
-| `expanded=` | Expansion source and result nodes, code, and snapshots |
-| `ProgressTracker#stage` | Start and end of compiler stages |
-| End of `CodeGenVisitor` visits | LLVM Builder function, basic block, and trailing instructions |
-| Successful TopLevelVisitor registration points | Type creation/reopening, inheritance, include/extend, and explicit method registration |
-| Checked activity hooks | Actual restrictions, guesses, initializer selection, missing-type completion, macro execution and LLVM instruction deltas |
-
-Most observation hooks are added through class reopening and `previous_def` in separate files. Declaration instrumentation is inserted at successful mutation points in the pinned TopLevelVisitor source during the build. It does not edit the upstream checkout; it applies to the generated build tree and fails if the expected source fragments do not match. This does not replace the compiler’s Visitors or semantic-analysis algorithms. Observation hooks are muted while serializing AST snapshots so that our own traversal does not appear as compiler work.
-
-A single AST snapshot can miss macro expansions or specialized methods later removed by Cleanup. Therefore, snapshots are also captured at stage boundaries, expansions, and call resolution. They are point-in-time ASTs, not a fully reversible AST history for every event.
-
-The type dependency graph and Visitor stack are replayed up to the selected event. Arrows point from the **dependency to the node that observes its type**, making type recalculation visible beyond a simple depth-first traversal.
-
-## GitHub Pages
-
-`web/` contains the required WASM and compressed, observed traces. The Pages workflow prepares the WASI host from npm. No server-side compiler or Node runtime is needed after deployment.
-
-1. Put the project in your GitHub repository.
-2. Set Settings → Pages → Source to **GitHub Actions**.
-3. Deploy by pushing to `main` or manually running the **GitHub Pages** workflow.
-
-This documentation does not imply that this project was pushed to GitHub or deployed.
-
-All WASM, Worker, and sample URLs are relative, so deployment under a project subpath is supported. SharedArrayBuffer is not used; custom COOP/COEP headers are unnecessary. Each compilation creates a fresh WASM instance and in-memory filesystem, and programs run in a separate Worker.
-
-To rebuild only the lightweight syntax parser:
-
-```sh
-# Put wasm-ld on PATH (Ubuntu example).
-export PATH="/usr/lib/llvm-18/bin:$PATH"
-make wasm
-```
-
-The build fetches the sysroot from `kojix2/wasm-libs` v0.0.5 and verifies its SHA256. It uses `-Dwithout_mt` for the WASI EventLoop in the pinned source.
-
-To rebuild the complete browser compiler, install Crystal 1.22.0, LLVM 20 development libraries and `opt`/`llc`, a C++ compiler, and Node 24 for WASM validation. Linux x86_64 is the tested host.
-
-```sh
-LLVM_CONFIG=llvm-config-20 make browser
-```
-
-The build fetches wasi-sdk 33 and `@live-codes/llvm-wasm` 0.1.0 and verifies their SHA256 digests. It applies the checked-in `patches/browser-port.patch`, derived from the pinned upstream port, to a copy of the pinned Crystal 1.22.0 sources using `patch`. See `patches/README.md` for provenance. Development scripts use Crystal and Unix tools (`curl`, `cp`, `patch`, `awk`, `gzip`, `shasum`, `tar`, and `zip`/`unzip`); Python is not required.
-
-To regenerate the observed samples using the same browser WASM compiler, LLVM, and LLD (Node 24 required):
-
-```sh
-make samples
-```
-
-## Tests and scope
-
-```sh
-make web-deps
-make samples           # Compile examples/*.cr with WASM and update bundled traces
-make test              # Crystal dependency tests and Node WASM/UI-model tests
-npm run lint
-npm run format:check
-```
-
-Tests cover arbitrary source through semantic analysis, LLVM, linking, and execution; exceptions; stdin and arguments; regular expressions; and recovery after diagnostics. They also cover trace references, Visitor stacks, rewinding, type dependencies, macro expansion, overloads, the lightweight syntax WASM, Worker cancellation and races, the JA/EN dictionaries, and four-pane width calculations.
-
-For observation boundaries, limitations, and the WASM architecture, see [ARCHITECTURE.md](docs/ARCHITECTURE.md). For validation results, see [VALIDATION.md](docs/VALIDATION.md).
-
-## Sources and licenses
-
-Project-authored code is MIT-licensed. Crystal and dependencies retain their respective licenses; see [THIRD_PARTY.md](THIRD_PARTY.md).
-
-The user-provided [kojix2/astv.cr](https://github.com/kojix2/astv.cr) inspired the project’s initial concept and WASM syntax experiments. The approach of loading the compiler as a library, which the user cited from a forum, was developed into the actual analysis engine.
-
-For maintenance responsibilities, retained workarounds, and verification steps, see [MAINTENANCE.md](docs/MAINTENANCE.md). For Git setup and dependency updates, see [DEPENDENCIES.md](docs/DEPENDENCIES.md).
+GitHub Pages serves `web/`. Select **GitHub Actions** as the Pages source and run
+the **GitHub Pages** workflow. Project subpaths are supported; no compiler backend,
+SharedArrayBuffer or custom COOP/COEP headers are required.
