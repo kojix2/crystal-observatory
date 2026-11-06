@@ -12,7 +12,9 @@ compile without execution. **Output** accepts stdin and a JSON array of argument
 **Parse only** uses a separate lightweight lexer/parser, without semantic analysis.
 
 Selecting an example loads its source; **Example trace** opens its bundled
-recording. **Open trace…** and **Save trace JSON** import and export recordings.
+recording. While nothing is loaded, History lists the examples so a recording opens
+with one click. **Open…** and **Save** in the History header import and export
+recordings.
 Compilation always analyzes the current editor contents.
 
 **Compare…** shows two views of the same recording. AST snapshots and history

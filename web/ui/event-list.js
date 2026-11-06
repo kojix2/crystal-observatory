@@ -128,6 +128,9 @@ export class EventList {
     if (!this.model) return;
     const pages = Math.max(1, Math.ceil(this.rows.length / PAGE_SIZE));
     this.page = Math.max(0, Math.min(this.page, pages - 1));
+    const empty = this.model.trace.mode === 'empty';
+    $('history-start').hidden = !empty;
+    $('history-no-match').hidden = empty || !this.model.trace.events.length || this.rows.length > 0;
     $('events').innerHTML = this.rows
       .slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE)
       .map((row) => this.renderRow(row))

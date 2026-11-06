@@ -291,13 +291,26 @@ input[type=checkbox],input[type=range] { accent-color:var(--accent); }
 .splitter::after { content:""; position:absolute; width:2px; height:28px; left:2px; top:calc(50% - 14px); border-radius:1px; background:#b8b8c4; }
 body.resizing { user-select:none; }
 .timeline,.workflow-column { display:flex; flex-direction:column; }
-.history-list { display:grid; grid-template-rows:31px 30px 16px 25px 18px 31px 54px minmax(0,1fr) 22px; flex:1; min-width:0; min-height:0; }
+.history-list { display:grid; grid-template-rows:30px 16px 25px 18px 31px 54px minmax(0,1fr) 22px; flex:1; min-width:0; min-height:0; }
 .activity-tools { display:flex; gap:4px; padding:4px 6px; min-width:0; }
 .activity-tools button,.activity-tools select { height:21px; font-size:11px; padding:1px 5px; }
 .activity-tools select { flex:1; min-width:0; }
-.record-tools { display:flex; gap:5px; padding:4px 6px; border-bottom:1px solid var(--line); }
-.record-tools button { flex:1; padding:1px 4px; font-size:11px; }
+/* Import/export are rare; they live in the panel head so playback comes first. */
+.record-tools { display:flex; gap:2px; flex-shrink:0; }
+.record-tools button { height:22px; padding:1px 6px; font-size:11px; color:var(--muted); }
+.record-tools button:not(:disabled):hover { color:var(--ink); }
 #filter-count { flex:1; text-align:right; white-space:nowrap; }
+.history-start { padding:18px 14px; font-size:12px; line-height:1.65; }
+.history-start p { margin:0 0 6px; }
+.history-start p+p { margin-top:16px; color:var(--muted); }
+.start-examples { display:flex; flex-direction:column; gap:4px; }
+.start-examples button { text-align:left; padding:6px 9px; white-space:normal; overflow-wrap:anywhere; }
+.start-examples button:hover { border-color:var(--type); background:var(--type-bg); }
+.trace-empty #trace-content table { display:none; }
+.trace-empty .history-list { grid-template-rows:minmax(0,1fr); }
+.trace-empty .history-list>:not(#trace-content) { display:none; }
+.trace-empty #node-panel .inspect-scroll>:not(#node-title),.trace-empty #event-panel .inspect-scroll>:not(#explanation) { display:none; }
+.trace-empty #node-title { font:13px/1.65 var(--sans); color:var(--muted); }
 .playback { display:flex; align-items:center; gap:3px; padding:3px 5px; min-width:0; }
 .playback button { padding:2px 5px; font:11px var(--mono); height:23px; }
 #speed { padding:2px; height:22px; font-size:11px; border-color:transparent; background:var(--soft); }
@@ -339,7 +352,7 @@ footer a { text-decoration:none; }
 #engine { color:#565465; }
 #versions { overflow:hidden; text-overflow:ellipsis; }
 /* Each collapsed navigation pane retains its own expand button. */
-.trace-collapsed #timeline>:not(.panel-head),.trace-collapsed #timeline h2,.trace-collapsed #filter-count { display:none; }
+.trace-collapsed #timeline>:not(.panel-head),.trace-collapsed #timeline h2,.trace-collapsed #filter-count,.trace-collapsed .record-tools { display:none; }
 .trace-collapsed #timeline { display:block; }
 .trace-collapsed #timeline .panel-head { display:flex; justify-content:center; padding:0; }
 .workflow-collapsed #compiler-map,.workflow-collapsed #workflow-title { display:none; }

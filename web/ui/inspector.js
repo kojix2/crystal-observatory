@@ -34,7 +34,8 @@ export function renderInspector(
       : compilerStage(event),
     nodeEvents = node ? model.eventsFor(selected) : [];
   $('node-id').textContent = node ? `#${node.id}` : '—';
-  $('node-title').textContent = node?.kind || t('node.empty');
+  $('node-title').textContent =
+    node?.kind || t(model.trace.mode === 'empty' ? 'node.none' : 'node.empty');
   $('node-location').textContent = node?.line
     ? `${node.filename || model.trace.filename}:${node.line}:${node.column}`
     : '';

@@ -63,6 +63,7 @@ export class TraceView {
     this.snapshot = 0;
     this.collapsed.clear();
     this.editor.setRecord(trace.source, preserveEdits, trace.mode !== 'empty');
+    $('app').classList.toggle('trace-empty', trace.mode === 'empty');
     $('export').disabled = trace.mode === 'empty';
     $('follow').checked = true;
     $('snapshot').replaceChildren(...trace.snapshots.map((item, i) => new Option(item.name, i)));

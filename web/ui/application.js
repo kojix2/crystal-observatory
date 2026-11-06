@@ -196,6 +196,19 @@ export class Application {
       ...this.manifest.map((item, index) => new Option(this.exampleTitle(item), String(index + 1))),
     );
     $('example').value = selection;
+    // The empty History doubles as the entry point: one click opens a recording.
+    $('start-examples').replaceChildren(
+      ...this.manifest.map((item, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = this.exampleTitle(item);
+        button.onclick = () => {
+          $('example').value = String(index + 1);
+          this.loadExample(true);
+        };
+        return button;
+      }),
+    );
     this.updateControls();
   }
   loadExample(recorded) {
