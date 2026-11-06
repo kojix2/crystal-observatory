@@ -4,6 +4,7 @@ import { TraceModel, validateTrace, flattenAST } from '../web/core/trace-model.j
 import { renderDeclarations, declarationSummary } from '../web/ui/declarations.js';
 import { renderGraph } from '../web/ui/graphs.js';
 import { TraceView } from '../web/ui/trace-view.js';
+import { ViewLayout } from '../web/core/view-layout.js';
 import { setLocale, t, locales } from '../web/i18n/index.js';
 
 function fixture() {
@@ -397,6 +398,42 @@ test('declaration UI distinguishes missing observation, empty state and referenc
   } finally {
     delete globalThis.document;
     setLocale('en');
+  }
+});
+
+test('declaration events stay in view in either comparison pane', () => {
+  const originalDocument = globalThis.document;
+  const elements = {
+    follow: { checked: false },
+    scrubber: {},
+    position: {},
+    declarations: {
+      querySelector: () => ({
+        scrollIntoView: () => {
+          scrolled = true;
+        },
+      }),
+    },
+  };
+  let scrolled;
+  globalThis.document = { getElementById: (id) => elements[id] };
+  try {
+    for (const primary of ['source', 'declarations']) {
+      const view = Object.create(TraceView.prototype);
+      view.model = new TraceModel(fixture());
+      view.layout = new ViewLayout(primary);
+      view.layout.compare(primary === 'source' ? 'declarations' : 'source');
+      view.events = { follow() {} };
+      view.renderPhase = () => {};
+      view.renderSelection = () => {};
+      scrolled = false;
+      view.seek(5);
+      assert.equal(view.selectedType, 2);
+      assert.equal(scrolled, true);
+      assert.equal(view.layout.secondary !== null, true);
+    }
+  } finally {
+    globalThis.document = originalDocument;
   }
 });
 

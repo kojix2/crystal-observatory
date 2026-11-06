@@ -180,7 +180,7 @@ export class TraceView {
     this.events.follow();
     if (this.layout.has('ir')) this.ir.follow(event?.llvm_function, event?.llvm_block);
     this.renderSelection();
-    if (this.view === 'declarations' && event?.kind === 'declaration')
+    if (this.layout.has('declarations') && event?.kind === 'declaration')
       $('declarations')
         .querySelector('.declaration-details .declaration-changed')
         ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });

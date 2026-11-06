@@ -1,11 +1,7 @@
-const targets = {
-  source: ['ast', 'ir'],
-  ast: ['source', 'types'],
-  types: ['ast'],
-  ir: ['source'],
-};
+const views = ['source', 'ast', 'types', 'declarations', 'tokens', 'ir', 'run'];
 
-export const comparisonTargets = (view) => targets[view] || [];
+export const comparisonTargets = (view) =>
+  views.includes(view) ? views.filter((target) => target !== view) : [];
 export const viewLabel = (view) => ({ ast: 'AST', ir: 'LLVM IR', tokens: 'Tokens' })[view];
 export const viewLabelKey = (view) =>
   ({ run: 'execution', declarations: 'decl.title' })[view] || view;

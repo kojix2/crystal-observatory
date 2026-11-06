@@ -17,7 +17,8 @@ with one click. **Open…** and **Save** in the History header import and export
 recordings.
 Compilation always analyzes the current editor contents.
 
-**Compare…** shows two views of the same recording. AST snapshots and history
+**Compare…** shows any two different views of the same recording side by side:
+Source, AST, Types, Declarations, Tokens, LLVM IR, or Output. AST snapshots and history
 playback can refer to different times; Types follows the selected history event.
 Editing source does not update an existing AST or IR. Escape exits maximization;
 **End comparison** returns to one view.

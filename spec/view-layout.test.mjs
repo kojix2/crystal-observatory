@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ViewLayout, comparisonWidths, comparisonRatio } from '../web/core/view-layout.js';
+import {
+  ViewLayout,
+  comparisonTargets,
+  comparisonWidths,
+  comparisonRatio,
+} from '../web/core/view-layout.js';
 import { MIN_PANES, paneWidths, moveDivider } from '../web/core/layout.js';
 import { IRView } from '../web/ui/ir-view.js';
 import { renderGraph } from '../web/ui/graphs.js';
@@ -14,11 +19,38 @@ test('navigation to a displayed view preserves a pair; other navigation restores
   assert.deepEqual(layout.views, ['source', 'ast']);
   layout.show('declarations');
   assert.deepEqual(layout.views, ['declarations']);
-  assert.equal(layout.compare('ast'), false);
+  assert.equal(layout.compare('ast'), true);
+  assert.deepEqual(layout.views, ['declarations', 'ast']);
+  layout.close();
   layout.show('ast');
   layout.compare('types');
   layout.close();
   assert.deepEqual(layout.views, ['ast']);
+});
+
+test('every pair of distinct observation views can be compared in either order', () => {
+  const views = ['source', 'ast', 'types', 'declarations', 'tokens', 'ir', 'run'];
+  for (const primary of views) {
+    const layout = new ViewLayout(primary);
+    assert.deepEqual(
+      comparisonTargets(primary),
+      views.filter((view) => view !== primary),
+    );
+    for (const secondary of views) {
+      if (secondary === primary) continue;
+      assert.equal(layout.compare(secondary), true);
+      assert.deepEqual(layout.views, [primary, secondary]);
+      layout.show(secondary);
+      assert.deepEqual(layout.views, [primary, secondary]);
+      assert.equal(layout.compare(primary), false);
+      assert.equal(layout.compare('unknown'), false);
+      assert.deepEqual(layout.views, [primary, secondary]);
+      layout.close();
+      assert.deepEqual(layout.views, [primary]);
+    }
+  }
+  assert.deepEqual(comparisonTargets('unknown'), []);
+  assert.equal(new ViewLayout('unknown').compare('source'), false);
 });
 
 test('comparison widths preserve readable panes, valid ratios, and the outer column minimums', () => {
