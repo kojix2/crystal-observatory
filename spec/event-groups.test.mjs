@@ -230,6 +230,31 @@ test('node/search filters retain parent context, while original event rows still
   });
 });
 
+test('Visitor headings select an event by click or keyboard, separately from disclosure', () => {
+  withList(load('01_specialization'), (list, element, seeks) => {
+    const group = list.groups[0];
+    const html = list.renderRow({ group, count: group.end - group.start + 1 });
+    assert(html.includes(`data-index="${group.start}" tabindex="0"`));
+    assert.match(html, /<\/button><span class="event-visitor"/);
+    const target = {
+      closest: (selector) =>
+        selector === '[data-index]' ? { dataset: { index: String(group.start) } } : null,
+    };
+    element('events').onclick({ target });
+    let prevented = false;
+    element('events').onkeydown({
+      target,
+      key: 'Enter',
+      preventDefault() {
+        prevented = true;
+      },
+    });
+    assert.equal(prevented, true);
+    assert.deepEqual(seeks, [group.start, group.start]);
+    assert.equal(list.expanded.has(group.start), false);
+  });
+});
+
 test('declaration filtering exposes operations directly and searches relationships by name', () => {
   withList(load('09_declarations'), (list, element, seeks) => {
     element('kind').value = 'declaration';

@@ -1,4 +1,4 @@
-const views = ['source', 'ast', 'types', 'declarations', 'tokens', 'ir', 'run'];
+const views = ['source', 'tokens', 'ast', 'declarations', 'types', 'ir', 'run'];
 
 export const comparisonTargets = (view) =>
   views.includes(view) ? views.filter((target) => target !== view) : [];

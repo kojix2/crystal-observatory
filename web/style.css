@@ -340,10 +340,11 @@ td { padding:4px 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowra
 .event-visitor { font-size:11px; }
 .event-node,.event-result { font-size:10px; color:var(--muted); }
 .event-label { font-size:11px; }
-.event-group { background:var(--soft); cursor:default; }
+.event-group { background:var(--soft); }
 .event-group td:first-child { font-size:10px; white-space:normal; }
-.event-group-toggle { display:flex; align-items:center; gap:4px; width:100%; min-width:0; padding:0; border:0; background:transparent; text-align:left; }
-.event-group-toggle .event-visitor { min-width:0; }
+.event-group-heading { display:flex; align-items:center; gap:4px; }
+.event-group-toggle { flex-shrink:0; padding:0 2px; border:0; background:transparent; }
+.event-group-heading .event-visitor { min-width:0; }
 .event-group-arrow { flex-shrink:0; font-size:10px; color:var(--muted); }
 tbody tr { cursor:pointer; }
 tbody tr:hover { background:var(--soft); }

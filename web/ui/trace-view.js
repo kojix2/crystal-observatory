@@ -34,10 +34,7 @@ export class TraceView {
     this.view = 'source';
     this.scrollPositions = new Map();
     this.collapsed = new Set();
-    this.events = new EventList((index) => {
-      this.stop();
-      this.seek(index);
-    });
+    this.events = new EventList((index) => this.selectEvent(index));
     this.ir = new IRView();
     this.bindControls();
   }
@@ -185,6 +182,19 @@ export class TraceView {
         .querySelector('.declaration-details .declaration-changed')
         ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
+  selectEvent(index) {
+    this.stop();
+    this.seek(index);
+    const node = this.model?.event?.node_id;
+    if (!$('follow').checked || !node) return;
+    const snapshot = this.model.snapshotForNode(node, this.snapshot);
+    if (snapshot < 0) return;
+    this.snapshot = snapshot;
+    $('snapshot').value = snapshot;
+    revealASTNode(this.trace.snapshots[snapshot], node, this.collapsed);
+    if (!this.layout.has('ast')) this.setView('ast');
+    this.renderObservation({ reveal: true });
+  }
   selectStage(id) {
     this.stop();
     this.selectedStage = id;
@@ -290,6 +300,10 @@ export class TraceView {
         },
       });
     } else {
+      if (view === 'ast')
+        $('expand').hidden = !this.trace.snapshots[this.snapshot]?.nodes.some((node) =>
+          this.collapsed.has(node.id),
+        );
       renderGraph(
         {
           model: this.model,

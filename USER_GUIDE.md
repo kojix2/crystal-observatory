@@ -18,7 +18,7 @@ recordings.
 Compilation always analyzes the current editor contents.
 
 **Compare…** shows any two different views of the same recording side by side:
-Source, AST, Types, Declarations, Tokens, LLVM IR, or Output. AST snapshots and history
+Source, Tokens, AST, Declarations, Types, LLVM IR, or Output. AST snapshots and history
 playback can refer to different times; Types follows the selected history event.
 Editing source does not update an existing AST or IR. Escape exits maximization;
 **End comparison** returns to one view.
@@ -28,6 +28,13 @@ Editing source does not update an existing AST or IR. Escape exits maximization;
 History selects an event; the node inspector independently follows the selected
 node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
+
+With **Follow history** enabled, clicking a History event or Visitor name opens its
+node in AST, selecting a recorded snapshot containing it and opening folded ancestors.
+The arrow beside a Visitor only opens or closes its event group. Disable Follow history
+to keep the current view and AST snapshot while selecting events. A comparison that
+already includes AST stays open. Playback and stepping update the event without
+switching tabs. **Expand all** appears when the current AST has folded nodes.
 
 Full compiler recordings use four independent columns: **Workflow**, **History**,
 the selected observation (AST, source, IR or output), and node/operation details.

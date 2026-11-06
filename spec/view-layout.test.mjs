@@ -9,6 +9,8 @@ import {
 import { MIN_PANES, paneWidths, moveDivider } from '../web/core/layout.js';
 import { IRView } from '../web/ui/ir-view.js';
 import { renderGraph } from '../web/ui/graphs.js';
+import { TraceView } from '../web/ui/trace-view.js';
+import { TraceModel } from '../web/core/trace-model.js';
 
 test('navigation to a displayed view preserves a pair; other navigation restores one view', () => {
   const layout = new ViewLayout('source');
@@ -29,7 +31,7 @@ test('navigation to a displayed view preserves a pair; other navigation restores
 });
 
 test('every pair of distinct observation views can be compared in either order', () => {
-  const views = ['source', 'ast', 'types', 'declarations', 'tokens', 'ir', 'run'];
+  const views = ['source', 'tokens', 'ast', 'declarations', 'types', 'ir', 'run'];
   for (const primary of views) {
     const layout = new ViewLayout(primary);
     assert.deepEqual(
@@ -51,6 +53,88 @@ test('every pair of distinct observation views can be compared in either order',
   }
   assert.deepEqual(comparisonTargets('unknown'), []);
   assert.equal(new ViewLayout('unknown').compare('source'), false);
+});
+
+test('History selection reveals its AST node when following, preserving an existing AST comparison', () => {
+  const node = (id, children = []) => ({ id, kind: 'Var', children, targets: [] });
+  const trace = {
+    schema_version: 1,
+    source: '',
+    nodes: [node(1), node(2), node(3)],
+    snapshots: [
+      { at_event: 0, roots: [1], nodes: [node(1)] },
+      { at_event: 2, roots: [1], nodes: [node(1, [2]), node(2)] },
+    ],
+    events: [
+      { index: 0, kind: 'visit_enter', node_id: 2 },
+      { index: 1, kind: 'phase_enter', node_id: 0 },
+      { index: 2, kind: 'visit_enter', node_id: 3 },
+    ],
+  };
+  const elements = { follow: { checked: true }, snapshot: {}, scrubber: {}, position: {} };
+  const originalDocument = globalThis.document;
+  globalThis.document = { getElementById: (id) => elements[id] };
+  const createView = (primary, secondary) => {
+    const view = Object.create(TraceView.prototype);
+    view.model = new TraceModel(trace);
+    view.layout = new ViewLayout(primary);
+    if (secondary) view.layout.compare(secondary);
+    view.collapsed = new Set([1, 99]);
+    view.events = { follow() {} };
+    view.stop = () => {};
+    view.renderPhase = () => {};
+    view.renderSelection = () => {};
+    view.renderObservation = (options) => {
+      view.observationOptions = options;
+    };
+    view.setView = (name) => view.layout.show(name);
+    return view;
+  };
+  try {
+    for (const primary of ['source', 'tokens', 'ast', 'types', 'run']) {
+      const view = createView(primary);
+      view.selectEvent(0);
+      assert.deepEqual(view.layout.views, ['ast']);
+      assert.equal(view.model.index, 0);
+      assert.equal(view.selected, 2);
+      assert.equal(view.snapshot, 1);
+      assert.equal(elements.snapshot.value, 1);
+      assert.equal(elements.follow.checked, true);
+      assert.deepEqual([...view.collapsed], [99]);
+      assert.equal(view.observationOptions.reveal, true);
+    }
+    for (const pair of [
+      ['source', 'ast'],
+      ['ast', 'tokens'],
+    ]) {
+      const view = createView(...pair);
+      view.selectEvent(0);
+      assert.deepEqual(view.layout.views, pair);
+      assert.deepEqual([...view.collapsed], [99]);
+      assert.equal(view.observationOptions.reveal, true);
+    }
+    const pinned = createView('source');
+    elements.follow.checked = false;
+    pinned.snapshot = 1;
+    pinned.selectEvent(0);
+    assert.deepEqual(pinned.layout.views, ['source']);
+    assert.equal(pinned.model.index, 0);
+    assert.equal(pinned.snapshot, 1);
+    assert.deepEqual([...pinned.collapsed], [1, 99]);
+
+    elements.follow.checked = true;
+    for (const index of [1, 2]) {
+      const view = createView('source');
+      view.selectEvent(index);
+      assert.deepEqual(view.layout.views, ['source']);
+      assert.equal(view.model.index, index);
+    }
+    const playback = createView('source');
+    playback.seek(0);
+    assert.deepEqual(playback.layout.views, ['source']);
+  } finally {
+    globalThis.document = originalDocument;
+  }
 });
 
 test('comparison widths preserve readable panes, valid ratios, and the outer column minimums', () => {

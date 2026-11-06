@@ -56,10 +56,10 @@
     <article class="panel graph-panel" id="graph-panel">
       <div class="panel-head"><div class="tabs" id="view-tabs" role="tablist" data-i18n-aria="views">
         <button class="active" id="tab-source" data-view="source" role="tab" aria-selected="true" aria-controls="source-view" data-i18n="source">Source</button>
-        <button id="tab-ast" data-view="ast" role="tab" aria-selected="false" aria-controls="ast-view">AST</button>
-        <button id="tab-types" data-view="types" role="tab" aria-controls="types-view" aria-selected="false" data-i18n="types">Types</button>
-        <button id="tab-declarations" data-view="declarations" role="tab" aria-selected="false" aria-controls="declarations-view" data-i18n="decl.title">Declarations</button>
         <button id="tab-tokens" data-view="tokens" role="tab" aria-controls="tokens-view" aria-selected="false">Tokens</button>
+        <button id="tab-ast" data-view="ast" role="tab" aria-selected="false" aria-controls="ast-view">AST</button>
+        <button id="tab-declarations" data-view="declarations" role="tab" aria-selected="false" aria-controls="declarations-view" data-i18n="decl.title">Declarations</button>
+        <button id="tab-types" data-view="types" role="tab" aria-controls="types-view" aria-selected="false" data-i18n="types">Types</button>
         <button id="tab-ir" data-view="ir" role="tab" aria-controls="ir-view" aria-selected="false">LLVM IR</button>
         <button id="tab-run" data-view="run" role="tab" aria-controls="run-view" aria-selected="false" data-i18n="execution">Output</button>
       </div><span id="comparison-title" hidden></span><select id="compare-view" data-i18n-aria="comparison.title" data-i18n-title="comparison.title"><option value="" data-i18n="comparison.open">Compare…</option></select><button id="maximize-graph" class="quiet icon-button" data-i18n-aria="maximize" data-i18n-title="maximize" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 2H2v4m8-4h4v4M2 10v4h4m8-4v4h-4"/></svg></button></div>
@@ -71,7 +71,7 @@
       <div class="panel-foot" id="source-caption"></div>
       </div>
       <section id="ast-view" class="observation-view" data-observation="ast" role="tabpanel" aria-labelledby="tab-ast" hidden><div class="observation-title">AST</div>
-      <div class="view-tools"><select id="snapshot" data-i18n-aria="snapshot"></select><label data-i18n-title="follow.title"><input id="follow" type="checkbox" checked><span data-i18n="follow">Follow</span></label><button id="expand" class="quiet" data-i18n="expand" data-i18n-title="expand.title">Expand</button></div>
+      <div class="view-tools"><select id="snapshot" data-i18n-aria="snapshot"></select><label data-i18n-title="follow.title"><input id="follow" type="checkbox" checked><span data-i18n="follow">Follow history</span></label><button id="expand" class="quiet" data-i18n="expand" data-i18n-title="expand.title" hidden>Expand all</button></div>
       <div id="node-color-key" class="node-color-key" role="group" data-i18n-aria="ast.legend" data-i18n-title="ast.colorHint">
         <span data-node-family="literal"><i aria-hidden="true"></i><span data-i18n="ast.family.literal">Values</span></span>
         <span data-node-family="reference"><i aria-hidden="true"></i><span data-i18n="ast.family.reference">References</span></span>
