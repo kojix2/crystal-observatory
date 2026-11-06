@@ -17,6 +17,7 @@ Rebuild the corresponding WASM after changing compiler code or instrumentation:
 `make wasm` for syntax analysis, `LLVM_CONFIG=llvm-config-20 make browser` for the
 full compiler. Then regenerate recordings with `make samples` and run the checks
 above. Add a manifest label when adding an example.
+Keep examples focused on one observation; use test fixtures for broad hook coverage.
 
 A successful link or tests against checked-in assets do not validate a compiler
 rebuild. Validate the new WASM and compile in a real browser, including exceptions,

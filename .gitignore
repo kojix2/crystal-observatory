@@ -18,6 +18,7 @@ __pycache__/
 
 # Sample generation scratch space and legacy uncompressed fixtures.
 /web/traces/.samples-*/
+/spec/fixtures/traces/.samples-*/
 /web/traces/0*.json
 
 # Keep the checked-in prebuilt web WASM, runtime archives and gzip traces.

@@ -1,3 +1,2 @@
-# Preserve the operations leading up to a type error.
-answer = 42
-answer + "crystal"
+# Inspect the operations recorded before the incompatible argument is rejected.
+1 + "a"

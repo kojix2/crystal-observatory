@@ -1,14 +1,11 @@
-# Observe the type declaration, initialize, generated new method, and specialization.
+# Follow initialize, the generated new method and the instance variable's type.
 struct Point
-  getter x : Int32
-  getter y : Int32
-
-  def initialize(@x, @y)
+  def initialize(@x : Int32)
   end
 
-  def sum
-    @x + @y
+  def x
+    @x
   end
 end
 
-Point.new(12, 30).sum
+Point.new(1).x

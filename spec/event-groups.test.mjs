@@ -7,8 +7,8 @@ import { TraceModel } from '../web/core/trace-model.js';
 import { EventList } from '../web/ui/event-list.js';
 import { setLocale } from '../web/i18n/index.js';
 
-const load = (name) =>
-  JSON.parse(gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))));
+const load = (name, directory = '../web/traces/') =>
+  JSON.parse(gunzipSync(readFileSync(new URL(`${directory}${name}.json.gz`, import.meta.url))));
 
 const sample = () =>
   [
@@ -236,7 +236,7 @@ test('declaration filtering exposes operations directly and searches relationshi
     element('kind').onchange();
     assert(list.rows.length > 0);
     assert(list.rows.every((row) => row.event?.kind === 'declaration'));
-    element('search').value = 'FactoryLabel';
+    element('search').value = 'Named';
     element('search').oninput();
     assert(list.filtered.some((event) => event.declaration_action === 'extend'));
     const operation = list.filtered.find((event) => event.declaration_action === 'extend');
@@ -251,7 +251,7 @@ test('declaration filtering exposes operations directly and searches relationshi
 });
 
 test('paging follows visible rows and a collapsed group tracks its hidden current event', () => {
-  withList(load('07_struct'), (list, element) => {
+  withList(load('10_initializers', './fixtures/traces/'), (list, element) => {
     assert(list.rows.length > 70);
     const group = list.groups.find((group) => group.end - group.start > 100 && group.start > 100);
     assert(group);
@@ -267,11 +267,13 @@ test('paging follows visible rows and a collapsed group tracks its hidden curren
     list.toggle(group.start);
     assert.equal(list.model.index, current);
     assert(element('events').innerHTML.includes(`Current: #${current}`));
-    assert.equal(element('page-state').textContent, '1 / 2');
+    const pages = Math.ceil(list.rows.length / 70);
+    assert(pages > 1);
+    assert.equal(element('page-state').textContent, `1 / ${pages}`);
     const last = list.groups.at(-1).start + 1;
     list.model.seek(last);
     list.follow();
-    assert.equal(element('page-state').textContent, '2 / 2');
+    assert.equal(element('page-state').textContent, `${pages} / ${pages}`);
     assert(element('events').innerHTML.includes(`Current: #${last}`));
   });
 });

@@ -1,8 +1,7 @@
-# Methods are specialized for the argument types used at each call.
+# Compare the Int32 and Float64 specializations of the same method.
 def twice(x)
   x + x
 end
 
-seed = 21
-answer = twice(seed)
-answer
+twice(1)
+twice(1.0)

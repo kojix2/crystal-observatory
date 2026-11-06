@@ -1,9 +1,5 @@
-# Branches merge into Int32 | String; is_a? narrows the type within a branch.
-value = if ARGC_UNSAFE > 1
-          42
-        else
-          "crystal"
-        end
+# The branches produce Int32 | String; is_a? narrows it inside each branch.
+value = ARGV.empty? ? 1 : "a"
 
 if value.is_a?(Int32)
   value + 1

@@ -39,7 +39,10 @@ test('activity instrumentation preserves initialization and unused-block behavio
     ['13_missing_types', '7\nProc(Int32, NoReturn)\n5\n'],
     ['14_macro_control', '2\n5\n8\n'],
   ]) {
-    const source = await readFile(new URL(`../examples/${name}.cr`, import.meta.url), 'utf8');
+    const source = await readFile(
+      new URL(`./fixtures/compiler/${name}.cr`, import.meta.url),
+      'utf8',
+    );
     const result = await compile(source);
     assert.equal(await execute(result), output, name);
     assert.equal(result.trace.truncated, false, name);
@@ -131,7 +134,10 @@ test('programs read back virtual files without observing spare buffer capacity',
 });
 
 test('declarations record actual type identity, hierarchy, registrations and macro provenance', async () => {
-  const source = await readFile(new URL('../examples/09_declarations.cr', import.meta.url), 'utf8');
+  const source = await readFile(
+    new URL('./fixtures/compiler/09_declarations.cr', import.meta.url),
+    'utf8',
+  );
   const result = await compile(source);
   assert.equal(await execute(result), 'instance\nclass\n7\n8\nnine\n42\n');
   const trace = result.trace;

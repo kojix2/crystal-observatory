@@ -1,10 +1,10 @@
-# Compare CleanupTransformer after semantic analysis with the final IR.
+# The unused body is not type-checked; Cleanup removes the constant branch.
 def unused(x)
   x.this_method_does_not_exist
 end
 
 if false
-  99
+  0
 else
-  42
+  1
 end

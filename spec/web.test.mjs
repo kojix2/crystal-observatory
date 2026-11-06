@@ -12,7 +12,22 @@ const load = (name) =>
 
 test('real compiler traces have coherent references, balanced visits, and verified IR', () => {
   const files = fs.readdirSync(path.join(root, 'web/traces')).filter((f) => f.endsWith('.json.gz'));
-  assert.equal(files.length, 14);
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'web/traces/manifest.json'), 'utf8'));
+  const examples = fs
+    .readdirSync(path.join(root, 'examples'))
+    .filter((f) => f.endsWith('.cr'))
+    .sort();
+  assert.equal(files.length, examples.length);
+  assert.deepEqual(
+    manifest.map((item) => path.basename(item.trace, '.json.gz') + '.cr'),
+    examples,
+  );
+  for (const item of manifest) {
+    const name = path.basename(item.trace, '.json.gz');
+    const source = fs.readFileSync(path.join(root, 'examples', `${name}.cr`), 'utf8');
+    assert.equal(item.source, source);
+    assert.equal(load(name).source, source);
+  }
   for (const f of files) {
     const t = validateTrace(
       JSON.parse(gunzipSync(fs.readFileSync(path.join(root, 'web/traces', f)))),
@@ -60,7 +75,7 @@ test('seeking backwards restores types and observer edges', () => {
 });
 test('macro expansion and typed method resolution are observed, not invented', () => {
   const macro = load('03_macro_expansion');
-  assert(macro.events.some((e) => e.kind === 'expand' && e.after.includes('n * n')));
+  assert(macro.events.some((e) => e.kind === 'expand' && e.after.includes('3 * 3')));
   assert(macro.snapshots.some((s) => s.nodes.some((n) => n.expanded)));
   const overloads = load('05_overloads');
   assert(overloads.events.some((e) => e.kind === 'dispatch' && e.after.includes('scale(Int32)')));

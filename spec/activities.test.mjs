@@ -180,12 +180,14 @@ test('node activities navigate history independently and distinguish missing cov
   }
 });
 
-const sample = (name) =>
-  JSON.parse(gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))));
-test('recorded examples expose all fifteen real visitors and specific decisions', () => {
-  const traces = readdirSync(new URL('../web/traces/', import.meta.url))
-    .filter((name) => name.endsWith('.json.gz'))
-    .map((name) => sample(name.slice(0, -8)));
+const sample = (name, directory = './fixtures/traces/') =>
+  JSON.parse(gunzipSync(readFileSync(new URL(`${directory}${name}.json.gz`, import.meta.url))));
+test('recordings expose all fifteen real visitors and specific decisions', () => {
+  const traces = ['../web/traces/', './fixtures/traces/'].flatMap((directory) =>
+    readdirSync(new URL(directory, import.meta.url))
+      .filter((name) => name.endsWith('.json.gz'))
+      .map((name) => sample(name.slice(0, -8), directory)),
+  );
   const activities = traces.flatMap((t) => t.events.filter((e) => e.kind === 'activity'));
   const coverage = [
     ...readFileSync(new URL('../src/lab/activity_hooks.cr', import.meta.url), 'utf8').matchAll(

@@ -1,10 +1,9 @@
-# Observe how +=, unless, and until are transformed.
-x = 1
-x += 2
-unless x > 10
-  x = x + 4
-end
-until x >= 12
+# Compare +=, unless and until with their normalized AST.
+x = 0
+x += 1
+unless x == 2
   x += 1
 end
-x
+until x == 3
+  x += 1
+end
