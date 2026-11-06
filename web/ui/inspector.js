@@ -39,8 +39,11 @@ export function renderInspector(
   $('node-location').textContent = node?.line
     ? `${node.filename || model.trace.filename}:${node.line}:${node.column}`
     : '';
-  $('node-summary').textContent = node ? t('node.summary', { count: nodeEvents.length }) : '';
-  $('type-card').hidden = !node;
+  $('node-summary').textContent = node
+    ? t('count.events', { count: nodeEvents.length.toLocaleString() })
+    : '';
+  $('node-facts').hidden = !node;
+  $('node-code').hidden = !node;
   $('node-type').textContent = model.types.get(selected) || t('unknown');
   renderCrystal($('node-code'), node?.text || '—');
   const declarations = [...model.declarations.values()].filter(
@@ -267,6 +270,12 @@ export function renderActivities(
     container.append(section);
   }
   if (typeOnly) return;
+  // Unrecorded visitors are context, not findings: keep them in one collapsed list.
+  const coverage = document.createElement('details');
+  coverage.className = 'activity-coverage-list';
+  const title = document.createElement('summary');
+  coverage.append(title);
+  let missing = 0;
   for (const name of activityVisitors) {
     const visitor = `Crystal::${name}`;
     if (events.some((event) => event.visitor === visitor)) continue;
@@ -280,8 +289,12 @@ export function renderActivities(
           .map(activityLabel)
           .join(', '),
       });
-    container.append(status);
+    coverage.append(status);
+    missing++;
   }
+  if (!missing) return;
+  title.textContent = t('activity.unrecorded', { count: missing });
+  container.append(coverage);
 }
 function renderLinks(trace, event) {
   const name = visitorKey(event?.visitor);

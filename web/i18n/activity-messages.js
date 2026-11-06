@@ -55,6 +55,15 @@ export const activityMessages = {
     'Keine erfasste Aktivität aufgezeichnet (nicht vollständig)',
     'Нет записей в области измерения (не исчерпывающе)',
   ),
+  'activity.unrecorded': entry(
+    '活動記録のないVisitor ({count})',
+    'Visitors without recorded activity ({count})',
+    'Visitantes sin actividad registrada ({count})',
+    '无活动记录的访问器 ({count})',
+    'Visiteurs sans activité enregistrée ({count})',
+    'Visitor ohne aufgezeichnete Aktivität ({count})',
+    'Посетители без записанных действий ({count})',
+  ),
   'activity.incomplete': entry(
     '記録が不完全です。活動の不在は判断できません。',
     'Incomplete recording; absence of activity cannot be determined.',

@@ -110,12 +110,16 @@
       <section class="panel detail-panel" id="node-panel" aria-labelledby="node-heading">
         <div class="panel-head"><h2 id="node-heading" data-i18n="node.details">Node details</h2><span id="node-id" class="tiny">—</span></div>
         <div class="inspect-scroll">
-          <h3 id="node-title">—</h3><p id="node-location" class="tiny"></p><p id="node-summary"></p>
-          <div id="type-card" class="type-card"><span data-i18n="inferred">INFERRED TYPE</span><strong id="node-type"></strong></div>
+          <h3 id="node-title">—</h3>
+          <dl id="node-facts" class="node-facts">
+            <dt data-i18n="node.location">Location</dt><dd id="node-location"></dd>
+            <dt data-i18n="inferred">Inferred type</dt><dd id="node-type" class="node-type"></dd>
+            <dt data-i18n="node.eventCount">Events</dt><dd id="node-summary"></dd>
+          </dl>
+          <div class="inspector-actions"><button id="node-prev" class="quiet" data-i18n="node.prev">← Previous visit</button><button id="node-next" class="quiet" data-i18n="node.next">Next visit →</button><button id="node-filter" class="quiet" data-i18n="node.filter">Only this node</button></div>
+          <pre id="node-code" class="crystal-code"></pre>
           <div id="node-declarations"></div>
           <h4 data-i18n="activity.title">Visitor activities</h4><div id="node-activities"></div>
-          <div class="inspector-actions"><button id="node-prev" class="quiet" data-i18n="node.prev">← Previous visit</button><button id="node-next" class="quiet" data-i18n="node.next">Next visit →</button><button id="node-filter" class="quiet" data-i18n="node.filter">Only this node</button></div>
-          <h4 data-i18n="node.source">NODE / SOURCE</h4><pre id="node-code" class="crystal-code"></pre>
           <h4>LLVM IR</h4><p id="node-ir-note" class="tiny" data-i18n="node.irNote" hidden></p><div id="node-ir">—</div>
         </div>
       </section>

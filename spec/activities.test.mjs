@@ -158,9 +158,8 @@ test('node activities navigate history independently and distinguish missing cov
     assert.equal(seek, 0);
     assert.equal(model.index, -1);
     assert.equal(selected, undefined);
-    const texts = get('node-activities')
-      .children.map((child) => child.textContent)
-      .join('\n');
+    const flatten = (element) => [element.textContent, ...element.children.map(flatten)].join('\n');
+    const texts = flatten(get('node-activities'));
     assert(texts.includes(`MainVisitor · ${t('activity.none')}`));
     assert(texts.includes(`RestrictionsAugmenter · ${t('activity.unmeasured')}`));
     model.seek(0);
