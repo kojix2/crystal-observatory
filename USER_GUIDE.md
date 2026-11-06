@@ -167,7 +167,7 @@ To rebuild the complete browser compiler, install Crystal 1.22.0, LLVM 20 develo
 LLVM_CONFIG=llvm-config-20 make browser
 ```
 
-The build fetches wasi-sdk 33 and `@live-codes/llvm-wasm` 0.1.0 and verifies their SHA256 digests. It applies the checked-in `patches/browser-port.patch`, derived from the pinned upstream port, to a copy of the pinned Crystal 1.22.0 sources using `patch`. See `patches/README.md` for provenance. Development scripts use Crystal and Unix tools (`curl`, `cp`, `patch`, `gzip`, `sha256sum`, `tar`, and `zip`/`unzip`); Python is not required.
+The build fetches wasi-sdk 33 and `@live-codes/llvm-wasm` 0.1.0 and verifies their SHA256 digests. It applies the checked-in `patches/browser-port.patch`, derived from the pinned upstream port, to a copy of the pinned Crystal 1.22.0 sources using `patch`. See `patches/README.md` for provenance. Development scripts use Crystal and Unix tools (`curl`, `cp`, `patch`, `awk`, `gzip`, `shasum`, `tar`, and `zip`/`unzip`); Python is not required.
 
 To regenerate the observed samples using the same browser WASM compiler, LLVM, and LLD (Node 24 required):
 

@@ -21,13 +21,13 @@ Provenance of the original patch generator:
 - Generator SHA256: `7e86c54e250766415685fe351b06ce62b2c2d2d4a6a25293e4f33a600000c7b1`
 
 `scripts/prepare-browser-source.cr` copies restored source into a temporary build
-tree and runs `patch --batch --forward --fuzz=0 -p1`. Its receipt fingerprints
+tree and runs `patch -f -N -F 0 -p1`. Its receipt fingerprints
 the checked-in diff, instrumentation and preparation code. Unknown or stale
 build trees are rejected rather than patched again. A failed preparation is
 discarded without publishing a partial tree.
 
 When updating Crystal or the port, review the upstream changes and update this
 diff and its provenance together. Generate unified diffs with `a/` and `b/` path
-labels and no timestamps (`diff -u --label a/path --label b/path old new`).
+labels and no timestamps (`diff -u -L a/path -L b/path old new`).
 Verify that the fresh patched tree matches the intended upstream port before
 rebuilding, validating WASM and running the compiler tests.

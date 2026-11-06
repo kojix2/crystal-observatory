@@ -1,5 +1,6 @@
 require "./scripts_spec_helper"
 require "../scripts/support/sources"
+require "compress/zip" # Construct invalid archives for the rejection tests.
 
 describe ObservatoryScripts::Sources do
   it "restores only the selected subtree, preserves modes and links, and keeps local edits" do
@@ -118,11 +119,26 @@ describe ObservatoryScripts::Sources do
       status = Process.run("zip", ["-q", archive.to_s, "upstream/src/alias/hello.cr"], chdir: root.to_s)
       status.success?.should be_true
       spec.as_h["sha256"] = JSON::Any.new(ObservatoryScripts.digest(archive))
-      expect_raises(Exception, /through symlink/) do
+      expect_raises(Exception, /through another file/) do
         ObservatoryScripts::Sources.install("example", spec, root, cache, offline: true)
       end
       File.exists?(root / "vendor/example").should be_false
       File.read(source / "nested/hello.cr").should eq("keep me")
+    end
+  end
+
+  it "extracts selected filenames literally, including unzip pattern characters" do
+    ScriptSpec.with_sources do |root, cache, archive, spec|
+      filenames = ["file[1].cr", "file*literal.cr", "question?.cr", "with space.cr"]
+      filenames.each { |name| File.write(root / "upstream/src" / name, name) }
+      File.write(root / "upstream/src/file1.cr", "not selected")
+      ScriptSpec.zip(root, archive)
+      spec.as_h["files"] = JSON.parse(filenames.to_json)
+      spec.as_h["sha256"] = JSON::Any.new(ObservatoryScripts.digest(archive))
+      ObservatoryScripts::Sources.install("example", spec, root, cache, offline: true)
+      target = root / "vendor/example"
+      Dir.children(target).sort.should eq((filenames + [ObservatoryScripts::Sources::STAMP]).sort)
+      filenames.each { |name| File.read(target / name).should eq(name) }
     end
   end
 

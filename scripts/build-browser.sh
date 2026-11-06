@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Rebuild the instrumented browser compiler. Linux x86_64 is the tested host.
-# Requires Crystal 1.22.0, LLVM 20 development files/tools, C++, patch, gzip, sha256sum, curl, Node 24 (WASM validation).
+# Requires Crystal 1.22.0, LLVM 20 development files/tools, C++, patch, awk, gzip, shasum, curl, Node 24 (WASM validation).
 # Prebuilt browser assets are distributed; users do not need this to run the app.
 set -euo pipefail
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
@@ -8,7 +8,7 @@ CRYSTAL=${CRYSTAL:-crystal}
 LLVM_CONFIG=${LLVM_CONFIG:-llvm-config-20}
 export LLVM_CONFIG
 [[ $("$LLVM_CONFIG" --version) == 20.* ]] || { echo 'LLVM 20 is required for the reproducible browser build' >&2; exit 1; }
-"$CRYSTAL" --version | head -1 | grep -q '1.22.0' || { echo 'Use Crystal 1.22.0 to rebuild the browser compiler' >&2; exit 1; }
+"$CRYSTAL" --version | head -n 1 | grep -q '1.22.0' || { echo 'Use Crystal 1.22.0 to rebuild the browser compiler' >&2; exit 1; }
 OUT=${BROWSER_BUILD_DIR:-"$ROOT/.cache/browser"}
 mkdir -p "$OUT"
 # Restore exact source revisions rather than borrowing the host installation.
@@ -27,8 +27,8 @@ env CRYSTAL_PATH="$OUT/src" LLVM_VERSION=20.1.8 LLVM_TARGETS=WebAssembly LLVM_LD
   -Dwithout_openssl -Duse_pcre2 -Dwithout_mt --mattr=+exception-handling \
   --cross-compile --target wasm32-unknown-wasi --emit llvm-bc --single-module --no-debug -o "$OUT/observatory.bc"
 LLVM_BIN=$("$LLVM_CONFIG" --bindir)
-"$CRYSTAL" run "$ROOT/scripts/prepare-browser-ir.cr" -- "$LLVM_BIN/opt" "$OUT"
-# LLVM 20 WASM-EH exclusions are documented in prepare-browser-ir.cr.
+bash "$ROOT/scripts/prepare-browser-ir.sh" "$LLVM_BIN/opt" "$OUT"
+# LLVM 20 WASM-EH exclusions are documented in prepare-browser-ir.sh.
 # Applied only when building the compiler itself.
 # optnone requires noinline; this does not disable optimization in user modules.
 "$LLVM_BIN/opt" -passes=forceattrs -forceattrs-csv-path="$OUT/no-opt.csv" "$OUT/observatory.bc" -o "$OUT/observatory.marked.bc"
@@ -39,7 +39,7 @@ LLVM_BIN=$("$LLVM_CONFIG" --bindir)
 fetch() {
   local url=$1 file=$2 digest=$3
   [[ -f "$file" ]] || curl -fL --retry 2 "$url" -o "$file"
-  printf '%s  %s\n' "$digest" "$file" | sha256sum --check --status || {
+  printf '%s  %s\n' "$digest" "$file" | shasum -a 256 -c > /dev/null || {
     echo "Downloaded asset SHA256 mismatch: $file" >&2; return 1;
   }
 }

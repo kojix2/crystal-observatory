@@ -9,7 +9,7 @@ export WASI_SYSROOT=${WASI_SYSROOT:-"$CACHE/wasm32-wasi-sysroot"}
 if [[ ! -d "$WASI_SYSROOT" ]]; then
   mkdir -p "$CACHE"
   curl -fL --retry 2 https://github.com/kojix2/wasm-libs/releases/download/v0.0.5/wasm32-wasi-sysroot.tar.gz -o "$CACHE/sysroot.tar.gz"
-  printf '%s  %s\n' '8b123e2b7103e330c7d1743649aa0738b5ec05023a48ba609205bced7f9f2eb8' "$CACHE/sysroot.tar.gz" | sha256sum --check --status || {
+  printf '%s  %s\n' '8b123e2b7103e330c7d1743649aa0738b5ec05023a48ba609205bced7f9f2eb8' "$CACHE/sysroot.tar.gz" | shasum -a 256 -c > /dev/null || {
     echo 'WASI sysroot SHA256 mismatch' >&2; exit 1;
   }
   tar --no-same-owner -xzf "$CACHE/sysroot.tar.gz" -C "$CACHE"

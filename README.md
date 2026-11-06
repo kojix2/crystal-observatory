@@ -37,7 +37,7 @@ Programs target WASI: host processes, sockets, host files and arbitrary C librar
 
 ## Develop and verify
 
-Development uses Unix, Crystal, Node 24 and npm. Source restoration uses `curl`; browser source preparation uses `cp` and `patch`; builds use `gzip`, `sha256sum` and `tar`; source packaging uses `zip` and `unzip`. The supplied build scripts are tested on Linux.
+Development uses Unix, Crystal, Node 24 and npm. Source restoration uses `curl` and `unzip`; browser source preparation uses `cp` and `patch`; builds use `awk`, `gzip`, `shasum` and `tar`; source packaging uses `zip` and `unzip`. These helper commands use options shared by Linux and macOS. The supplied compiler build scripts are tested on Linux.
 
 ```sh
 make web-deps

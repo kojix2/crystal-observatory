@@ -10,8 +10,8 @@ module ObservatoryScripts
     Digest::SHA256.new.file(path.to_s).hexfinal
   end
 
-  def self.run(command, args, *, input = Process::Redirect::Close, output = STDOUT)
-    status = Process.run(command, args, input: input, output: output, error: STDERR)
+  def self.run(command, args, *, input = Process::Redirect::Close, output = STDOUT, env = nil)
+    status = Process.run(command, args, input: input, output: output, error: STDERR, env: env)
     raise "#{command} failed (#{status})" unless status.success?
   end
 

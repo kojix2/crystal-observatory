@@ -35,15 +35,14 @@ module ObservatoryScripts::Package
     Dir.mkdir_p(output.parent)
     ObservatoryScripts.temporary_directory do |temporary|
       tree = temporary / "crystal-observatory"
-      Dir.mkdir(tree)
-      files.each do |relative|
-        destination = tree / relative
-        Dir.mkdir_p(destination.parent)
-        FileUtils.cp(root / relative, destination)
-      end
+      # Give zip the fixed archive prefix without copying the source tree.
+      # source_files excludes symlinks; this temporary parent link is only a
+      # route to those regular files, and is not itself added to the archive.
+      File.symlink(root.expand, tree)
       # Build a new archive, so reusing an output path cannot retain stale files.
       archive = temporary / "source.zip"
-      status = Process.run("zip", ["-q", "-9", "-r", archive.to_s, "crystal-observatory"], chdir: temporary.to_s, output: STDOUT, error: STDERR)
+      names = files.map { |relative| "crystal-observatory/#{relative}" }
+      status = Process.run("zip", ["-q", "-9", archive.to_s] + names, chdir: temporary.to_s, output: STDOUT, error: STDERR)
       raise "zip failed (#{status})" unless status.success?
       ObservatoryScripts.run("unzip", ["-tq", archive.to_s])
       FileUtils.cp(archive, output)

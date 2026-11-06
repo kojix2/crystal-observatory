@@ -28,7 +28,7 @@ module ObservatoryScripts::BrowserSource
       # cp -R -P preserves upstream symlinks rather than dereferencing them.
       ObservatoryScripts.run("cp", ["-R", "-P", upstream.to_s, tree.to_s])
       File.open(patch) do |input|
-        ObservatoryScripts.run("patch", ["--batch", "--forward", "--fuzz=0", "-p1", "-d", tree.to_s], input: input, output: STDERR)
+        ObservatoryScripts.run("patch", ["-f", "-N", "-F", "0", "-p1", "-d", tree.to_s], input: input, output: STDERR)
       end
       ObservatoryScripts::Declarations.apply(tree)
       ObservatoryScripts::Activities.apply(tree)

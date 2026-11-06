@@ -1,5 +1,28 @@
 # Validation Record
 
+## Unix development helpers — 2026-11-06
+
+Source archives are now listed and extracted with the external `unzip` command,
+using options shared by Linux and macOS. The Crystal ZIP reader extension for
+Unix attributes was removed. The existing source-restoration protections remain;
+selection also handles literal filenames containing unzip wildcard characters.
+
+LLVM exclusion generation now uses a Bash pipeline and POSIX `awk`, retaining
+streaming and propagating tool failures with `pipefail`. Source packaging passes
+selected files directly to `zip` through a temporary parent symlink instead of
+copying the source tree. Build download checks use `shasum -a 256 -c`, and port
+patch application uses short options shared by GNU and BSD patch.
+
+On Linux, all 19 Crystal specs passed. A fresh restoration of the pinned browser
+compiler sources matched the existing source tree, including symlinks, and the
+prepared compiler tree still matched the earlier preparation pipeline. Actual
+LLVM 20 output produced the expected exclusion CSV; a failing producer retained
+its exit code. Both matching and mismatching SHA256 checks were verified. A real
+source ZIP passed integrity checking, and specs covered source exclusions,
+executable modes, hidden files and literal filenames. Shell syntax, Crystal
+formatting and whitespace checks passed. macOS was not available for execution
+in this workspace; the complete compiler WASM was not rebuilt.
+
 ## Crystal development scripts — 2026-11-06
 
 All eight Python scripts and their source-restoration/instrumentation tests were

@@ -1,7 +1,6 @@
 require "./scripts_spec_helper"
-require "../scripts/support/browser_ir"
 
-describe ObservatoryScripts::BrowserIR do
+describe "LLVM optimization exclusions" do
   it "streams LLVM output, marks only excluded definitions, and propagates opt failure" do
     ObservatoryScripts.temporary_directory do |root|
       opt = root / "opt"
@@ -18,7 +17,7 @@ describe ObservatoryScripts::BrowserIR do
         SH
       )
       File.chmod(opt, 0o755)
-      status = ObservatoryScripts::BrowserIR.prepare(opt.to_s, root)
+      status = Process.run("bash", [(ScriptSpec::ROOT / "scripts/prepare-browser-ir.sh").to_s, opt.to_s, root.to_s], error: STDERR)
       status.exit_code.should eq(7)
       File.read(root / "no-opt.csv").lines.should eq([
         "*Crystal::ASTNode#pretty_print<PrettyPrint>:Nil,optnone",
