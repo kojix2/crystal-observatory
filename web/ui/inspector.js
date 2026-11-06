@@ -13,6 +13,8 @@ import {
   activityLabel,
 } from './event-labels.js';
 import { activityVisitors, coverageFor } from '../core/activities.js';
+import { compilerStage } from '../core/compiler-stages.js';
+import { renderStageContext } from './compiler-map.js';
 
 // Node selection can move independently of playback. The lower inspector always
 // describes model.event, even when another node is clicked in the graph or stack.
@@ -61,8 +63,11 @@ export function renderInspector(
   for (const id of ['node-prev', 'node-next', 'node-filter']) $(id).disabled = !node;
 
   $('event-id').textContent = event ? `#${event.index}` : '—';
+  renderStageContext(event);
   $('visitor-title').textContent = event
-    ? shortVisitor(event.visitor) || t('event.noVisitor')
+    ? shortVisitor(event.visitor) ||
+      compilerStage(event)?.driver.split(' → ')[0] ||
+      t('event.noVisitor')
     : '—';
   $('visitor-title').dataset.visitor = visitorKey(event?.visitor);
   $('visitor-role').textContent = visitorRole(event, model);
@@ -229,10 +234,11 @@ export function renderActivities(
 }
 function renderLinks(trace, event) {
   const name = visitorKey(event?.visitor);
-  const files = new Set([sourceFiles[name]]);
+  const files = new Set([compilerStage(event)?.file, sourceFiles[name]]);
   if (event?.kind === 'expand' || event?.kind === 'dispatch') files.add('semantic/call.cr');
   if (['type', 'bind', 'unbind'].includes(event?.kind)) files.add('semantic/bindings.cr');
   files.delete(undefined);
+  files.delete(null);
   $('compiler-link').replaceChildren();
   for (const file of files) {
     const link = document.createElement('a');

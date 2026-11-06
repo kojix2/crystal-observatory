@@ -3,10 +3,14 @@ import { t } from '../i18n/index.js';
 import { comparisonRatio, comparisonWidths } from '../core/view-layout.js';
 import {
   DEFAULT_PANES,
-  MIN_PANES,
+  DEFAULT_WORKFLOW_WIDTH,
+  MIN_WORKFLOW_WIDTH,
+  PANE_GAP,
   paneWeights,
-  paneWidths,
   moveDivider,
+  moveWorkflowDivider,
+  workspaceLayout,
+  workspaceMinimumWidth,
   detailHeights,
 } from '../core/layout.js';
 
@@ -56,22 +60,41 @@ function range(handle, value, min, max) {
   handle.setAttribute('aria-valuenow', Math.round(value));
   handle.setAttribute('aria-valuetext', `${Math.round(value)}px`);
 }
+function setHandleEnabled(handle, active) {
+  handle.tabIndex = active ? 0 : -1;
+  handle.setAttribute('aria-disabled', !active);
+}
+function label(button, key) {
+  button.dataset.i18nAria = button.dataset.i18nTitle = key;
+  button.setAttribute('aria-label', t(key));
+  button.title = t(key);
+}
 export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   const app = $('app'),
     bench = $('workbench');
   const handles = ['timeline-splitter', 'inspector-splitter'].map($);
-  // v2 had four columns in a different order; do not reinterpret those settings.
-  const key = 'crystal-observatory.workspace.v3';
+  const workflowHandle = $('workflow-splitter');
+  // Workflow now has an independent pixel width; old history widths included it.
+  const key = 'crystal-observatory.workspace.v5';
   const comparisonKey = 'crystal-observatory.comparison.v1';
   let weights = [...DEFAULT_PANES],
+    workflowWidth = DEFAULT_WORKFLOW_WIDTH,
     detailRatio = 0.42,
     compareRatio = 0.5,
     resizeFrame;
   try {
     const saved = JSON.parse(localStorage.getItem(key));
+    const details =
+      saved ||
+      JSON.parse(localStorage.getItem('crystal-observatory.workspace.v4')) ||
+      JSON.parse(localStorage.getItem('crystal-observatory.workspace.v3'));
     weights = paneWeights(saved?.weights);
-    if (Number.isFinite(saved?.detailRatio) && saved.detailRatio > 0 && saved.detailRatio < 1)
-      detailRatio = saved.detailRatio;
+    if (Number.isFinite(details?.detailRatio) && details.detailRatio > 0 && details.detailRatio < 1)
+      detailRatio = details.detailRatio;
+    if (Number.isFinite(saved?.workflowWidth) && saved.workflowWidth >= MIN_WORKFLOW_WIDTH)
+      workflowWidth = saved.workflowWidth;
+    app.classList.toggle('workflow-collapsed', saved?.workflowCollapsed === true);
+    app.classList.toggle('trace-collapsed', saved?.collapsed === true);
   } catch {
     /* Optional preference. */
   }
@@ -81,18 +104,38 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     /* Optional preference. */
   }
   const comparing = () => app.classList.contains('comparing');
-  const minimums = () => (comparing() ? [250, 646, 270] : MIN_PANES);
+  const workflowAvailable = () => !$('workflow-column').hidden;
+  const historyCollapsed = () => app.classList.contains('trace-collapsed');
+  const workflowCollapsed = () => app.classList.contains('workflow-collapsed');
+  const layoutOptions = () => ({
+    workflowWidth,
+    workflowAvailable: workflowAvailable(),
+    workflowCollapsed: workflowCollapsed(),
+    historyCollapsed: historyCollapsed(),
+    comparing: comparing(),
+  });
   const persist = () => {
     if (comparing()) return;
     try {
-      localStorage.setItem(key, JSON.stringify({ weights, detailRatio }));
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          weights,
+          workflowWidth,
+          detailRatio,
+          collapsed: historyCollapsed(),
+          workflowCollapsed: workflowCollapsed(),
+        }),
+      );
     } catch {
       /* Private browsing. */
     }
   };
-  const widths = () => paneWidths(bench.clientWidth - 12, weights, minimums());
+  const sizes = () => workspaceLayout(bench.clientWidth, weights, layoutOptions());
+  const widths = () => sizes().panes;
+  const minimums = () => sizes().minimums;
   const compareWidths = () =>
-    comparisonWidths($('observation-scroll').clientWidth - 6, compareRatio);
+    comparisonWidths($('observation-scroll').clientWidth - PANE_GAP, compareRatio);
   const persistComparison = () => {
     try {
       localStorage.setItem(comparisonKey, JSON.stringify({ ratio: compareRatio }));
@@ -102,15 +145,29 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   };
   const heights = () => detailHeights($('inspector-panel').clientHeight - 6, detailRatio);
   function apply() {
-    const panes = widths();
-    if (app.classList.contains('trace-collapsed')) {
-      panes[1] += panes[0] - 32;
-      panes[0] = 32;
-    }
-    bench.style.setProperty('--pane-columns', panes.map((n) => `${n}px`).join(' 6px '));
-    handles.forEach((handle, i) =>
-      range(handle, panes[i], minimums()[i], panes[i] + panes[i + 1] - minimums()[i + 1]),
+    bench.style.minWidth = enabled() ? `${workspaceMinimumWidth(layoutOptions())}px` : '0';
+    const { workflow, panes, minimums, workflowMinimum, workflowGap } = sizes();
+    bench.style.setProperty(
+      '--pane-columns',
+      `${workflow}px ${workflowGap}px ${panes.map((n) => `${n}px`).join(` ${PANE_GAP}px `)}`,
     );
+    handles.forEach((handle, i) => {
+      range(handle, panes[i], minimums[i], panes[i] + panes[i + 1] - minimums[i + 1]);
+      setHandleEnabled(handle, enabled() && (i !== 0 || !historyCollapsed()));
+    });
+    range(workflowHandle, workflow, workflowMinimum, workflow + panes[0] - minimums[0]);
+    setHandleEnabled(
+      workflowHandle,
+      enabled() && workflowAvailable() && !workflowCollapsed() && !historyCollapsed(),
+    );
+    for (const [button, collapsed, expand, collapse] of [
+      [$('toggle-trace'), historyCollapsed(), 'trace.expand', 'trace.collapse'],
+      [$('toggle-workflow'), workflowCollapsed(), 'pipeline.expand', 'pipeline.collapse'],
+    ]) {
+      button.setAttribute('aria-expanded', !collapsed);
+      button.textContent = collapsed ? '›' : '‹';
+      label(button, collapsed ? expand : collapse);
+    }
     const [top, bottom] = heights();
     $('inspector-panel').style.gridTemplateRows = `${top}px 6px ${bottom}px`;
     range($('detail-splitter'), top, 150, top + bottom - 190);
@@ -121,10 +178,24 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     }
   }
   const enabled = () => !app.classList.contains('graph-maximized');
+  bindDivider(workflowHandle, {
+    axis: 'x',
+    enabled: () => enabled() && workflowAvailable() && !workflowCollapsed() && !historyCollapsed(),
+    measure: sizes,
+    persist,
+    move: (layout, delta) => {
+      ({ workflowWidth, weights } = moveWorkflowDivider(layout, delta));
+      apply();
+    },
+    reset: () => {
+      workflowWidth = DEFAULT_WORKFLOW_WIDTH;
+      apply();
+    },
+  });
   handles.forEach((handle, i) =>
     bindDivider(handle, {
       axis: 'x',
-      enabled: () => enabled() && !app.classList.contains('trace-collapsed'),
+      enabled: () => enabled() && (i !== 0 || !historyCollapsed()),
       measure: widths,
       persist,
       move: (panes, delta) => {
@@ -174,11 +245,6 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
       apply();
     },
   });
-  function label(button, key) {
-    button.dataset.i18nAria = button.dataset.i18nTitle = key;
-    button.setAttribute('aria-label', t(key));
-    button.title = t(key);
-  }
   function maximize(active) {
     app.classList.toggle('graph-maximized', active);
     $('maximize-graph').setAttribute('aria-pressed', active);
@@ -187,22 +253,25 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   }
   function collapse(active) {
     app.classList.toggle('trace-collapsed', active);
-    $('toggle-trace').setAttribute('aria-expanded', !active);
-    $('toggle-trace').textContent = active ? '›' : '‹';
-    label($('toggle-trace'), active ? 'trace.expand' : 'trace.collapse');
-    handles.forEach((handle) => {
-      handle.tabIndex = active ? -1 : 0;
-      handle.setAttribute('aria-disabled', active);
-    });
     apply();
   }
   $('maximize-graph').onclick = () => maximize(!app.classList.contains('graph-maximized'));
-  $('toggle-trace').onclick = () => collapse(!app.classList.contains('trace-collapsed'));
+  $('toggle-trace').onclick = () => {
+    collapse(!historyCollapsed());
+    persist();
+  };
+  $('toggle-workflow').onclick = () => {
+    app.classList.toggle('workflow-collapsed', !workflowCollapsed());
+    apply();
+    persist();
+  };
   $('reset-layout').onclick = () => {
     onReset();
     weights = [...DEFAULT_PANES];
+    workflowWidth = DEFAULT_WORKFLOW_WIDTH;
     detailRatio = 0.42;
     compareRatio = 0.5;
+    app.classList.remove('workflow-collapsed');
     maximize(false);
     collapse(false);
     persist();
@@ -227,12 +296,16 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     capture: () => ({
       weights: [...weights],
       detailRatio,
+      workflowWidth,
+      workflowCollapsed: workflowCollapsed(),
       maximized: app.classList.contains('graph-maximized'),
       collapsed: app.classList.contains('trace-collapsed'),
     }),
     restore: (saved) => {
       weights = [...saved.weights];
       detailRatio = saved.detailRatio;
+      workflowWidth = saved.workflowWidth;
+      app.classList.toggle('workflow-collapsed', saved.workflowCollapsed);
       collapse(saved.collapsed);
       maximize(saved.maximized);
       persist();

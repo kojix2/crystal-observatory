@@ -26,6 +26,20 @@ History selects an event; the node inspector independently follows the selected
 node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
 
+Full compiler recordings use four independent columns: **Workflow**, **History**,
+the selected observation (AST, source, IR or output), and node/operation details.
+Workflow starts narrow at 180 px. Resize it using its own divider, or collapse
+Workflow and History separately with their header buttons. Widths and collapsed
+states are saved in the browser. The outline follows the selected event; selecting
+a stage jumps History to its first recorded event while retaining its filters.
+Semantic steps appear under their parent stages, from registering definitions
+through type inference and final checks. The operation inspector shows the stage's
+incoming state, outgoing state and implementation, followed by the observed Visitor
+and operation.
+These handoffs describe compiler responsibilities, not additional measured events.
+LLD linking and execution appear as context outside the trace. Parse-only uses a
+separate syntax engine and does not display the full compiler pipeline.
+
 Activities record measured decisions and changes. **Not instrumented** and
 **No covered activity recorded** have different meanings; neither proves that
 the compiler did nothing. Errors and truncation make observations incomplete.

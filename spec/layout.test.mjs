@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_PANES,
   MIN_PANES,
+  DEFAULT_WORKFLOW_WIDTH,
+  MIN_WORKFLOW_WIDTH,
+  workspaceLayout,
+  workspaceMinimumWidth,
+  moveWorkflowDivider,
   paneWeights,
   paneWidths,
   moveDivider,
@@ -50,6 +55,58 @@ test('invalid and old workspace settings fall back instead of corrupting the gri
     assert.deepEqual(paneWeights(bad), DEFAULT_PANES);
   assert.deepEqual(paneWeights([2, 5, 3]), [20, 50, 30]);
 });
+
+test('independent navigation panes fit the workspace in every visibility and comparison state', () => {
+  for (const available of [200, 900, 1440, 1879]) {
+    for (const workflowAvailable of [false, true]) {
+      for (const workflowCollapsed of [false, true]) {
+        for (const historyCollapsed of [false, true]) {
+          for (const comparing of [false, true]) {
+            const options = { workflowAvailable, workflowCollapsed, historyCollapsed, comparing };
+            const layout = workspaceLayout(available, DEFAULT_PANES, options);
+            close(
+              layout.workflow + sum(layout.panes) + layout.gaps,
+              Math.max(available, workspaceMinimumWidth(options)),
+            );
+            layout.panes.forEach((width, index) => assert(width >= layout.minimums[index] - 1e-8));
+            if (!workflowAvailable) {
+              assert.equal(layout.workflow, 0);
+              assert.equal(layout.workflowGap, 0);
+            } else if (workflowCollapsed) assert.equal(layout.workflow, 32);
+            else assert(layout.workflow >= MIN_WORKFLOW_WIDTH);
+            if (historyCollapsed) assert.equal(layout.panes[0], 32);
+            if (comparing) assert(layout.panes[1] >= 646);
+          }
+        }
+      }
+    }
+  }
+  assert.equal(
+    workspaceLayout(1440, DEFAULT_PANES, { workflowAvailable: true }).workflow,
+    DEFAULT_WORKFLOW_WIDTH,
+  );
+});
+
+test('workflow resizing changes only workflow and history and respects their minimum widths', () => {
+  const available = 1879;
+  const original = workspaceLayout(available, DEFAULT_PANES, { workflowAvailable: true });
+  const snapshot = structuredClone(original);
+  for (const delta of [-10000, -12, 0, 12, 10000]) {
+    const resized = moveWorkflowDivider(original, delta);
+    const next = workspaceLayout(available, resized.weights, {
+      workflowAvailable: true,
+      workflowWidth: resized.workflowWidth,
+    });
+    close(next.workflow + next.panes[0], original.workflow + original.panes[0]);
+    close(next.panes[1], original.panes[1]);
+    close(next.panes[2], original.panes[2]);
+    assert(next.workflow >= MIN_WORKFLOW_WIDTH);
+    assert(next.panes[0] >= MIN_PANES[0] - 1e-8);
+    if (Math.abs(delta) <= 12) close(next.workflow, original.workflow + delta);
+  }
+  assert.deepEqual(original, snapshot);
+});
+
 test('stacked details fill the column and keep both inspectors usable at either resize limit', () => {
   for (const height of [200, 340, 600, 1200]) {
     for (const ratio of [-2, 0, 0.42, 1, 2]) {

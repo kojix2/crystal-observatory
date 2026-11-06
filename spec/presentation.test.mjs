@@ -77,7 +77,10 @@ test('visitor roles stay distinct from the measured operation, including callbac
   assert.match(visitorRole(event), /specializes methods/);
   assert.match(explanation(event), /Int32 to Int32 \| String/);
   assert.match(explanation({ ...event, kind: 'visit_enter' }), /#12/);
-  assert.equal(explanation({ kind: 'phase_leave', detail: 'Semantic (main)' }), 'Semantic (main)');
+  assert.equal(
+    explanation({ kind: 'phase_leave', detail: 'Semantic (main)' }),
+    t('pipeline.leave', { stage: t('pipeline.stage.main') }),
+  );
   assert.equal(
     visitorKey('Crystal::CodeGenVisitor::CodegenWellKnownFunctions'),
     'CodeGenVisitor::CodegenWellKnownFunctions',

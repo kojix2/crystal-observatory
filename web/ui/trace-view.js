@@ -9,6 +9,8 @@ import { renderTokens } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
 import { renderDeclarations } from './declarations.js';
+import { indexCompilerStages } from '../core/compiler-stages.js';
+import { renderCompilerMap } from './compiler-map.js';
 import { ViewLayout, comparisonTargets, viewLabel, viewLabelKey } from '../core/view-layout.js';
 
 const scrollTargets = {
@@ -54,6 +56,7 @@ export class TraceView {
     const model = new TraceModel(trace); // Validate before replacing a usable view.
     this.stop();
     this.model = model;
+    this.stageRecords = indexCompilerStages(trace);
     this.selected = 0;
     this.selectedType = 0;
     this.snapshot = 0;
@@ -114,6 +117,12 @@ export class TraceView {
   }
   renderPhase() {
     const event = this.model?.event;
+    const workflowHidden = $('workflow-column').hidden;
+    renderCompilerMap(this.model, this.stageRecords, (index) => {
+      this.stop();
+      this.seek(index);
+    });
+    if (workflowHidden !== $('workflow-column').hidden) this.workspace?.refresh();
     $('phase-status').textContent = event
       ? `${event.phase} / ${shortVisitor(event.visitor)} / ${eventLabel(event.kind)}`
       : t('state.waiting');

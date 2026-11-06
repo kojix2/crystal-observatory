@@ -163,3 +163,51 @@ test('a replaced method still links its historical node to the observed owner', 
     setLocale('en');
   }
 });
+
+test('stage handoff follows playback independently of the selected node, including phases without Visitors', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const model = new TraceModel({
+    schema_version: 1,
+    compiler_version: 'WASI',
+    source: '',
+    snapshots: [],
+    nodes: [{ id: 1, kind: 'Def', text: 'def initialize; end' }],
+    events: [
+      { index: 0, kind: 'phase_enter', phase: 'Semantic (new)', detail: 'Semantic (new)' },
+      {
+        index: 1,
+        kind: 'visit_enter',
+        phase: 'Semantic (type declarations)',
+        visitor: 'Crystal::TypeGuessVisitor',
+        node_id: 1,
+      },
+      { index: 2, kind: 'complete', phase: '' },
+    ],
+  });
+  try {
+    setLocale('ja');
+    model.seek(0);
+    renderInspector(model, 1, () => {});
+    assert.equal(get('visitor-title').textContent, 'Program#define_new_methods');
+    assert(get('stage-context').innerHTML.includes(t('pipeline.stage.new')));
+    assert.equal(get('compiler-link').children[0].textContent, 'semantic/new.cr ↗');
+    model.seek(1);
+    renderInspector(model, 0, () => {});
+    assert.equal(get('node-id').textContent, '—');
+    assert(get('stage-context').innerHTML.includes(t('pipeline.stage.declarations')));
+    assert.equal(get('visitor-title').textContent, 'TypeGuessVisitor');
+    assert.equal(model.index, 1);
+    model.seek(2);
+    renderInspector(model, 1, () => {});
+    assert.equal(get('stage-context').hidden, true);
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
+  }
+});

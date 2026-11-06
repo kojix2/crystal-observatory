@@ -2,6 +2,7 @@ import { messages } from '../i18n/messages.js';
 import { t } from '../i18n/index.js';
 import { declarationSummary } from './declarations.js';
 import { coverageFor } from '../core/activities.js';
+import { compilerStage } from '../core/compiler-stages.js';
 export const shortVisitor = (name) =>
   (name || '').replace(/^Crystal::/, '').replace(/^Observatory::/, '');
 export const eventLabel = (kind) =>
@@ -27,8 +28,14 @@ export function explanation(event, model) {
     return t('explain.declaration');
   if (['type', 'bind', 'unbind', 'expand', 'dispatch', 'rewrite', 'ir'].includes(event.kind))
     return t(`explain.${event.kind}`, values);
-  if (['phase_enter', 'phase_leave'].includes(event.kind))
-    return event.detail || t('explain.phase', values);
+  if (['phase_enter', 'phase_leave'].includes(event.kind)) {
+    const stage = compilerStage(event);
+    return stage
+      ? t(event.kind === 'phase_enter' ? 'pipeline.enter' : 'pipeline.leave', {
+          stage: t(`pipeline.stage.${stage.id}`),
+        })
+      : event.detail || t('explain.phase', values);
+  }
   if (event.kind === 'visit_enter') return t('explain.visit', values);
   if (event.kind.endsWith('_leave')) return t('explain.leave', values);
   if (event.kind === 'transform_enter') return t('explain.transform', values);

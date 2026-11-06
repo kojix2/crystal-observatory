@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ViewLayout, comparisonWidths, comparisonRatio } from '../web/core/view-layout.js';
-import { paneWidths, moveDivider } from '../web/core/layout.js';
+import { MIN_PANES, paneWidths, moveDivider } from '../web/core/layout.js';
 import { IRView } from '../web/ui/ir-view.js';
 import { renderGraph } from '../web/ui/graphs.js';
 
@@ -31,12 +31,19 @@ test('comparison widths preserve readable panes, valid ratios, and the outer col
       assert.equal(widths[0] + widths[1], Math.max(640, available));
     }
   }
-  const minimums = [250, 646, 270];
+  const minimums = [MIN_PANES[0], 646, MIN_PANES[2]];
   const widths = paneWidths(880, [25, 47, 28], minimums);
   assert.deepEqual(widths, minimums);
   for (const direction of [-10000, 10000]) {
     const weights = moveDivider(widths, 0, direction, minimums);
-    assert.deepEqual(paneWidths(1166, weights, minimums), minimums);
+    assert.deepEqual(
+      paneWidths(
+        minimums.reduce((sum, value) => sum + value, 0),
+        weights,
+        minimums,
+      ),
+      minimums,
+    );
   }
 });
 
