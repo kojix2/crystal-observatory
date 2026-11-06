@@ -15,7 +15,7 @@ test('pipeline order follows actual compiler boundaries, including stages with n
   const observed = trace.events.filter((event) => event.kind === 'phase_enter');
   assert.deepEqual(
     observed.map((event) => compilerStage(event)?.id),
-    compilerStages.map((stage) => stage.id),
+    compilerStages.filter((stage) => stage.id !== 'link').map((stage) => stage.id),
   );
   for (const event of observed)
     assert.equal(records.get(compilerStage(event).id).first, event.index);
@@ -27,6 +27,8 @@ test('pipeline order follows actual compiler boundaries, including stages with n
   assert.equal(compilerStage(constructorEvents[0]).driver, 'Program#define_new_methods');
   assert.equal(compilerStage({ phase: 'Semantic (type declarations)' }).output, 'variableTypes');
   assert.equal(compilerStage({ phase: 'Codegen (crystal)' }).id, 'codegen');
+  assert.equal(compilerStage({ phase: 'Link (LLD)' }).id, 'link');
+  assert(!records.has('link'), 'Older recordings must not invent a link result');
 });
 
 test('partial, error and syntax recordings do not invent later compiler stages', () => {
@@ -118,6 +120,61 @@ test('workflow stays visible alongside history during playback and ignores old v
   } finally {
     globalThis.document = originalDocument;
     globalThis.localStorage = originalStorage;
+    setLocale('en');
+  }
+});
+
+test('link result is selectable in the workflow and follows normal history navigation', () => {
+  const root = { contains: (element) => !!element, querySelector: () => null };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: () => root };
+  const event = { index: 0, kind: 'link', phase: 'Link (LLD)' };
+  const trace = { mode: 'full', events: [event] };
+  const records = indexCompilerStages(trace);
+  try {
+    setLocale('ja');
+    let selected;
+    renderCompilerMap({ trace, event }, records, (index) => (selected = index));
+    assert.match(root.innerHTML, /data-index="0" aria-current="step"/);
+    assert(root.innerHTML.includes(t('pipeline.group.link')));
+    root.onclick({ target: { closest: () => ({ dataset: { index: '0' } }) } });
+    assert.equal(selected, 0);
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
+  }
+});
+
+test('bundled recordings allow inspecting link without inventing an event or seeking history', () => {
+  const root = { contains: (element) => !!element, querySelector: () => null };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: () => root };
+  const trace = recording('02_union_and_narrowing');
+  const records = indexCompilerStages(trace);
+  const model = { trace, event: trace.events[records.get('main').first] };
+  const initial = JSON.stringify(trace);
+  let selectedStage;
+  const onSeek = () => assert.fail('Stage overview must not seek history');
+  const options = () => ({ selectedStage, onSelectStage: (id) => (selectedStage = id) });
+  try {
+    setLocale('ja');
+    renderCompilerMap(model, records, onSeek, options());
+    const button = root.innerHTML.match(/<button[^>]*data-stage="link"[^>]*>/)?.[0];
+    assert(button, 'Link should have a stage description button');
+    assert(!button.includes('disabled'));
+    assert(!button.includes('data-index'));
+    root.onclick({ target: { closest: () => ({ dataset: { stage: 'link' } }) } });
+    assert.equal(selectedStage, 'link');
+    renderCompilerMap(model, records, onSeek, options());
+    assert.match(root.innerHTML, /data-stage="link" aria-current="step"/);
+    setLocale('en');
+    renderCompilerMap(model, records, onSeek, options());
+    assert.match(root.innerHTML, /data-stage="link" aria-current="step"/);
+    assert.equal(JSON.stringify(trace), initial);
+    assert.equal(model.event.index, records.get('main').first);
+    assert(!records.has('link'));
+  } finally {
+    globalThis.document = original;
     setLocale('en');
   }
 });

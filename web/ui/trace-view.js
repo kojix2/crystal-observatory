@@ -57,6 +57,7 @@ export class TraceView {
     this.stop();
     this.model = model;
     this.stageRecords = indexCompilerStages(trace);
+    this.selectedStage = null;
     this.selected = 0;
     this.selectedType = 0;
     this.snapshot = 0;
@@ -118,14 +119,21 @@ export class TraceView {
   renderPhase() {
     const event = this.model?.event;
     const workflowHidden = $('workflow-column').hidden;
-    renderCompilerMap(this.model, this.stageRecords, (index) => {
-      this.stop();
-      this.seek(index);
-    });
+    renderCompilerMap(
+      this.model,
+      this.stageRecords,
+      (index) => {
+        this.stop();
+        this.seek(index);
+      },
+      { selectedStage: this.selectedStage, onSelectStage: (id) => this.selectStage(id) },
+    );
     if (workflowHidden !== $('workflow-column').hidden) this.workspace?.refresh();
-    $('phase-status').textContent = event
-      ? `${event.phase} / ${shortVisitor(event.visitor)} / ${eventLabel(event.kind)}`
-      : t('state.waiting');
+    $('phase-status').textContent = this.selectedStage
+      ? `${t(`pipeline.stage.${this.selectedStage}`)} / ${t('pipeline.unrecordedShort')}`
+      : event
+        ? `${event.phase} / ${shortVisitor(event.visitor)} / ${eventLabel(event.kind)}`
+        : t('state.waiting');
   }
 
   stop() {
@@ -156,6 +164,7 @@ export class TraceView {
   }
   seek(index) {
     if (!this.model) return;
+    this.selectedStage = null;
     this.model.seek(index);
     const event = this.model.event;
     this.selected = event?.node_id || this.selected;
@@ -174,6 +183,12 @@ export class TraceView {
       $('declarations')
         .querySelector('.declaration-details .declaration-changed')
         ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  selectStage(id) {
+    this.stop();
+    this.selectedStage = id;
+    this.renderPhase();
+    this.renderSelection({ reveal: false });
   }
   selectNode(id) {
     this.selected = id;
@@ -233,6 +248,7 @@ export class TraceView {
         this.setView('ir');
         this.ir.follow(event.llvm_function, event.llvm_block, true);
       },
+      this.selectedStage,
     );
     this.editor.highlight(this.model.nodes.get(this.selected));
   }
@@ -387,7 +403,9 @@ export class TraceView {
     const index = this.trace.events.findIndex(
       (event) =>
         event.index > this.model.index &&
-        (event.kind === kind || (kind === 'rewrite' && event.kind === 'expand')),
+        (event.kind === kind ||
+          (kind === 'rewrite' && event.kind === 'expand') ||
+          (kind === 'phase_enter' && event.kind === 'link')),
     );
     if (index >= 0) this.seek(index);
     else notify(() => t('notice.noNext'));

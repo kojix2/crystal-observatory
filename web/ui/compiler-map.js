@@ -1,20 +1,24 @@
 import { getLocale, t } from '../i18n/index.js';
 import { $, esc } from './dom.js';
-import { compilerStage, pipelineGroups } from '../core/compiler-stages.js';
+import { compilerStage, compilerStages, pipelineGroups } from '../core/compiler-stages.js';
 
 const renderedMaps = new WeakMap();
 
-export function renderCompilerMap(model, records, onSeek) {
+export function renderCompilerMap(model, records, onSeek, { selectedStage, onSelectStage } = {}) {
   const root = $('compiler-map');
-  const current = compilerStage(model?.event);
+  const current = selectedStage
+    ? compilerStages.find((stage) => stage.id === selectedStage)
+    : compilerStage(model?.event);
   // The syntax engine is separate and does not run this semantic pipeline.
   root.hidden = model?.trace.mode !== 'full';
   $('workflow-column').hidden = root.hidden;
   $('workflow-splitter').hidden = root.hidden;
   if (root.hidden) return;
   root.onclick = (event) => {
-    const button = event.target.closest('button[data-index]');
-    if (button && root.contains(button)) onSeek(Number(button.dataset.index));
+    const button = event.target.closest('button[data-index], button[data-stage]');
+    if (!button || !root.contains(button)) return;
+    if (button.dataset.stage) onSelectStage?.(button.dataset.stage);
+    else onSeek(Number(button.dataset.index));
   };
   const previous = renderedMaps.get(root);
   if (
@@ -24,7 +28,7 @@ export function renderCompilerMap(model, records, onSeek) {
   )
     return;
   const focused = root.contains(document.activeElement)
-    ? document.activeElement.dataset.index
+    ? document.activeElement.dataset
     : undefined;
   renderedMaps.set(root, { records, stage: current?.id, locale: getLocale() });
   root.title = t('pipeline.navigation');
@@ -34,11 +38,15 @@ export function renderCompilerMap(model, records, onSeek) {
         .map((stage) => records.get(stage.id)?.first)
         .find((index) => index !== undefined);
       const active = group.id === current?.group;
+      // Stage descriptions remain useful when an older trace has no result.
+      const overview = group.id === 'link' && first === undefined;
       const note = group.outsideTrace
         ? t('pipeline.outside')
-        : first === undefined
-          ? t('pipeline.unrecorded')
-          : t('pipeline.jump');
+        : overview
+          ? t('link.inspect')
+          : first === undefined
+            ? t('pipeline.unrecorded')
+            : t('pipeline.jump');
       const stages = group.stages;
       const children =
         stages.length > 1
@@ -49,27 +57,32 @@ export function renderCompilerMap(model, records, onSeek) {
               })
               .join('')}</ol>`
           : '';
-      return `<li><button type="button" ${first === undefined ? 'disabled' : `data-index="${first}"`} ${active ? 'aria-current="step"' : ''} title="${esc(note)}"><span>${i + 1} · ${esc(t(`pipeline.group.${group.id}`))}</span><small>${esc(t(`pipeline.artifact.${group.output}`))}${group.outsideTrace ? ` · ${esc(t('pipeline.outsideShort'))}` : first === undefined ? ` · ${esc(t('pipeline.unrecordedShort'))}` : ''}</small></button>${children}</li>`;
+      return `<li><button type="button" ${overview ? 'data-stage="link"' : first === undefined ? 'disabled' : `data-index="${first}"`} ${active ? 'aria-current="step"' : ''} title="${esc(note)}"><span>${i + 1} · ${esc(t(`pipeline.group.${group.id}`))}</span><small>${esc(t(`pipeline.artifact.${group.output}`))}${group.outsideTrace ? ` · ${esc(t('pipeline.outsideShort'))}` : first === undefined ? ` · ${esc(t('pipeline.unrecordedShort'))}` : ''}</small></button>${children}</li>`;
     })
     .join('')}</ol>`;
-  if (focused !== undefined)
-    root.querySelector(`button[data-index="${focused}"]`)?.focus({ preventScroll: true });
+  if (focused?.index !== undefined)
+    root.querySelector(`button[data-index="${focused.index}"]`)?.focus({ preventScroll: true });
+  else if (focused?.stage)
+    root.querySelector('button[data-stage="link"]')?.focus({ preventScroll: true });
   const active =
     root.querySelector('.semantic-map [aria-current="step"]') ||
     root.querySelector('.compiler-pipeline > li > [aria-current="step"]');
   active?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
-export function renderStageContext(event) {
-  const stage = compilerStage(event);
+export function renderStageContext(event, stage = compilerStage(event)) {
   const root = $('stage-context');
   root.hidden = !stage;
   if (!stage) {
     root.replaceChildren();
     return;
   }
+  const output =
+    event?.kind === 'link' && (event.link.exitCode !== 0 || event.link.outputBytes === null)
+      ? t('link.noOutput')
+      : t(`pipeline.artifact.${stage.output}`);
   root.innerHTML = `<div class="stage-context-heading">${esc(t('pipeline.current'))} · ${esc(t(`pipeline.group.${stage.group}`))}</div>
     <strong>${esc(t(`pipeline.stage.${stage.id}`))}</strong><code>${esc(stage.phase)}</code>
-    <div class="stage-handoff"><div><small>${esc(t('pipeline.input'))}</small><span>${esc(t(`pipeline.artifact.${stage.input}`))}</span></div><b aria-hidden="true">→</b><div><small>${esc(t('pipeline.output'))}</small><span>${esc(t(`pipeline.artifact.${stage.output}`))}</span></div></div>
+    <div class="stage-handoff"><div><small>${esc(t('pipeline.input'))}</small><span>${esc(t(`pipeline.artifact.${stage.input}`))}</span></div><b aria-hidden="true">→</b><div><small>${esc(t('pipeline.output'))}</small><span>${esc(output)}</span></div></div>
     <details class="stage-driver"><summary>${esc(t('pipeline.driver'))}</summary><code>${esc(stage.driver)}</code><p>${esc(t(`pipeline.action.${stage.id}`))}</p></details>`;
 }

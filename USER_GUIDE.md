@@ -37,8 +37,13 @@ through type inference and final checks. The operation inspector shows the stage
 incoming state, outgoing state and implementation, followed by the observed Visitor
 and operation.
 These handoffs describe compiler responsibilities, not additional measured events.
-LLD linking and execution appear as context outside the trace. Parse-only uses a
-separate syntax engine and does not display the full compiler pipeline.
+Select **Link (LLD)** to inspect the input object, specified libraries, output
+size, elapsed time, exit code, diagnostics and actual link command. New full
+compilations record the link result in History, including failures; saved traces
+retain these details. Older recordings without a link result still let you select
+the stage to read its role and input/output descriptions, marked as unrecorded.
+Execution remains outside the trace. Parse-only uses a separate syntax engine and
+does not display the full compiler pipeline.
 
 Activities record measured decisions and changes. **Not instrumented** and
 **No covered activity recorded** have different meanings; neither proves that

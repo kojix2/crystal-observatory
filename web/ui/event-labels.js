@@ -13,6 +13,10 @@ export const eventLabel = (kind) =>
       : kind || '—';
 export function explanation(event, model) {
   if (!event) return t('explain.empty');
+  if (event.kind === 'link')
+    return t(
+      event.link.exitCode === 0 && event.link.outputBytes !== null ? 'link.success' : 'link.failed',
+    );
   if (event.kind === 'declaration' && model) return declarationSummary(event, model);
   if (event.kind === 'activity') return activitySummary(event);
   const visitor = shortVisitor(event.visitor);
@@ -73,6 +77,7 @@ export function activitySummary(event) {
 }
 export function visitorRole(event, model) {
   if (!event) return '—';
+  if (event.kind === 'link') return t('pipeline.action.link');
   const name = visitorKey(event.visitor);
   const role = t(
     !name ? 'visitor.stage' : messages[`visitor.${name}`] ? `visitor.${name}` : 'visitor.unknown',

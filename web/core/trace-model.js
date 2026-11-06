@@ -22,9 +22,29 @@ export function validateTrace(t) {
     t.nodes.some((n) => !Number.isInteger(n.id) || n.id <= 0 || typeof n.kind !== 'string')
   )
     throw new UIError('error.traceNode');
-  for (const e of t.events)
+  for (const e of t.events) {
     if ((e.node_id && !ids.has(e.node_id)) || (e.related_id && !ids.has(e.related_id)))
       throw new UIError('error.traceReference');
+    if (e.kind === 'link') {
+      const link = e.link;
+      const size = (value) => Number.isSafeInteger(value) && value >= 0;
+      if (
+        !link ||
+        e.phase !== 'Link (LLD)' ||
+        !Array.isArray(link.args) ||
+        !link.args.length ||
+        link.args.some((arg) => typeof arg !== 'string') ||
+        !size(link.objectBytes) ||
+        !Number.isFinite(link.elapsedMs) ||
+        link.elapsedMs < 0 ||
+        !Number.isInteger(link.exitCode) ||
+        !(link.outputBytes === null || size(link.outputBytes)) ||
+        typeof link.stdout !== 'string' ||
+        typeof link.stderr !== 'string'
+      )
+        throw new UIError('error.traceSchema');
+    }
+  }
   for (const s of t.snapshots) {
     if (!Array.isArray(s.nodes) || !Array.isArray(s.roots) || s.nodes.length > 20000)
       throw new UIError('error.traceAST');

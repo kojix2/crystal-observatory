@@ -211,3 +211,132 @@ test('stage handoff follows playback independently of the selected node, includi
     setLocale('en');
   }
 });
+
+test('link details survive localization and node selection, then clear when seeking away', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const trace = {
+    schema_version: 1,
+    compiler_version: 'WASI',
+    source: 'puts 1',
+    nodes: [{ id: 1, kind: 'Call', text: 'puts 1' }],
+    snapshots: [],
+    events: [
+      { index: 0, kind: 'complete', phase: '', visitor: '' },
+      {
+        index: 1,
+        kind: 'link',
+        phase: 'Link (LLD)',
+        visitor: 'LLD',
+        node_id: 0,
+        link: {
+          args: ['wasm-ld', 'out.o.wasm', '-lc', 'lib/libclang_rt.builtins.a', '-o', 'out.wasm'],
+          objectBytes: 2000,
+          outputBytes: 3000,
+          elapsedMs: 125,
+          exitCode: 0,
+          stdout: '',
+          stderr: '<script>diagnostic</script>',
+        },
+      },
+    ],
+  };
+  const model = new TraceModel(trace).seek(1);
+  const contents = (element) => [element.textContent, ...element.children.map(contents)].join('\n');
+  try {
+    setLocale('ja');
+    renderInspector(model, 1, () => {});
+    assert.equal(get('visitor-title').textContent, 'LLD');
+    assert.equal(get('link-details').hidden, false);
+    assert.equal(get('event-node').hidden, true);
+    assert.equal(get('explanation').textContent, t('link.success'));
+    assert(get('stage-context').innerHTML.includes(t('pipeline.stage.link')));
+    const details = contents(get('link-details'));
+    assert.match(details, /out\.o\.wasm/);
+    assert.match(details, /out\.wasm/);
+    assert.match(details, /0\.125/);
+    assert.match(details, /-lc\nlib\/libclang_rt\.builtins\.a/);
+    assert.match(details, /wasm-ld out\.o\.wasm -lc/);
+    assert.match(details, /<script>diagnostic<\/script>/); // Text, never innerHTML.
+    assert.equal(model.index, 1);
+
+    setLocale('en');
+    renderInspector(model, 0, () => {});
+    assert.equal(model.index, 1);
+    assert.equal(get('node-id').textContent, '—');
+    assert(contents(get('link-details')).includes(t('link.command')));
+
+    trace.events[1].link.exitCode = 1;
+    trace.events[1].link.outputBytes = null;
+    renderInspector(model, 1, () => {});
+    assert.equal(get('explanation').textContent, t('link.failed'));
+    assert(contents(get('link-details')).includes(t('link.noOutput')));
+    assert(get('stage-context').innerHTML.includes(t('link.noOutput')));
+
+    model.seek(0);
+    renderInspector(model, 1, () => {});
+    assert.equal(get('link-details').hidden, true);
+    assert.equal(get('link-details').children.length, 0);
+    const invalid = structuredClone(trace);
+    delete invalid.events[1].link;
+    assert.throws(() => new TraceModel(invalid));
+    invalid.events[1].link = { ...trace.events[1].link, args: [null] };
+    assert.throws(() => new TraceModel(invalid));
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
+  }
+});
+
+test('an unrecorded link stage shows its description without stale event results', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const model = new TraceModel({
+    schema_version: 1,
+    compiler_version: 'WASI',
+    source: 'puts 1',
+    snapshots: [],
+    nodes: [{ id: 1, kind: 'Call', text: 'puts 1' }],
+    events: [{ index: 0, kind: 'phase_enter', phase: 'Semantic (new)' }],
+  }).seek(0);
+  const initial = JSON.stringify(model.trace);
+  const render = (stage) =>
+    renderInspector(model, 1, () => {}, undefined, undefined, undefined, stage);
+  try {
+    setLocale('ja');
+    render('link');
+    assert.equal(get('node-id').textContent, '#1');
+    assert.equal(get('event-id').textContent, '—');
+    assert.equal(get('visitor-title').textContent, 'LLD (wasm-ld)');
+    assert.equal(get('event-kind').textContent, t('pipeline.unrecordedShort'));
+    assert.equal(get('explanation').textContent, t('link.unrecorded'));
+    assert.equal(get('visitor-role').textContent, t('pipeline.action.link'));
+    assert(get('stage-context').innerHTML.includes(t('pipeline.artifact.object')));
+    assert(get('stage-context').innerHTML.includes(t('pipeline.artifact.wasm')));
+    assert.equal(get('link-details').hidden, true);
+    assert.equal(get('event-node').hidden, true);
+    assert.equal(get('stack').textContent, '—');
+    assert.equal(model.index, 0);
+    assert.equal(JSON.stringify(model.trace), initial);
+    setLocale('en');
+    render('link');
+    assert.equal(get('explanation').textContent, t('link.unrecorded'));
+    render(null);
+    assert.equal(get('event-id').textContent, '#0');
+    assert.equal(get('visitor-title').textContent, 'Program#define_new_methods');
+    assert(get('stage-context').innerHTML.includes(t('pipeline.stage.new')));
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
+  }
+});

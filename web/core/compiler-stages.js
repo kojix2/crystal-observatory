@@ -119,6 +119,15 @@ export const compilerStages = [
     driver: 'LLVM TargetMachine',
     file: null,
   },
+  {
+    id: 'link',
+    phase: 'Link (LLD)',
+    group: 'link',
+    input: 'object',
+    output: 'wasm',
+    driver: 'LLD (wasm-ld)',
+    file: null,
+  },
 ];
 
 export const pipelineGroups = [
@@ -127,7 +136,7 @@ export const pipelineGroups = [
   { id: 'infer', output: 'codegenReady' },
   { id: 'codegen', output: 'ir' },
   { id: 'object', output: 'object' },
-  { id: 'link', output: 'wasm', outsideTrace: true },
+  { id: 'link', output: 'wasm' },
   { id: 'run', output: 'result', outsideTrace: true },
 ].map((group) => ({
   ...group,

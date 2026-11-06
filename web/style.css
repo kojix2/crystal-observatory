@@ -95,6 +95,8 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:var(--head
 .inspect-scroll .stage-context p { font-size:11px; line-height:1.6; color:var(--ink); margin:8px 0; }
 .stage-driver { border-top:1px solid var(--line); padding-top:5px; margin-top:8px; }
 .stage-driver summary { font-size:10px; color:var(--muted); cursor:pointer; }
+#link-details pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+#link-details details summary { color:var(--muted); font-size:11px; cursor:pointer; }
 .workbench-scroll { flex:1; min-height:0; overflow:auto; }
 .workbench { width:100%; min-width:1118px; min-height:390px; height:100%; display:grid; grid-template-columns:var(--pane-columns,180px 6px 34fr 6px 39fr 6px 27fr); }
 #workflow-column { grid-column:1; grid-row:1; }

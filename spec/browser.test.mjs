@@ -5,6 +5,8 @@ import { runCommand } from '../web/runtime/wasi-command.js';
 import { compileSource } from '../web/runtime/compiler-pipeline.js';
 import { TraceModel, flattenAST } from '../web/core/trace-model.js';
 import { readFile } from 'node:fs/promises';
+import { LINKER_ARGS } from '../web/runtime/linker-args.js';
+import { indexCompilerStages } from '../web/core/compiler-stages.js';
 
 let assets;
 before(async () => {
@@ -78,6 +80,34 @@ test('arbitrary edited source drives actual semantics, LLVM, linking and executi
     .join('\n');
   assert.match(dispatches, /power_sum\(Int32\)/);
   assert.match(dispatches, /power_sum\(Float64\)/);
+  const event = result.trace.events.at(-1);
+  assert.equal(event.kind, 'link');
+  assert.equal(indexCompilerStages(result.trace).get('link').first, event.index);
+  assert.deepEqual(event.link.args.slice(0, LINKER_ARGS.length), LINKER_ARGS);
+  assert.equal(event.link.elapsedMs, result.timings.link);
+  assert(event.link.objectBytes > 0);
+  assert.equal(event.link.outputBytes, result.wasm.byteLength);
+  assert.equal(event.link.exitCode, 0);
+  const restored = new TraceModel(JSON.parse(JSON.stringify(result.trace))).seek(event.index);
+  assert.deepEqual(restored.event.link, event.link);
+});
+
+test('link failures retain the invocation and diagnostics in a selectable stage', async () => {
+  const result = await compile(`
+lib Missing
+  fun observatory_missing : Int32
+end
+puts Missing.observatory_missing
+`);
+  assert.equal(result.wasm, undefined);
+  assert(result.trace.errors.length > 0);
+  const event = result.trace.events.at(-1);
+  assert.equal(event.kind, 'link');
+  assert.notEqual(event.link.exitCode, 0);
+  assert.equal(event.link.outputBytes, null);
+  assert.match(event.link.stderr, /observatory_missing/);
+  assert.equal(indexCompilerStages(result.trace).get('link').first, event.index);
+  assert.equal(new TraceModel(result.trace).seek(event.index).event, event);
 });
 
 test('macros generate traced AST; collections and Unicode execute', async () => {
@@ -108,6 +138,7 @@ test('stdin, argv and regex libraries are real WASI inputs', async () => {
 test('type and syntax errors return genuine diagnostics without an executable', async () => {
   const wrongType = await compile('puts 42 + "crystal"\n');
   assert.ok(wrongType.trace.errors.length);
+  assert(!indexCompilerStages(wrongType.trace).has('link'));
   assert.match(wrongType.trace.errors.join('\n'), /String|Int32/);
   assert.equal(wrongType.wasm, undefined);
   const wrongSyntax = await compile('def broken(\n');

@@ -41,6 +41,13 @@ LLVM instruction observations include child emission and only cover the final
 insertion block. They are neither exclusive per-node output nor complete
 multi-block diffs. Function-signature creation does not imply that generating
 the function body succeeded. LLVM optimization and linker internals are unobserved.
+The browser appends a `link` event after LLD returns, recording its invocation,
+input/output sizes, elapsed time, exit code and diagnostics. This is an invocation
+result, not a trace of symbol resolution or proof that every specified library
+contributed code. The compiler's `complete` event precedes this browser-side step.
+Older recordings can omit the link event; no result is inferred for them. Selecting
+the link stage without a result shows its description independently of history,
+without appending synthetic events or changing the selected history position.
 
 Runtime limits are defined in `web/core/limits.js` and the Crystal entrypoints.
 They bound resources, not compiler coverage or a complete memory sandbox.

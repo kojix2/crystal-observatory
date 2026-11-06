@@ -6,6 +6,7 @@ import {
   visitorKey,
   activityLabel,
   activitySummary,
+  explanation,
 } from './event-labels.js';
 import { groupActivitySummary } from '../core/activities.js';
 import { groupEvents, eventRows } from '../core/event-groups.js';
@@ -172,11 +173,13 @@ export class EventList {
     return `<tr class="${event.index === this.model.index ? 'active' : ''} ${esc(event.kind)}" data-index="${event.index}" tabindex="0" aria-current="${event.index === this.model.index ? 'step' : 'false'}"><td>${event.index}</td><td title="${esc(event.visitor)}"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(shortVisitor(event.visitor) || event.phase)}</span>${this.renderNode(event)}</td><td><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-result" title="${esc(this.result(event))}">${esc(brief(this.result(event), 130))}</span></td></tr>`;
   }
   result(event) {
-    return event.kind === 'activity'
-      ? activitySummary(event)
-      : event.kind === 'declaration'
-        ? declarationSummary(event, this.model)
-        : event.after || event.detail;
+    return event.kind === 'link'
+      ? explanation(event)
+      : event.kind === 'activity'
+        ? activitySummary(event)
+        : event.kind === 'declaration'
+          ? declarationSummary(event, this.model)
+          : event.after || event.detail;
   }
   renderNode(event) {
     return `<span class="event-node">${event.node_id ? `#${event.node_id} ${esc(this.model.nodes.get(event.node_id)?.kind || '')}` : '—'}</span>`;

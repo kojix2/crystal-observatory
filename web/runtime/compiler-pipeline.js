@@ -27,19 +27,39 @@ export async function compileSource(source, assets, onStage = () => {}) {
   const object = compiled.root.contents.get('out.o.wasm')?.data;
   if (!object) throw new Error('LLVM did not emit a WebAssembly object');
   onStage('linking');
+  const args = [
+    ...LINKER_ARGS,
+    `--max-memory=${LIMITS.programMemoryBytes}`,
+    '-z',
+    `stack-size=${LIMITS.programStackBytes}`,
+  ];
   const linkStart = performance.now();
   const linked = await runCommand(assets.lld, {
-    args: [
-      ...LINKER_ARGS,
-      `--max-memory=${LIMITS.programMemoryBytes}`,
-      '-z',
-      `stack-size=${LIMITS.programStackBytes}`,
-    ],
+    args,
     entries: [['out.o.wasm', object], ...Object.entries(assets.libs)],
     stage: 'linking',
   });
   timings.link = performance.now() - linkStart;
   const wasm = linked.root.contents.get('out.wasm')?.data;
+  // This observes one browser-side invocation, not LLD's internal operations.
+  // Keep the result in the trace so exported recordings retain the link details.
+  trace.events.push({
+    index: trace.events.length,
+    kind: 'link',
+    phase: 'Link (LLD)',
+    visitor: 'LLD',
+    node_id: 0,
+    detail: '',
+    link: {
+      args,
+      objectBytes: object.byteLength,
+      elapsedMs: timings.link,
+      exitCode: linked.exitCode,
+      outputBytes: wasm?.byteLength ?? null,
+      stdout: stripAnsi(linked.stdout),
+      stderr: stripAnsi(linked.stderr),
+    },
+  });
   if (!wasm || linked.exitCode !== 0) {
     trace.errors.push(stripAnsi(linked.stderr || linked.stdout) || `LLD exited ${linked.exitCode}`);
     return { trace, timings };

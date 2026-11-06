@@ -13,11 +13,11 @@ import {
   activityLabel,
 } from './event-labels.js';
 import { activityVisitors, coverageFor } from '../core/activities.js';
-import { compilerStage } from '../core/compiler-stages.js';
+import { compilerStage, compilerStages } from '../core/compiler-stages.js';
 import { renderStageContext } from './compiler-map.js';
 
-// Node selection can move independently of playback. The lower inspector always
-// describes model.event, even when another node is clicked in the graph or stack.
+// Node selection can move independently of playback. The lower inspector follows
+// model.event unless an unrecorded stage description is explicitly selected.
 export function renderInspector(
   model,
   selected,
@@ -25,9 +25,13 @@ export function renderInspector(
   onDeclaration = () => {},
   onSeek = () => {},
   onIR = () => {},
+  selectedStage = null,
 ) {
   const node = model.nodes.get(selected),
-    event = model.event,
+    event = selectedStage ? undefined : model.event,
+    stage = selectedStage
+      ? compilerStages.find((item) => item.id === selectedStage)
+      : compilerStage(event),
     nodeEvents = node ? model.eventsFor(selected) : [];
   $('node-id').textContent = node ? `#${node.id}` : '—';
   $('node-title').textContent = node?.kind || t('node.empty');
@@ -63,16 +67,19 @@ export function renderInspector(
   for (const id of ['node-prev', 'node-next', 'node-filter']) $(id).disabled = !node;
 
   $('event-id').textContent = event ? `#${event.index}` : '—';
-  renderStageContext(event);
+  renderStageContext(event, stage);
   $('visitor-title').textContent = event
-    ? shortVisitor(event.visitor) ||
-      compilerStage(event)?.driver.split(' → ')[0] ||
-      t('event.noVisitor')
-    : '—';
+    ? shortVisitor(event.visitor) || stage?.driver.split(' → ')[0] || t('event.noVisitor')
+    : stage?.driver || '—';
   $('visitor-title').dataset.visitor = visitorKey(event?.visitor);
-  $('visitor-role').textContent = visitorRole(event, model);
-  $('event-kind').textContent = eventLabel(event?.kind);
-  $('explanation').textContent = explanation(event, model);
+  $('visitor-role').textContent = selectedStage
+    ? t(`pipeline.action.${stage.id}`)
+    : visitorRole(event, model);
+  $('event-kind').textContent = selectedStage
+    ? t('pipeline.unrecordedShort')
+    : eventLabel(event?.kind);
+  $('explanation').textContent = selectedStage ? t('link.unrecorded') : explanation(event, model);
+  renderLinkDetails(event);
   $('event-declaration').hidden = event?.kind !== 'declaration';
   $('event-declaration').textContent = t('decl.title');
   $('event-declaration').onclick = () => onDeclaration(event.type_id);
@@ -119,7 +126,7 @@ export function renderInspector(
     if (['rewrite', 'expand'].includes(event?.kind)) renderCrystal($(id), value);
     else $(id).textContent = value;
   }
-  const stack = model.stack.slice(-15);
+  const stack = selectedStage ? [] : model.stack.slice(-15);
   $('stack').replaceChildren(
     ...stack.map((frame, i) => {
       const button = document.createElement('button');
@@ -133,6 +140,49 @@ export function renderInspector(
   );
   if (!stack.length) $('stack').textContent = '—';
   renderLinks(model.trace, event);
+}
+
+function renderLinkDetails(event) {
+  const root = $('link-details');
+  root.hidden = event?.kind !== 'link';
+  root.replaceChildren();
+  if (root.hidden) return;
+  const link = event.link;
+  const bytes = (value) => t('link.bytes', { bytes: value.toLocaleString() });
+  const field = (label, value, code = false) => {
+    const heading = document.createElement('h4');
+    heading.textContent = t(label);
+    const content = document.createElement(code ? 'pre' : 'p');
+    content.textContent = value;
+    root.append(heading, content);
+  };
+  field('pipeline.input', `out.o.wasm · ${bytes(link.objectBytes)}`);
+  field(
+    'link.libraries',
+    link.args.filter((arg) => arg.startsWith('-l') || arg.endsWith('.a')).join('\n') || '—',
+    true,
+  );
+  field(
+    'pipeline.output',
+    link.outputBytes === null ? t('link.noOutput') : `out.wasm · ${bytes(link.outputBytes)}`,
+  );
+  field('link.elapsed', t('link.seconds', { seconds: (link.elapsedMs / 1000).toFixed(3) }));
+  field('link.exitCode', String(link.exitCode));
+  field(
+    'link.diagnostics',
+    [link.stdout, link.stderr].filter(Boolean).join('\n') || t('link.noDiagnostics'),
+    true,
+  );
+  const command = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.textContent = t('link.command');
+  const code = document.createElement('pre');
+  // Quote arguments for display only; nothing here is evaluated as shell code.
+  code.textContent = link.args
+    .map((arg) => (/^[A-Za-z0-9_./=:+,-]+$/.test(arg) ? arg : `'${arg.replaceAll("'", "'\\''")}'`))
+    .join(' ');
+  command.append(summary, code);
+  root.append(command);
 }
 function renderNodeIR(node, events) {
   // Like source, show the selected node's records from the whole compilation,
