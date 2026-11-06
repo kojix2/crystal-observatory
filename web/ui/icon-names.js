@@ -27,5 +27,7 @@ export const lucideNames = {
   download: 'download',
   external: 'external-link',
   info: 'info',
+  menu: 'ellipsis',
+  history: 'rotate-ccw-clock',
   reference: 'arrow-up-right',
 };

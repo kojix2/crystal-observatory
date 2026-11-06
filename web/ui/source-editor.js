@@ -55,23 +55,33 @@ export class SourceEditor {
     $('restore').hidden = !this.dirty;
     this.scroll();
   }
+  metrics() {
+    const style = window.getComputedStyle($('source'));
+    return { lineHeight: parseFloat(style.lineHeight), padding: parseFloat(style.paddingTop) };
+  }
   scroll() {
+    const { lineHeight, padding } = this.metrics();
     $('source-location').textContent =
       this.line && !this.dirty ? `L${this.line}:${this.column}` : '';
     $('source-colors').style.transform =
       `translate(${-$('source').scrollLeft}px, ${-$('source').scrollTop}px)`;
     $('line-numbers').style.transform = `translateY(${-$('source').scrollTop}px)`;
     $('highlight').style.display = this.line > 0 && !this.dirty ? 'block' : 'none';
-    $('highlight').style.top = `${14 + (this.line - 1) * 21 - $('source').scrollTop}px`;
+    $('highlight').style.top =
+      `${padding + (this.line - 1) * lineHeight - $('source').scrollTop}px`;
   }
   highlight(node) {
     const changed = this.line !== (node?.line || 0);
     this.line = node?.line || 0;
     this.column = node?.column || 0;
     if (changed && this.line && !this.dirty && !$('source-view').hidden) {
-      const y = (this.line - 1) * 21;
-      if (y < $('source').scrollTop || y > $('source').scrollTop + $('source').clientHeight - 45)
-        $('source').scrollTop = Math.max(0, y - 55);
+      const { lineHeight } = this.metrics();
+      const y = (this.line - 1) * lineHeight;
+      if (
+        y < $('source').scrollTop ||
+        y > $('source').scrollTop + $('source').clientHeight - 2 * lineHeight
+      )
+        $('source').scrollTop = Math.max(0, y - 2.5 * lineHeight);
     }
     this.scroll();
   }

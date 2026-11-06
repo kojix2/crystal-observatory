@@ -23,6 +23,28 @@ playback can refer to different times; Types follows the selected history event.
 Editing source does not update an existing AST or IR. Escape exits maximization;
 **End comparison** returns to one view.
 
+## On a smartphone
+
+At widths up to 960 px, use the bottom navigation: **Work**, **History**,
+**Workflow**, and **Details**. Work contains the source editor and all observation
+tabs. Swipe the tab row to reach more views. Compile, run, parse, and stop remain
+in the top toolbar; its options button opens language, settings, help, layout
+reset, and GitHub. Editing remains available while compilation runs.
+
+Selecting a History event or Workflow stage opens Details, with the operation
+above the node information. Return to History to continue from the same selection,
+filters, and scroll position. Playback and stepping stay in the current screen.
+Workflow is available only for full compiler recordings. Comparisons stack the
+two views vertically and scroll within Work. Code and graphs can scroll sideways
+inside their own panels.
+When a keyboard leaves very little vertical space during source editing, the
+editor and compile controls take priority. Dismiss the keyboard to restore the
+navigation and other controls.
+
+Rotating the device or returning to a desktop-sized window preserves source,
+selection, and comparison. Desktop divider sizes and collapsed panels remain
+separate from phone navigation. The phone view always starts in Work on reload.
+
 ## Read observations
 
 History selects an event; the node inspector independently follows the selected

@@ -124,6 +124,7 @@ export class TraceView {
       (index) => {
         this.stop();
         this.seek(index);
+        this.workspace?.showPane('details', { focus: true });
       },
       { selectedStage: this.selectedStage, onSelectStage: (id) => this.selectStage(id) },
     );
@@ -187,20 +188,24 @@ export class TraceView {
     this.stop();
     this.seek(index);
     const node = this.model?.event?.node_id;
-    if (!$('follow').checked || !node) return;
-    const snapshot = this.model.snapshotForNode(node, this.snapshot);
-    if (snapshot < 0) return;
-    this.snapshot = snapshot;
-    $('snapshot').value = snapshot;
-    revealASTNode(this.trace.snapshots[snapshot], node, this.collapsed);
-    if (!this.layout.has('ast')) this.setView('ast');
-    this.renderObservation({ reveal: true });
+    if ($('follow').checked && node) {
+      const snapshot = this.model.snapshotForNode(node, this.snapshot);
+      if (snapshot >= 0) {
+        this.snapshot = snapshot;
+        $('snapshot').value = snapshot;
+        revealASTNode(this.trace.snapshots[snapshot], node, this.collapsed);
+        if (!this.layout.has('ast')) this.setView('ast');
+        this.renderObservation({ reveal: true });
+      }
+    }
+    this.workspace?.showPane('details', { focus: true });
   }
   selectStage(id) {
     this.stop();
     this.selectedStage = id;
     this.renderPhase();
     this.renderSelection({ reveal: false });
+    this.workspace?.showPane('details', { focus: true });
   }
   selectNode(id) {
     this.selected = id;
@@ -402,7 +407,8 @@ export class TraceView {
     this.workspaceBeforeComparison = null;
     if (focus) $(`tab-${this.view}`).focus({ preventScroll: true });
   }
-  setView(name) {
+  setView(name, { reveal = true } = {}) {
+    if (reveal) this.workspace?.showPane('work');
     if (this.layout.secondary && this.layout.has(name)) {
       const target = name === 'source' ? $('source') : $(scrollTargets[name]);
       target.tabIndex = name === 'source' ? target.tabIndex : -1;
@@ -474,7 +480,7 @@ export class TraceView {
       ['next-activity', 'activity'],
     ])
       $(id).onclick = () => {
-        if (kind === 'declaration') this.setView('declarations');
+        if (kind === 'declaration') this.setView('declarations', { reveal: false });
         this.nextKind(kind);
       };
     $('snapshot').onchange = () => {
@@ -490,7 +496,10 @@ export class TraceView {
       this.collapsed.clear();
       this.renderObservation();
     };
-    $('node-filter').onclick = () => this.events.filter(this.selected);
+    $('node-filter').onclick = () => {
+      this.events.filter(this.selected);
+      this.workspace?.showPane('history');
+    };
     $('node-next').onclick = () => this.moveNode(1);
     $('node-prev').onclick = () => this.moveNode(-1);
     $('download-ir').onclick = () => {

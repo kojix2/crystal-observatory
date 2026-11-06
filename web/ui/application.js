@@ -93,6 +93,7 @@ export class Application {
     // the older trace, rather than silently replacing the user's newer source.
     const changed = this.editor.value !== submittedSource;
     this.trace.load(trace, { origin, preserveEdits: changed, live });
+    this.trace.workspace?.showPane('work');
     // Imported traces can replace the editor with unrelated code. Do not keep
     // offering the previous example's recording as though it matched this input.
     if (this.manifest[Number($('example').value) - 1]?.source !== this.editor.value)

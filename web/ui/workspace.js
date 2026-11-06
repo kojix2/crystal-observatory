@@ -1,4 +1,5 @@
 import { $ } from './dom.js';
+import { setupMobileWorkspace } from './mobile-workspace.js';
 import { t } from '../i18n/index.js';
 import { comparisonRatio, comparisonWidths } from '../core/view-layout.js';
 import {
@@ -74,6 +75,10 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     bench = $('workbench');
   const handles = ['timeline-splitter', 'inspector-splitter'].map($);
   const workflowHandle = $('workflow-splitter');
+  const mobile = setupMobileWorkspace(() => {
+    apply();
+    onResize();
+  });
   // Workflow now has an independent pixel width; old history widths included it.
   const key = 'crystal-observatory.workspace.v5';
   const comparisonKey = 'crystal-observatory.comparison.v1';
@@ -145,6 +150,18 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   };
   const heights = () => detailHeights($('inspector-panel').clientHeight - 6, detailRatio);
   function apply() {
+    mobile.refresh();
+    if (mobile.active) {
+      bench.style.minWidth = '0';
+      for (const handle of [
+        ...handles,
+        workflowHandle,
+        $('detail-splitter'),
+        $('comparison-splitter'),
+      ])
+        setHandleEnabled(handle, false);
+      return;
+    }
     bench.style.minWidth = enabled() ? `${workspaceMinimumWidth(layoutOptions())}px` : '0';
     const { workflow, panes, minimums, workflowMinimum, workflowGap } = sizes();
     bench.style.setProperty(
@@ -170,13 +187,15 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     const [top, bottom] = heights();
     $('inspector-panel').style.gridTemplateRows = `${top}px 6px ${bottom}px`;
     range($('detail-splitter'), top, 150, top + bottom - 190);
+    setHandleEnabled($('detail-splitter'), enabled());
+    setHandleEnabled($('comparison-splitter'), comparing());
     if (comparing()) {
       const [left, right] = compareWidths();
       $('observation-views').style.setProperty('--comparison-columns', `${left}px 6px ${right}px`);
       range($('comparison-splitter'), left, 320, left + right - 320);
     }
   }
-  const enabled = () => !app.classList.contains('graph-maximized');
+  const enabled = () => !mobile.active && !app.classList.contains('graph-maximized');
   bindDivider(workflowHandle, {
     axis: 'x',
     enabled: () => enabled() && workflowAvailable() && !workflowCollapsed() && !historyCollapsed(),
@@ -216,7 +235,7 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   );
   bindDivider($('comparison-splitter'), {
     axis: 'x',
-    enabled: comparing,
+    enabled: () => !mobile.active && comparing(),
     measure: compareWidths,
     persist: persistComparison,
     move: ([left, right], delta) => {
@@ -271,6 +290,7 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     detailRatio = 0.42;
     compareRatio = 0.5;
     app.classList.remove('workflow-collapsed');
+    mobile.showPane('work');
     maximize(false);
     collapse(false);
     persist();
@@ -292,6 +312,10 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   apply();
   return {
     refresh: apply,
+    showPane: mobile.showPane,
+    get mobile() {
+      return mobile.active;
+    },
     capture: () => ({
       weights: [...weights],
       detailRatio,

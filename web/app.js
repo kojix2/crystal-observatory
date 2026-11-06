@@ -8,7 +8,13 @@ mountIcons();
 setupSettings();
 setupLanguage();
 const app = new Application();
-app.trace.workspace = setupWorkspace(() => app.trace.renderObservation(), {
-  onReset: () => app.trace.endComparison(),
-});
+app.trace.workspace = setupWorkspace(
+  () => {
+    app.editor.refresh();
+    app.trace.renderObservation();
+  },
+  {
+    onReset: () => app.trace.endComparison(),
+  },
+);
 app.loadManifest();

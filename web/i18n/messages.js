@@ -6,7 +6,10 @@ import { astMessages } from './ast-messages.js';
 import { comparisonMessages } from './comparison-messages.js';
 import { pipelineMessages } from './pipeline-messages.js';
 
+import { mobileMessages } from './mobile-messages.js';
+
 export const messages = {
+  ...mobileMessages,
   ...declarationMessages,
   ...activityMessages,
   ...settingsMessages,
