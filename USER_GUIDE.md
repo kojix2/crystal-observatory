@@ -43,7 +43,10 @@ Workflow and History separately with their header buttons. Widths and collapsed
 states are saved in the browser. The outline follows the selected event; selecting
 a stage jumps History to its first recorded event while retaining its filters.
 Semantic steps appear under their parent stages, from registering definitions
-through type inference and final checks. The operation inspector shows the stage's
+through type inference and final checks. The current group opens automatically;
+use its arrow to show or hide the steps without moving History. Manual choices
+last until another recording is loaded. Hover a stage for its output and recording
+availability. The operation inspector shows the stage's
 incoming state, outgoing state and implementation, followed by the observed Visitor
 and operation.
 These handoffs describe compiler responsibilities, not additional measured events.

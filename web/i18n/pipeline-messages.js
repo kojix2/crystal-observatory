@@ -1,6 +1,33 @@
 const entry = (ja, en, es, zh, fr, de, ru) => ({ ja, en, es, 'zh-CN': zh, fr, de, ru });
 
 export const pipelineMessages = {
+  'pipeline.section.prepare': entry(
+    '定義と宣言',
+    'Definitions',
+    'Definiciones',
+    '定义与声明',
+    'Définitions',
+    'Definitionen',
+    'Определения',
+  ),
+  'pipeline.section.infer': entry(
+    '型推論と検査',
+    'Type analysis',
+    'Análisis de tipos',
+    '类型分析',
+    'Analyse des types',
+    'Typanalyse',
+    'Анализ типов',
+  ),
+  'pipeline.details': entry(
+    '「{stage}」の詳細工程を開閉',
+    'Toggle stages in {stage}',
+    'Mostrar u ocultar etapas de {stage}',
+    '展开或折叠{stage}的子阶段',
+    'Afficher ou masquer les étapes de {stage}',
+    'Teilschritte von {stage} ein- oder ausblenden',
+    'Показать или скрыть шаги этапа «{stage}»',
+  ),
   'link.inspect': entry(
     'リンク工程の説明を表示',
     'Inspect the linking stage',

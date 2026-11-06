@@ -3,6 +3,20 @@ import { $, esc } from './dom.js';
 import { compilerStage, compilerStages, pipelineGroups } from '../core/compiler-stages.js';
 
 const renderedMaps = new WeakMap();
+const disclosures = new WeakMap();
+const icons = {
+  parse: '<path d="m6 3-4 5 4 5m4-10 4 5-4 5"/>',
+  prepare: '<path d="m8 2 6 3-6 3-6-3 6-3Zm-6 6 6 3 6-3M2 11l6 3 6-3"/>',
+  infer:
+    '<circle cx="4" cy="3" r="1.5"/><circle cx="12" cy="7" r="1.5"/><circle cx="4" cy="13" r="1.5"/><path d="M4 4.5v7M5.5 7H9a3 3 0 0 0 3-2V3"/>',
+  codegen: '<path d="M6 2H3v12h3m4-12h3v12h-3M6 6l4 2-4 2"/>',
+  object:
+    '<rect x="4" y="4" width="8" height="8" rx="1"/><path d="M6 1v3m4-3v3M6 12v3m4-3v3M1 6h3m-3 4h3m8-4h3m-3 4h3"/>',
+  link: '<path d="m6.5 9.5 3-3m-5 1-1 1a3 3 0 0 0 4 4l1-1m-1-7 1-1a3 3 0 0 1 4 4l-1 1"/>',
+  run: '<path d="m5 3 8 5-8 5V3Z"/>',
+};
+const icon = (group) =>
+  `<svg class="pipeline-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[group]}</svg>`;
 
 export function renderCompilerMap(model, records, onSeek, { selectedStage, onSelectStage } = {}) {
   const root = $('compiler-map');
@@ -14,10 +28,22 @@ export function renderCompilerMap(model, records, onSeek, { selectedStage, onSel
   $('workflow-column').hidden = root.hidden;
   $('workflow-splitter').hidden = root.hidden;
   if (root.hidden) return;
+  if (disclosures.get(root)?.records !== records)
+    disclosures.set(root, { records, groups: new Map() });
+  const expandedGroups = disclosures.get(root).groups;
   root.onclick = (event) => {
-    const button = event.target.closest('button[data-index], button[data-stage]');
+    const button = event.target.closest(
+      'button[data-index], button[data-stage], button[data-toggle-group]',
+    );
     if (!button || !root.contains(button)) return;
-    if (button.dataset.stage) onSelectStage?.(button.dataset.stage);
+    if (button.dataset.toggleGroup) {
+      expandedGroups.set(
+        button.dataset.toggleGroup,
+        button.getAttribute('aria-expanded') !== 'true',
+      );
+      renderedMaps.delete(root);
+      renderCompilerMap(model, records, onSeek, { selectedStage, onSelectStage });
+    } else if (button.dataset.stage) onSelectStage?.(button.dataset.stage);
     else onSeek(Number(button.dataset.index));
   };
   const previous = renderedMaps.get(root);
@@ -33,7 +59,7 @@ export function renderCompilerMap(model, records, onSeek, { selectedStage, onSel
   renderedMaps.set(root, { records, stage: current?.id, locale: getLocale() });
   root.title = t('pipeline.navigation');
   root.innerHTML = `<ol class="compiler-pipeline">${pipelineGroups
-    .map((group, i) => {
+    .map((group) => {
       const first = group.stages
         .map((stage) => records.get(stage.id)?.first)
         .find((index) => index !== undefined);
@@ -48,25 +74,35 @@ export function renderCompilerMap(model, records, onSeek, { selectedStage, onSel
             ? t('pipeline.unrecorded')
             : t('pipeline.jump');
       const stages = group.stages;
+      const expanded = expandedGroups.get(group.id) ?? active;
       const children =
         stages.length > 1
-          ? `<ol class="semantic-map">${stages
+          ? `<ol class="semantic-map" id="pipeline-${group.id}" ${expanded ? '' : 'hidden'}>${stages
               .map((stage) => {
                 const first = records.get(stage.id)?.first;
-                return `<li><button type="button" ${first === undefined ? 'disabled' : `data-index="${first}"`} ${stage.id === current?.id ? 'aria-current="step"' : ''} title="${esc(stage.phase)}">${esc(t(`pipeline.stage.${stage.id}`))}</button></li>`;
+                return `<li><button type="button" ${first === undefined ? 'disabled' : `data-index="${first}"`} ${expanded && stage.id === current?.id ? 'aria-current="step"' : ''} title="${esc(stage.phase)}">${esc(t(`pipeline.stage.${stage.id}`))}</button></li>`;
               })
               .join('')}</ol>`
           : '';
-      return `<li><button type="button" ${overview ? 'data-stage="link"' : first === undefined ? 'disabled' : `data-index="${first}"`} ${active ? 'aria-current="step"' : ''} title="${esc(note)}"><span>${i + 1} · ${esc(t(`pipeline.group.${group.id}`))}</span><small>${esc(t(`pipeline.artifact.${group.output}`))}${group.outsideTrace ? ` · ${esc(t('pipeline.outsideShort'))}` : first === undefined ? ` · ${esc(t('pipeline.unrecordedShort'))}` : ''}</small></button>${children}</li>`;
+      const name = t(`pipeline.${children ? 'section' : 'group'}.${group.id}`);
+      const title = `${t(`pipeline.group.${group.id}`)} · ${t(`pipeline.artifact.${group.output}`)} · ${note}`;
+      const toggle = children
+        ? `<button type="button" class="pipeline-disclosure" data-toggle-group="${group.id}" aria-expanded="${expanded}" aria-controls="pipeline-${group.id}" aria-label="${esc(t('pipeline.details', { stage: name }))}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m4 2 4 4-4 4"/></svg></button>`
+        : '';
+      return `<li class="pipeline-group" data-pipeline-group="${group.id}"><div class="pipeline-row"><button type="button" ${overview ? 'data-stage="link"' : first === undefined ? 'disabled' : `data-index="${first}"`} ${active && (!children || !expanded) ? 'aria-current="step"' : ''} title="${esc(title)}">${icon(group.id)}<span>${esc(name)}</span></button>${toggle}</div>${children}</li>`;
     })
     .join('')}</ol>`;
-  if (focused?.index !== undefined)
+  if (focused?.toggleGroup)
+    root
+      .querySelector(`button[data-toggle-group="${focused.toggleGroup}"]`)
+      ?.focus({ preventScroll: true });
+  else if (focused?.index !== undefined)
     root.querySelector(`button[data-index="${focused.index}"]`)?.focus({ preventScroll: true });
   else if (focused?.stage)
     root.querySelector('button[data-stage="link"]')?.focus({ preventScroll: true });
   const active =
     root.querySelector('.semantic-map [aria-current="step"]') ||
-    root.querySelector('.compiler-pipeline > li > [aria-current="step"]');
+    root.querySelector('.pipeline-row [aria-current="step"]');
   active?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 

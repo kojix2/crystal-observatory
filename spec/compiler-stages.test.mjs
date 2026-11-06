@@ -73,7 +73,7 @@ test('map follows event phase, jumps to recorded indices, localizes and marks ex
     renderCompilerMap(model, records, (index) => (selected = index));
     assert.equal(root.hidden, false);
     assert.match(root.innerHTML, /aria-current="step"[^>]*title="Semantic \(new\)"/);
-    assert(root.innerHTML.includes(t('pipeline.outsideShort')));
+    assert(root.innerHTML.includes(t('pipeline.outside')));
     const index = records.get('declarations').first;
     root.onclick({ target: { closest: () => ({ dataset: { index: String(index) } }) } });
     assert.equal(selected, index);
@@ -85,6 +85,55 @@ test('map follows event phase, jumps to recorded indices, localizes and marks ex
     assert(root.innerHTML.includes(t('pipeline.stage.declarations')));
     renderCompilerMap({ trace: { mode: 'syntax' } }, new Map(), () => {});
     assert.equal(root.hidden, true);
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
+  }
+});
+
+test('workflow disclosures preserve manual choices without seeking and reset with a new recording', () => {
+  const trace = recording('02_union_and_narrowing');
+  const records = indexCompilerStages(trace);
+  const root = { contains: (element) => !!element, querySelector: () => null };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: () => root };
+  const model = { trace, event: trace.events[records.get('main').first] };
+  const render = (source = records) =>
+    renderCompilerMap(model, source, () => assert.fail('Disclosure must not seek'));
+  const list = (group) =>
+    root.innerHTML.match(new RegExp(`<ol[^>]*id="pipeline-${group}"[^>]*>`))[0];
+  const toggle = (group, expanded) =>
+    root.onclick({
+      target: {
+        closest: () => ({
+          dataset: { toggleGroup: group },
+          getAttribute: () => String(expanded),
+        }),
+      },
+    });
+  try {
+    setLocale('en');
+    render();
+    assert(list('prepare').includes('hidden'));
+    assert(!list('infer').includes('hidden'));
+    assert.equal((root.innerHTML.match(/aria-current="step"/g) || []).length, 1);
+    toggle('prepare', false);
+    assert(!list('prepare').includes('hidden'));
+    const event = model.event;
+    toggle('infer', true);
+    assert(list('infer').includes('hidden'));
+    assert.equal(model.event, event);
+    assert.equal((root.innerHTML.match(/aria-current="step"/g) || []).length, 1);
+    setLocale('ja');
+    render();
+    assert(list('infer').includes('hidden'));
+    assert(!list('prepare').includes('hidden'));
+    model.event = trace.events[records.get('cleanup').first];
+    render();
+    assert(list('infer').includes('hidden'));
+    render(new Map(records));
+    assert(!list('infer').includes('hidden'));
+    assert(list('prepare').includes('hidden'));
   } finally {
     globalThis.document = original;
     setLocale('en');
