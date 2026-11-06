@@ -9,12 +9,9 @@ export WASI_SYSROOT=${WASI_SYSROOT:-"$CACHE/wasm32-wasi-sysroot"}
 if [[ ! -d "$WASI_SYSROOT" ]]; then
   mkdir -p "$CACHE"
   curl -fL --retry 2 https://github.com/kojix2/wasm-libs/releases/download/v0.0.5/wasm32-wasi-sysroot.tar.gz -o "$CACHE/sysroot.tar.gz"
-  python3 - "$CACHE/sysroot.tar.gz" <<'PY'
-import hashlib,sys
-with open(sys.argv[1],'rb') as f:actual=hashlib.file_digest(f,'sha256').hexdigest()
-expected='8b123e2b7103e330c7d1743649aa0738b5ec05023a48ba609205bced7f9f2eb8'
-if actual != expected:raise SystemExit('WASI sysroot SHA256 mismatch')
-PY
+  printf '%s  %s\n' '8b123e2b7103e330c7d1743649aa0738b5ec05023a48ba609205bced7f9f2eb8' "$CACHE/sysroot.tar.gz" | sha256sum --check --status || {
+    echo 'WASI sysroot SHA256 mismatch' >&2; exit 1;
+  }
   tar --no-same-owner -xzf "$CACHE/sysroot.tar.gz" -C "$CACHE"
 fi
 export CRYSTAL_PATH="$ROOT/vendor/crystal-src"

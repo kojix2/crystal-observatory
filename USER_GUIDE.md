@@ -8,15 +8,15 @@ The browser version uses **Crystal 1.22.0 with WASI/exception-handling patches, 
 
 ## Try the browser app
 
-Unzip the project and run these commands from the `crystal-observatory` directory. Node 24 and npm prepare the JavaScript WASI host. Ruby only serves static files; installing Crystal or LLVM is not required.
+Unzip the project and run these commands from the `crystal-observatory` directory. Node 24 and npm prepare the JavaScript WASI host. `make serve` uses Crystal to serve the prebuilt files; LLVM and a compiler rebuild are not required.
 
 ```sh
 npm ci --ignore-scripts
 npm run web:deps
-ruby -run -e httpd web -p 8000 --bind-address=127.0.0.1
+make serve
 ```
 
-If WEBrick is unavailable, install it with `gem install webrick`. Python 3 can serve the same app with `python3 scripts/serve.py`.
+Use `make serve PORT=8080` to choose another port, or `crystal run scripts/serve.cr -- --port 8080` directly. To serve without installing Crystal, use `ruby -run -e httpd web -p 8000 --bind-address=127.0.0.1`; install WEBrick with `gem install webrick` if needed.
 
 Open <http://127.0.0.1:8000/> in a browser. Use HTTP rather than opening the HTML through `file://`, which restricts Workers and sample loading.
 
@@ -167,7 +167,7 @@ To rebuild the complete browser compiler, install Crystal 1.22.0, LLVM 20 develo
 LLVM_CONFIG=llvm-config-20 make browser
 ```
 
-The build fetches wasi-sdk 33 and `@live-codes/llvm-wasm` 0.1.0 and verifies their SHA256 digests. It restores the upstream source patch from its pinned commit and applies it to the pinned Crystal 1.22.0 source copy.
+The build fetches wasi-sdk 33 and `@live-codes/llvm-wasm` 0.1.0 and verifies their SHA256 digests. It applies the checked-in `patches/browser-port.patch`, derived from the pinned upstream port, to a copy of the pinned Crystal 1.22.0 sources using `patch`. See `patches/README.md` for provenance. Development scripts use Crystal and Unix tools (`curl`, `cp`, `patch`, `gzip`, `sha256sum`, `tar`, and `zip`/`unzip`); Python is not required.
 
 To regenerate the observed samples using the same browser WASM compiler, LLVM, and LLD (Node 24 required):
 
@@ -180,7 +180,7 @@ make samples
 ```sh
 make web-deps
 make samples           # Compile examples/*.cr with WASM and update bundled traces
-make test              # Python dependency tests and Node WASM/UI-model tests
+make test              # Crystal dependency tests and Node WASM/UI-model tests
 npm run lint
 npm run format:check
 ```

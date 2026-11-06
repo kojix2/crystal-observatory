@@ -6,7 +6,7 @@ This version preserves in-browser compilation while assigning clear ownership to
 
 | Change | Owner | Boundary |
 |---|---|---|
-| Dependency restoration | `deps/sources.lock.json`, `scripts/fetch_sources.py`, `scripts/prepare-web.mjs` | Do not duplicate upstream sources in Git; see [DEPENDENCIES.md](DEPENDENCIES.md) |
+| Dependency restoration | `deps/sources.lock.json`, `scripts/fetch_sources.cr`, `scripts/prepare-web.mjs` | Do not duplicate upstream sources in Git; see [DEPENDENCIES.md](DEPENDENCIES.md) |
 | Application startup | `web/app.js` | Wires the Application and layout together |
 | Compile, run, parse, and open trace actions | `web/ui/application.js` | Coordinates user actions; does not create Workers directly |
 | Playback, node selection, and view tabs | `web/ui/trace-view.js` | Presents traces; does not launch the compiler |
@@ -31,7 +31,7 @@ This version preserves in-browser compilation while assigning clear ownership to
 | Full compiler | `src/lab/compilation.cr` | Recorder lifetime, semantic analysis, LLVM verification/output, and diagnostics |
 | WASI I/O and settings | `src/browser_trace.cr` | Input, target configuration, and output serialization |
 | Observation hooks | `src/lab/hooks.cr`, `full_hooks.cr` | Preserve upstream behavior through `previous_def`, then record results |
-| Declaration operations | `scripts/instrument_declarations.py`, `src/lab/full_hooks.cr` | Instruments successful mutation points in the pinned compiler; records semantic type IDs and owners separately from AST expression types |
+| Declaration operations | `scripts/instrument_declarations.cr`, `src/lab/full_hooks.cr` | Instruments successful mutation points in the pinned compiler; records semantic type IDs and owners separately from AST expression types |
 | Declaration replay and UI | `web/core/declarations.js`, `web/ui/declarations.js` | Displays state at the selected event; manually selecting types/nodes does not seek |
 
 ## Async-operation guarantees
@@ -58,8 +58,8 @@ Use HTML `data-i18n` for fixed labels, `data-i18n-title` for tooltips, and `data
 |---|---|---|
 | `Crystal::Type#to_s : String` in `src/lab/full_hooks.cr` | Calling it to observe a type would otherwise create a compiler return-type inference cycle | Build the full WASM without an explicit method return type; verify semantic analysis, type changes, and IR generation |
 | The two `set_type` overloads in the same file | Correctly dispatch `previous_def` to the upstream `Type` and `Nil` overloads | Do not replace them with a single Union-argument method; a macro generates the shared body |
-| browser-port `apply-patches.py`, from `deps/sources.lock.json` | Provides Crystal 1.22 WASI/exception handling and LLVM integration | Keep the version pinned. Compare patches before updating, then retest exceptions, macros, and diagnostics |
-| `scripts/prepare-browser-ir.py` | LLVM 20 WASM exception-handling bugs: CFG Stackify fails in `pretty_print`, and `MainVisitor#visit(Yield)` produced invalid catch-target arity | Apply `optnone/noinline` only to affected functions, never generated user modules. Before removal, validate WASM and run the complete compiler tests in a real browser |
+| `patches/browser-port.patch`, provenance in `patches/README.md` | Provides Crystal 1.22 WASI/exception handling and LLVM integration | Keep the version pinned. Compare patches before updating, then retest exceptions, macros, and diagnostics |
+| `scripts/prepare-browser-ir.cr` | LLVM 20 WASM exception-handling bugs: CFG Stackify fails in `pretty_print`, and `MainVisitor#visit(Yield)` produced invalid catch-target arity | Apply `optnone/noinline` only to affected functions, never generated user modules. Before removal, validate WASM and run the complete compiler tests in a real browser |
 | `web/runtime/wasi-file-growth.js` | Avoids copying the entire file on every small append with shim 0.4.2 | Retain until upstream distinguishes capacity and logical length correctly. Test EOF, seek, stat, resize, and allocate |
 | `src/wasm.cr` and `web/runtime/syntax-engine.js` | Exceptions in the lightweight 1.23 syntax engine trap rather than unwind | Save diagnostics before trapping and never reenter that instance, including to free it. This is separate from exception handling in the full compiler |
 | `web/runtime/sha256.js` | `crypto.subtle` is unavailable on non-secure HTTP origins | Never skip SHA256 verification. Keep tests against native hashing and every distributed asset |

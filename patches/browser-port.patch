@@ -1,0 +1,473 @@
+--- a/compiler/crystal/codegen/codegen.cr
++++ b/compiler/crystal/codegen/codegen.cr
+@@ -301,6 +301,11 @@
+       if @program.has_flag?("msvc")
+         @personality_name = "__CxxFrameHandler3"
+         @main.personality_function = windows_personality_fun.func
++      elsif @program.target_machine.triple.starts_with?("wasm32")
++        # WebAssembly EH uses libc++abi's scoped wasm personality, which
++        # WasmEHPrepare requires on every function that owns a catchpad.
++        @personality_name = "__gxx_wasm_personality_v0"
++        @main.personality_function = wasm_personality_fun.func
+       else
+         @personality_name = "__crystal_personality"
+       end
+--- a/compiler/crystal/codegen/exception.cr
++++ b/compiler/crystal/codegen/exception.cr
+@@ -61,8 +61,17 @@
+     # Note we codegen the ensure body three times! In practice this isn't a big deal, since ensure bodies are typically small.
+ 
+     msvc = @program.has_flag?("msvc")
+-
+-    context.fun.personality_function = windows_personality_fun.func if msvc
++    # WebAssembly's exception handling in LLVM uses the funclet representation
++    # (catchswitch/catchpad, lowered to `catch __cpp_exception`), which is the
++    # same shape as the msvc path -- so a wasm target takes it.
++    wasm_target = @program.target_machine.triple.starts_with?("wasm32")
++    funclet_eh = msvc || wasm_target
++
++    if msvc
++      context.fun.personality_function = windows_personality_fun.func
++    elsif wasm_target
++      context.fun.personality_function = wasm_personality_fun.func
++    end
+ 
+     # This is the block which is entered when the body raises an exception
+     rescue_block = new_block "rescue"
+@@ -109,7 +118,7 @@
+ 
+       old_catch_pad = @catch_pad
+ 
+-      if msvc
++      if funclet_eh
+         # Windows structured exception handling must enter a catch_switch instruction
+         # which decides which catch body block to enter. Crystal only ever generates one catch body
+         # which is used for all exceptions. For more information on how structured exception handling works in LLVM,
+@@ -121,22 +130,48 @@
+         # We're now generating the catch body, which must begin with a catchpad instruction
+         position_at_end catch_body
+ 
+-        # Allocate space for the caught exception
+         exception_type = @program.exception.virtual_type
+         exception_llvm_type = llvm_type(exception_type)
+-        caught_exception_ptr = alloca exception_llvm_type
+ 
+-        # The catchpad instruction dictates which types of exceptions this block handles,
+-        # we want all of them, so we rescue all void* by passing the void_ptr_type_descriptor.
+-        # We also need to record the catch pad instruction in `@catch_pad` to refer to the parent catch
+-        # pad in nested rescue blocks, and to generate funclet information for function calls which are
+-        # "inside" this catchpad. More information on this is available in the link above.
+-        @catch_pad = builder.catch_pad catch_switch, [void_ptr_type_descriptor, int32(0), caught_exception_ptr]
++        if wasm_target
++          # WebAssembly reuses the funclet IR but not the msvc catchpad shape. Its
++          # catchpad declares a single catch-all operand, and the caught exception
++          # arrives through llvm.wasm.get.exception(token), which WasmEHPrepare
++          # rewrites to the wasm `catch` instruction. There is no catch-object slot,
++          # so the exception is unwrapped by __crystal_get_exception exactly as the
++          # landing-pad path below does.
++          catch_pad = builder.catch_pad catch_switch, [llvm_context.void_pointer.null]
++          @catch_pad = catch_pad
++
++          get_wasm_exception_fun = fetch_typed_fun(@llvm_mod, "llvm.wasm.get.exception") do
++            LLVM::Type.function([catch_pad.type], llvm_context.void_pointer, false)
++          end
++          unwind_ex_obj = call get_wasm_exception_fun, [catch_pad]
++
++          get_exception_fun = main_fun(GET_EXCEPTION_NAME)
++          get_exception_arg_type = get_exception_fun.type.params_types.first # LibUnwind::Exception*
++          get_exception_arg = pointer_cast(unwind_ex_obj, get_exception_arg_type)
++
++          set_current_debug_location node if @debug.line_numbers?
++          caught_exception_ptr = call get_exception_fun, [get_exception_arg]
++          caught_exception = int2ptr caught_exception_ptr, llvm_typer.type_id_pointer
++          exception_type_id = load llvm_context.int32, caught_exception
++        else
++          # Allocate space for the caught exception
++          caught_exception_ptr = alloca exception_llvm_type
++
++          # The catchpad instruction dictates which types of exceptions this block handles,
++          # we want all of them, so we rescue all void* by passing the void_ptr_type_descriptor.
++          # We also need to record the catch pad instruction in `@catch_pad` to refer to the parent catch
++          # pad in nested rescue blocks, and to generate funclet information for function calls which are
++          # "inside" this catchpad. More information on this is available in the link above.
++          @catch_pad = builder.catch_pad catch_switch, [void_ptr_type_descriptor, int32(0), caught_exception_ptr]
+ 
+-        # builder.printf("catchpad entered #{node.location}\n", catch_pad: @catch_pad)
++          # builder.printf("catchpad entered #{node.location}\n", catch_pad: @catch_pad)
+ 
+-        caught_exception = load exception_llvm_type, caught_exception_ptr
+-        exception_type_id = type_id(caught_exception, exception_type)
++          caught_exception = load exception_llvm_type, caught_exception_ptr
++          exception_type_id = type_id(caught_exception, exception_type)
++        end
+       else
+         # Unwind exception handling code - used on non-MSVC platforms (essentially the Itanium
+         # C++ ABI) - is a lot simpler.
+@@ -249,14 +284,20 @@
+ 
+         # Codegen catchswitch+pad or landing pad as described above.
+         # This code is simpler because we never need to extract the exception type
+-        if msvc
++        if funclet_eh
+           rescue_ensure_body = new_block "rescue_ensure_body"
+           catch_switch = builder.catch_switch(old_catch_pad || LLVM::Value.null, @rescue_block || LLVM::BasicBlock.null, 1)
+           builder.add_handler catch_switch, rescue_ensure_body
+ 
+           position_at_end rescue_ensure_body
+ 
+-          @catch_pad = builder.catch_pad catch_switch, [void_ptr_type_descriptor, int32(0), llvm_context.void_pointer.null]
++          if wasm_target
++            # As in the rescue pad: a wasm catchpad takes a single catch-all
++            # operand, and a re-raise needs no catch-object slot.
++            @catch_pad = builder.catch_pad catch_switch, [llvm_context.void_pointer.null]
++          else
++            @catch_pad = builder.catch_pad catch_switch, [void_ptr_type_descriptor, int32(0), llvm_context.void_pointer.null]
++          end
+         else
+           lp_ret_type = llvm_typer.landing_pad_type
+           lp = builder.landing_pad lp_ret_type, main_fun(personality_name).func, [] of LLVM::Value
+@@ -284,7 +325,17 @@
+   end
+ 
+   def codegen_re_raise(node, unwind_ex_obj)
+-    if @program.has_flag?("msvc")
++    if @program.target_machine.triple.starts_with?("wasm32")
++      # WebAssembly has no _CxxThrowException. Its re-raise is LLVM's
++      # llvm.wasm.rethrow intrinsic, which rethrows the exception caught by the
++      # nearest enclosing catch. Both call sites above sit inside a catchpad, so
++      # this re-raises exactly the exception being handled.
++      rethrow_fun = fetch_typed_fun(@llvm_mod, "llvm.wasm.rethrow") do
++        LLVM::Type.function([] of LLVM::Type, llvm_context.void, false)
++      end
++      call rethrow_fun
++      unreachable
++    elsif @program.has_flag?("msvc")
+       # On the MSVC C++ ABI we can re-raise by calling _CxxThrowException with two null arguments
+       call windows_throw_fun, [llvm_context.void_pointer.null, llvm_context.void_pointer.null]
+       unreachable
+@@ -328,4 +379,13 @@
+       LLVM::Type.function([] of LLVM::Type, @llvm_context.int32, true)
+     end
+   end
++
++  # WasmEHPrepare requires a scoped personality on every function that owns a
++  # catchpad; libc++abi provides this one. It is never called directly -- the VM's
++  # unwinder and _Unwind_CallPersonality drive it -- but it must be declared.
++  private def wasm_personality_fun
++    fetch_typed_fun(@llvm_mod, "__gxx_wasm_personality_v0") do
++      LLVM::Type.function([] of LLVM::Type, @llvm_context.int32, true)
++    end
++  end
+ end
+--- a/compiler/crystal/codegen/target.cr
++++ b/compiler/crystal/codegen/target.cr
+@@ -221,6 +221,11 @@
+       end
+     when "wasm32"
+       LLVM.init_webassembly
++      # The wasm exception model is an LLVM `cl::opt` the C API cannot set, and
++      # the subtarget feature must agree or `try`/`catch` cannot be selected; so
++      # a wasm target always gets both. See enable_wasm_eh.
++      enable_wasm_eh
++      features += "+exception-handling" unless features.includes?("exception-handling")
+     else
+       raise Target::Error.new("Unsupported architecture for target triple: #{self}")
+     end
+@@ -264,4 +269,35 @@
+ 
+     environment == other.environment
+   end
++
++  @@wasm_eh_enabled = false
++
++  # Turns on WebAssembly exception handling in the wasm backend, and picks the
++  # proposal the whole module will use.
++  #
++  # The exception model is selected by an LLVM `cl::opt` (`-wasm-enable-eh`) that
++  # is not reachable through the LLVM C API. Without it the wasm backend runs the
++  # `lowerinvoke` pass and silently discards every `try`/`catch`, so a raised
++  # exception escapes the module instead of being caught. clang's
++  # `-fwasm-exceptions` sets the very same option. Idempotent: the option parser
++  # is only meant to run once per process.
++  private def enable_wasm_eh : Nil
++    return if @@wasm_eh_enabled
++    @@wasm_eh_enabled = true
++
++    # `-wasm-use-legacy-eh=false` is the second half, and it is not optional.
++    # LLVM 20 defaults to the *legacy* proposal (`try`/`catch`/`rethrow`) while
++    # wasi-sdk's libc++ is built with the standardized one (`try_table`/
++    # `throw_ref`) -- and a module may not contain both: V8 rejects a mix at
++    # validation, which a lazily-compiled module hides until something forces a
++    # full validation. So everything is emitted for the standardized proposal,
++    # which is also the one LLVM's own comment says browsers are moving to.
++    #
++    # LLVMParseCommandLineOptions skips argv[0], hence the leading "crystal".
++    LLVM.parse_command_line_options([
++      "crystal",
++      "-wasm-enable-eh",
++      "-wasm-use-legacy-eh=false",
++    ])
++  end
+ end
+--- a/compiler/crystal/command/docs.cr
++++ b/compiler/crystal/command/docs.cr
+@@ -1,3 +1,5 @@
++{% skip_file if flag?(:without_docs) %}
++
+ # Implementation of the `crystal docs` command
+ #
+ # This is just the command-line part. Everything else
+--- a/compiler/crystal/command.cr
++++ b/compiler/crystal/command.cr
+@@ -110,7 +110,12 @@
+       exit 1
+     when "docs".starts_with?(command)
+       options.shift
+-      docs
++      {% if flag?(:without_docs) %}
++        puts "Crystal was compiled without docs support"
++        exit 1
++      {% else %}
++        docs
++      {% end %}
+     when command == "env"
+       options.shift
+       env
+--- a/compiler/crystal/config.cr
++++ b/compiler/crystal/config.cr
+@@ -42,10 +42,15 @@
+       {{ flag?(:release) }}
+     end
+ 
+-    def self.exec_path
++    def self.exec_path : String
+       ENV.fetch("CRYSTAL_EXEC_PATH") do
+-        executable_path = Process.executable_path || return
+-        File.dirname(executable_path)
++        {% if flag?(:wasm32) %}
++          # WASI has no executable path; the compiler is configured through ENV.
++          ""
++        {% else %}
++          executable_path = Process.executable_path
++          executable_path ? File.dirname(executable_path) : ""
++        {% end %}
+       end
+     end
+ 
+--- a/compiler/crystal/ffi/lib_ffi.cr
++++ b/compiler/crystal/ffi/lib_ffi.cr
+@@ -68,6 +68,18 @@
+         {% else %}
+           DEFAULT = SYSV
+         {% end %}
++      {% elsif flag?(:wasm32) %}
++        # wasm32 is ILP32, like i386-unix -- the closest libffi ABI.
++        SYSV     = 1
++        THISCALL = 3
++        FASTCALL
++        STDCALL
++        PASCAL
++        REGISTER
++        MS_CDECL
++        LAST
++
++        DEFAULT = SYSV
+       {% else %}
+         {% raise "Unsupported target for ABI" %}
+       {% end %}
+--- a/compiler/crystal/tools/doc.cr
++++ b/compiler/crystal/tools/doc.cr
+@@ -1 +1,3 @@
++{% skip_file if flag?(:without_docs) %}
++
+ require "./doc/*"
+--- a/crystal/event_loop/wasi.cr
++++ b/crystal/event_loop/wasi.cr
+@@ -34,7 +34,15 @@
+   end
+ 
+   def open(path : String, flags : Int32, permissions : File::Permissions, blocking : Bool?) : {System::FileDescriptor::Handle, Bool} | Errno | WinError
+-    raise NotImplementedError.new("Crystal::Wasi::EventLoop#open")
++    path.check_no_null_byte
++
++    fd = LibC.open(path, flags, permissions)
++    return Errno.value if fd == -1
++
++    # A descriptor from a WASI filesystem is blocking; there is no non-blocking
++    # mode to switch to, so the caller is told what is true rather than what was
++    # asked for.
++    {fd, true}
+   end
+ 
+   # TODO: LibWasi.fd_read
+--- a/crystal/system/wasi/file_descriptor.cr
++++ b/crystal/system/wasi/file_descriptor.cr
+@@ -34,7 +34,7 @@
+     raise NotImplementedError.new "Crystal::System::FileDescriptor#system_reopen"
+   end
+ 
+-  private def system_lock(blocking, exclusive)
++  private def system_lock(blocking : Bool, exclusive : Bool) : Nil
+     raise NotImplementedError.new "Crystal::System::File#system_lock"
+   end
+ 
+--- a/crystal/system/wasi/process.cr
++++ b/crystal/system/wasi/process.cr
+@@ -80,7 +80,11 @@
+     raise NotImplementedError.new("Process.times")
+   end
+ 
+-  def self.spawn(command, args, shell, env, clear_env, input, output, error, chdir)
++  def self.prepare_args(command, args, shell)
++    raise NotImplementedError.new("Process.prepare_args")
++  end
++
++  def self.spawn(prepared_args, shell, env, clear_env, input, output, error, chdir)
+     raise NotImplementedError.new("Process.spawn")
+   end
+ 
+--- a/exception/call_stack/null.cr
++++ b/exception/call_stack/null.cr
+@@ -14,6 +14,10 @@
+     nil
+   end
+ 
++  # The other call-stack implementations provide this; raise needs it.
++  def self.print_backtrace : Nil
++  end
++
+   protected def self.decode_frame(pc)
+     nil
+   end
+--- a/exception/lib_unwind.cr
++++ b/exception/lib_unwind.cr
+@@ -127,7 +127,7 @@
+     fun get_language_specific_data = _Unwind_GetLanguageSpecificData(Context) : UInt8*
+     fun get_region_start = _Unwind_GetRegionStart(Context) : LibC::SizeT
+     fun get_ip = _Unwind_GetIP(context : Context) : LibC::SizeT
+-    fun set_ip = _Unwind_SetIP(context : Context, ip : LibC::SizeT) : LibC::SizeT
++    fun set_ip = _Unwind_SetIP(context : Context, ip : LibC::SizeT) : Void
+     fun set_gr = _Unwind_SetGR(context : Context, index : Int32, value : LibC::SizeT)
+     fun raise_exception = _Unwind_RaiseException(ex : Exception*) : ReasonCode
+   {% end %}
+--- a/process/status.cr
++++ b/process/status.cr
+@@ -278,27 +278,33 @@
+   # NOTE: `#exit_reason` is preferred over this method as a portable alternative
+   # which also works on Windows.
+   @[Deprecated("Use `#exit_signal?` instead.")]
+-  def exit_signal : Signal
+-    {% if flag?(:unix) && !flag?(:wasm32) %}
++  {% if flag?(:unix) && !flag?(:wasm32) %}
++    def exit_signal : Signal
+       Signal.new(signal_code)
+-    {% else %}
+-      raise NotImplementedError.new("Process::Status#exit_signal")
+-    {% end %}
+-  end
++    end
+ 
+-  # Returns the exit `Signal` or `nil` if there is none.
+-  #
+-  # On Windows returns always `nil`.
+-  #
+-  # * `#exit_reason` is a portable alternative.
+-  def exit_signal? : Signal?
+-    {% if flag?(:unix) && !flag?(:wasm32) %}
++    # Returns the exit `Signal` or `nil` if there is none.
++    #
++    # On Windows returns always `nil`.
++    #
++    # * `#exit_reason` is a portable alternative.
++    def exit_signal? : Signal?
+       code = signal_code
+       unless code.zero?
+         Signal.new(code)
+       end
+-    {% end %}
+-  end
++    end
++  {% else %}
++    # Signals do not exist on this platform; `#exit_reason` is the portable
++    # alternative. The type annotation cannot name `Signal` here.
++    def exit_signal : NoReturn
++      raise NotImplementedError.new("Process::Status#exit_signal")
++    end
++
++    def exit_signal? : NoReturn
++      raise NotImplementedError.new("Process::Status#exit_signal?")
++    end
++  {% end %}
+ 
+   # Returns the exit code of the process if it exited normally (`#normal_exit?`).
+   #
+--- a/raise.cr
++++ b/raise.cr
+@@ -2,6 +2,9 @@
+ require "c/stdlib"
+ require "crystal/system/print_error"
+ require "exception/call_stack"
++{% unless flag?(:interpreted) %}
++  require "exception/lib_unwind"
++{% end %}
+ 
+ Exception::CallStack.skip(__FILE__)
+ 
+@@ -161,26 +164,6 @@
+ 
+     __crystal_continue_unwind
+   end
+-{% elsif flag?(:wasm32) %}
+-  # :nodoc:
+-  fun __crystal_personality
+-    Crystal::System.print_error "EXITING: __crystal_personality called"
+-    LibC.exit(1)
+-  end
+-
+-  # :nodoc:
+-  @[Raises]
+-  fun __crystal_raise(ex : Void*) : NoReturn
+-    Crystal::System.print_error "EXITING: __crystal_raise called"
+-    LibC.exit(1)
+-  end
+-
+-  # :nodoc:
+-  fun __crystal_get_exception(ex : Void*) : UInt64
+-    Crystal::System.print_error "EXITING: __crystal_get_exception called"
+-    LibC.exit(1)
+-    0u64
+-  end
+ {% else %}
+   {% mingw = flag?(:win32) && flag?(:gnu) %}
+   # :nodoc:
+@@ -222,7 +205,7 @@
+   {% end %}
+ {% end %}
+ 
+-{% unless flag?(:interpreted) || (flag?(:win32) && !flag?(:gnu)) || flag?(:wasm32) %}
++{% unless flag?(:interpreted) || (flag?(:win32) && !flag?(:gnu)) %}
+   # :nodoc:
+   @[Raises]
+   fun __crystal_raise(unwind_ex : LibUnwind::Exception*) : NoReturn
+@@ -239,13 +222,6 @@
+   end
+ {% end %}
+ 
+-{% if flag?(:wasm32) %}
+-  def raise(exception : Exception) : NoReturn
+-    Crystal::System.print_error "EXITING: Attempting to raise:\n%s\n", exception.inspect_with_backtrace
+-    LibIntrinsics.debugtrap
+-    LibC.exit(1)
+-  end
+-{% else %}
+   # Raises the *exception*.
+   #
+   # This will set the exception's callstack if it hasn't been already.
+@@ -260,7 +236,6 @@
+     exception.callstack ||= Exception::CallStack.new
+     raise_without_backtrace(exception)
+   end
+-{% end %}
+ 
+ # Raises an Exception with the *message*.
+ def raise(message : String) : NoReturn

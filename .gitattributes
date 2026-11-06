@@ -2,5 +2,7 @@
 *.sh text eol=lf
 *.py text eol=lf
 *.cr text eol=lf
+# Unified diffs require a space on blank context lines.
+*.patch text eol=lf -whitespace
 *.wasm binary
 *.gz binary

@@ -1,3 +1,6 @@
+CRYSTAL ?= crystal
+PORT ?= 8000
+
 .PHONY: deps web-deps syntax-deps browser-deps wasm browser samples serve test test-browser test-sources lint format-check
 
 deps: web-deps
@@ -5,9 +8,9 @@ web-deps:
 	npm ci --ignore-scripts
 	npm run web:deps
 syntax-deps:
-	python3 scripts/fetch_sources.py syntax
+	$(CRYSTAL) run scripts/fetch_sources.cr -- syntax
 browser-deps:
-	python3 scripts/fetch_sources.py browser
+	$(CRYSTAL) run scripts/fetch_sources.cr -- browser
 wasm: syntax-deps
 	bash scripts/build-wasm.sh
 browser:
@@ -15,12 +18,12 @@ browser:
 samples:
 	npm run samples
 serve:
-	python3 scripts/serve.py
+	$(CRYSTAL) run scripts/serve.cr -- --port $(PORT)
 test: test-sources test-browser
 test-browser:
 	npm test
 test-sources:
-	python3 -m unittest discover -s spec -p 'test_*.py'
+	$(CRYSTAL) spec spec/*_spec.cr
 lint:
 	npm run lint
 format-check:

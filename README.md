@@ -16,16 +16,16 @@ A browser app for compiling Crystal source, observing the compiler's Visitors an
 
 ## Run locally
 
-Node 24 and npm prepare the static WASI host. Ruby or Python serves files; installing Crystal or LLVM is unnecessary.
+Node 24 and npm prepare the static WASI host. `make serve` uses Crystal to serve files; no LLVM installation or compiler rebuild is needed. Ruby can also serve the prebuilt app without installing Crystal.
 
 ```sh
 npm ci --ignore-scripts
 npm run web:deps
-ruby -run -e httpd web -p 8000 --bind-address=127.0.0.1
-# Alternatively: python3 scripts/serve.py
+make serve
+# Alternatively: ruby -run -e httpd web -p 8000 --bind-address=127.0.0.1
 ```
 
-Open <http://127.0.0.1:8000/> in a browser with standardized WebAssembly exception handling. If Ruby lacks WEBrick, install it with `gem install webrick`. Use HTTP rather than opening the HTML file directly.
+Open <http://127.0.0.1:8000/> in a browser with standardized WebAssembly exception handling. If Ruby lacks WEBrick, install it with `gem install webrick`. Use `make serve PORT=8080` to change the port. Use HTTP rather than opening the HTML file directly.
 
 Choose initial code in the **Source** tab, or edit freely. **Compile & run** compiles and executes; **Compile → IR** compiles and links without execution; **Parse only** uses the lightweight syntax engine. The **Output** tab accepts stdin and a JSON array of arguments.
 
@@ -37,10 +37,12 @@ Programs target WASI: host processes, sockets, host files and arbitrary C librar
 
 ## Develop and verify
 
+Development uses Unix, Crystal, Node 24 and npm. Source restoration uses `curl`; browser source preparation uses `cp` and `patch`; builds use `gzip`, `sha256sum` and `tar`; source packaging uses `zip` and `unzip`. The supplied build scripts are tested on Linux.
+
 ```sh
 make web-deps
 make samples       # Regenerate recordings with the actual WASM compiler
-make test          # Python source-restoration tests + Node WASM/UI-model tests
+make test          # Crystal source-restoration tests + Node WASM/UI-model tests
 npm run lint
 npm run format:check
 ```

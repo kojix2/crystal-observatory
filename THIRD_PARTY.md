@@ -74,7 +74,7 @@ Pinned download SHA256:
 ```
 @live-codes/llvm-wasm 0.1.0 npm archive
 e75ec5b39a1750faa2792a6671dc917b5ea321a857d822daa39e1436e0551d75
-browser-crystal archive addressed by commit (see deps/sources.lock.json)
+browser-crystal archive used to derive patches/browser-port.patch (see patches/README.md)
 1a9a7723ecdbaa42362f2be0a84d23e13a107a3f46969ca4e44f04b6de7f8c7c
 wasi-sdk-33.0-x86_64-linux.tar.gz
 0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce
@@ -92,8 +92,10 @@ editable-text overlay; the real Crystal compiler still provides all diagnostics.
 
 ## Dependency restoration
 
-Upstream Crystal sources and the browser port patch script are
-restored by `scripts/fetch_sources.py` using `deps/sources.lock.json`. The lock
+Upstream Crystal sources are restored by `scripts/fetch_sources.cr` using
+`deps/sources.lock.json`. The browser port is kept as the checked-in
+`patches/browser-port.patch` and applied with `patch`; `patches/README.md`
+records its upstream revision, original archive and generator hashes, and license. The lock
 records source revisions, exact archive URLs, SHA256 digests and extraction
 paths. Previously bundled upstream sources and build documentation are no
 longer tracked. Licenses and prebuilt browser runtime assets remain included.

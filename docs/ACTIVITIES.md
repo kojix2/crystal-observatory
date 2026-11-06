@@ -33,7 +33,7 @@ Errors and truncation additionally make incompleteness explicit.
 ## Observation inventory
 
 Paths below are relative to the pinned compiler's `compiler/crystal/` directory.
-The [source instrumentation](../scripts/instrument_activities.py) and
+The [source instrumentation](../scripts/instrument_activities.cr) and
 [reopened hooks](../src/lab/activity_hooks.cr) define the exact boundaries.
 
 | Visitor | Node / implementation point | Activity and recorded evidence | Success / decision boundary |

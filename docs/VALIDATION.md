@@ -1,5 +1,35 @@
 # Validation Record
 
+## Crystal development scripts — 2026-11-06
+
+All eight Python scripts and their source-restoration/instrumentation tests were
+migrated to Crystal. The upstream browser port is now a checked-in unified diff
+applied by `patch`; shell build steps use `sha256sum` and `gzip`.
+
+Validated on Linux with Crystal 1.22.2 and Node 23.11.0 (CI continues to use
+Crystal 1.22.0 and Node 24):
+
+- 18 Crystal specs passed, covering source hashes, safe ZIP extraction, symlinks
+  and executable modes, offline/cache behavior, failed-download cleanup,
+  instrumentation, build receipts, LLVM output streaming and exit status,
+  deterministic gzip receipts, and source packaging.
+- Fresh Crystal-restored pinned sources matched the previous Python-restored
+  tree. The new patch and instrumentation pipeline also produced a tree identical
+  to the previous pipeline, including symlinks, using `diff -r --no-dereference`.
+- Existing Node tests passed across all 14 test files, including real WASM
+  compilation and execution. ESLint and Prettier passed.
+- The Crystal HTTP server returned the actual `index.html` at `/` and served
+  WASM, JavaScript and gzip with their expected content types on localhost.
+- A real source ZIP was generated and verified with `unzip -t`; it included the
+  Crystal scripts and checked-in patch and excluded restored dependencies.
+- The LLVM exclusion script was checked against actual LLVM 20 output and a
+  failing child process. Shell syntax, Crystal formatting and whitespace checks
+  passed.
+
+The complete compiler WASM was not rebuilt for this migration; its prepared
+source is unchanged and the distributed assets passed the existing tests. The
+records below describe earlier validations, including the former Python tests.
+
 ## Visitor activity validation — 2026-11-05
 
 The latest change adds actual activity observations for all fifteen recorded

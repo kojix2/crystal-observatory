@@ -34,7 +34,7 @@ Not every compiler operation is a Visitor. Helper type lookups and code paths th
 The optional schema-1 `activity` events and `activity_coverage` describe actual
 decisions and mutations separately from visits. The inventory, success boundaries,
 and deliberately incomplete coverage are documented in [ACTIVITIES.md](ACTIVITIES.md).
-`scripts/instrument_activities.py` uses checked source fragments in the generated
+`scripts/instrument_activities.cr` uses checked source fragments in the generated
 build tree; its hash participates in the source fingerprint. Reopened hooks use
 `previous_def`. Neither approach replaces the compiler's algorithms.
 
@@ -53,7 +53,7 @@ unmeasured; empty covered lists and incomplete recordings have distinct labels.
 
 ### Declaration operations are observed separately from visits
 
-`scripts/instrument_declarations.py` inserts hooks at successful mutation points in the pinned TopLevelVisitor source: type creation/reopening, inheritance, include/extend, and explicit `Def` registration. It modifies neither the fetched upstream sources nor the compiler source checkout; it applies to the generated build tree after the port patch. Each source replacement checks that its expected fragment occurs exactly once, and the script hash is included in the build-tree fingerprint. If later work fails after a mutation has succeeded, the completed mutation remains recorded; a failed registration is not reported as successful.
+`scripts/instrument_declarations.cr` inserts hooks at successful mutation points in the pinned TopLevelVisitor source: type creation/reopening, inheritance, include/extend, and explicit `Def` registration. It modifies neither the fetched upstream sources nor the compiler source checkout; it applies to the generated build tree after the port patch. Each source replacement checks that its expected fragment occurs exactly once, and the script hash is included in the build-tree fingerprint. If later work fails after a mutation has succeeded, the completed mutation remains recorded; a failed registration is not reported as successful.
 
 Class registration and superclass information are emitted consecutively after registration succeeds. The trace records observed declarations and relationships, not every internal assignment. Method signatures come from the AST at registration time; they do not necessarily reproduce the original unnormalized source header or restrictions added later.
 

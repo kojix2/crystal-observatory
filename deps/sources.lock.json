@@ -18,17 +18,5 @@
     "sha256": "342f6c3b69e614a10aac84785c0d03fec8c8bed30acad165d3b833132745ffb7",
     "prefix": "crystal-1.22.0/src/",
     "destination": "vendor/crystal-browser-src"
-  },
-  "browser-port": {
-    "group": "browser",
-    "repository": "https://github.com/live-codes/browser-crystal",
-    "revision": "daf9e56bfba0724e6fc689eff83f0e2415fab254",
-    "url": "https://codeload.github.com/live-codes/browser-crystal/zip/daf9e56bfba0724e6fc689eff83f0e2415fab254",
-    "sha256": "1a9a7723ecdbaa42362f2be0a84d23e13a107a3f46969ca4e44f04b6de7f8c7c",
-    "prefix": "browser-crystal-daf9e56bfba0724e6fc689eff83f0e2415fab254/build/crystal-wasm/",
-    "files": [
-      "apply-patches.py"
-    ],
-    "destination": ".cache/sources/browser-port"
   }
 }
