@@ -101,15 +101,19 @@ export class TraceView {
     this.playTimer = null;
     $('play').textContent = '▶';
     $('play').dataset.i18nAria = 'play';
+    $('play').dataset.i18nTitle = 'play';
     $('play').setAttribute('aria-label', t('play'));
+    $('play').title = t('play');
   }
   togglePlay() {
     if (this.playTimer) return this.stop();
     if (!this.trace?.events.length) return;
     if (this.model.index >= this.trace.events.length - 1) this.seek(0);
-    $('play').textContent = 'Ⅱ';
+    $('play').textContent = '⏸';
     $('play').dataset.i18nAria = 'pause';
+    $('play').dataset.i18nTitle = 'pause';
     $('play').setAttribute('aria-label', t('pause'));
+    $('play').title = t('pause');
     this.playTimer = setInterval(
       () => {
         if (this.model.index >= this.trace.events.length - 1) this.stop();
@@ -295,6 +299,7 @@ export class TraceView {
       ['first', () => 0],
       ['prev', () => this.model.index - 1],
       ['next', () => this.model.index + 1],
+      ['last', () => this.trace.events.length - 1],
     ])
       $(id).onclick = () => {
         if (this.model) {
