@@ -39,6 +39,18 @@ export const colorGroups = [
     colors: colors(['graph-bg', 'node-bg', 'node-selected', 'edge', 'type', 'type-bg']),
   },
   {
+    id: 'ast',
+    colors: colors([
+      'ast-literal',
+      'ast-reference',
+      'ast-operation',
+      'ast-control',
+      'ast-definition',
+      'ast-macro',
+      'ast-structure',
+    ]),
+  },
+  {
     id: 'visitors',
     colors: [
       ['visitor-top-level', 'TopLevelVisitor'],
@@ -63,7 +75,7 @@ export const colorSettings = colorGroups.flatMap((group) => group.colors);
 export const isColor = (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
 
 export function normalizeSettings(value) {
-  const result = { colors: {} };
+  const result = { colors: {}, astColors: value?.astColors !== false };
   for (const { id } of colorSettings) {
     const color = value?.colors?.[id];
     if (isColor(color)) result.colors[id] = color.toLowerCase();

@@ -269,6 +269,7 @@ export class TraceView {
     }))
       $(id).hidden = view !== name;
     document.querySelector('.view-tools').style.display = name === 'ast' ? 'flex' : 'none';
+    $('node-color-key').hidden = name !== 'ast' && name !== 'types';
     this.renderObservation();
   }
   nextKind(kind) {

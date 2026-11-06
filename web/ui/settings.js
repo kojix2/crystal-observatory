@@ -43,6 +43,8 @@ export function setupSettings() {
   );
 
   const apply = () => {
+    root.dataset.astColors = String(settings.astColors);
+    $('ast-node-colors').checked = settings.astColors;
     for (const { id, variable } of colorSettings) {
       const value = settings.colors[id] || defaults[id];
       if (settings.colors[id]) root.style.setProperty(variable, value);
@@ -71,7 +73,13 @@ export function setupSettings() {
   });
   $('reset-colors').onclick = () => {
     settings.colors = {};
+    settings.astColors = true;
     apply();
+    persist();
+  };
+  $('ast-node-colors').onchange = (event) => {
+    settings.astColors = event.target.checked;
+    root.dataset.astColors = String(settings.astColors);
     persist();
   };
   $('settingsButton').onclick = () => $('settings').showModal();

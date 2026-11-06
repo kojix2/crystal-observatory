@@ -45,6 +45,7 @@ The interface combines a dark header and code editor with a white observation ar
 - Pane widths are saved by the browser. Use **↺** to restore the initial layout. The previous version’s saved History height is not carried over.
 - The language selector supports Japanese, English, Spanish, Simplified Chinese, French, German and Russian. Source, selection, filters, and execution results are preserved, and the language choice is remembered. Source, compiler diagnostics, and internal identifiers are not translated.
 - Open **Settings** with the small gear at the top right to customize interface, code, graph, type, and Visitor colors. Changes apply immediately and are saved in this browser. **Restore default colors** resets the palette; your source, trace, language, and layout stay as they are.
+- AST nodes use a narrow color band and a faint tint for values, references, operations, control flow, definitions, and macros. Containers and unfamiliar nodes stay neutral. Selection has a dark outline; type and semantic changes retain their purple background, with both visible when a changed node is selected. The legend names the families, and node kinds remain readable without color. **Settings → AST node colors** changes the palette; **Color AST nodes by kind** turns this coloring off. These colors describe syntax, independently of the Visitor colors and inferred types.
 - All three columns remain available on narrow screens; scroll horizontally within the workspace.
 
 ## Fourteen experiments

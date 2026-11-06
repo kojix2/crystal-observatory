@@ -2,6 +2,7 @@ import { t } from '../i18n/index.js';
 import { $, esc, brief } from './dom.js';
 import { flattenAST } from '../core/trace-model.js';
 import { renderActivities } from './inspector.js';
+import { astFamily } from '../core/ast-colors.js';
 
 const mutations = new Set([
   'assign_type',
@@ -22,6 +23,7 @@ export function renderGraph(
   onSeek = () => {},
 ) {
   function svgNode(n, x, y, width = 270, reference = false) {
+    const family = astFamily(n.kind);
     const type = $('follow').checked ? model.types.get(n.id) || '' : n.inferred_type || '';
     const activities = model.activities.get(n.id) || [];
     const changed =
@@ -37,7 +39,7 @@ export function renderGraph(
     const folded = collapsed.has(n.id);
     const hasKids =
       n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded;
-    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text><text x="${width - 9}" y="16" text-anchor="end" class="svg-id">${activities.length ? '● ' : ''}${reference ? '↗ ' : ''}#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
+    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><title>${esc(t(`ast.family.${family}`))}</title><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text><text x="${width - 9}" y="16" text-anchor="end" class="svg-id">${activities.length ? '● ' : ''}${reference ? '↗ ' : ''}#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
   }
   function wireGraph(container) {
     container.querySelectorAll('[data-node]').forEach((el) => {

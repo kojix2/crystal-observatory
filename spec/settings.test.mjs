@@ -19,6 +19,7 @@ test('saved colors retain valid overrides while ignoring corrupt and unknown pre
   const original = structuredClone(stored);
   assert.deepEqual(normalizeSettings(stored), {
     colors: { paper: '#123abc', 'visitor-main': '#456789', 'syntax-keyword': '#aabbcc' },
+    astColors: true,
   });
   assert.deepEqual(stored, original);
 });
@@ -35,5 +36,15 @@ test('missing or malformed settings fall back to the default palette', () => {
     { colors: null },
     { colors: [] },
   ])
-    assert.deepEqual(normalizeSettings(stored), { colors: {} });
+    assert.deepEqual(normalizeSettings(stored), { colors: {}, astColors: true });
+});
+
+test('AST color preferences load alongside older palettes and validate the opt-out', () => {
+  const colors = { 'ast-literal': '#12AB34', paper: '#ffffff' };
+  assert.deepEqual(normalizeSettings({ colors, astColors: false }), {
+    colors: { 'ast-literal': '#12ab34', paper: '#ffffff' },
+    astColors: false,
+  });
+  for (const invalid of [null, 0, 'false', {}, []])
+    assert.equal(normalizeSettings({ astColors: invalid }).astColors, true);
 });
