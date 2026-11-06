@@ -5,6 +5,7 @@
 /vendor/crystal-src/
 /vendor/crystal-browser-src/
 /web/vendor/prismjs/
+/web/vendor/lucide/
 /web/vendor/browser_wasi_shim/
 /web/vendor/browser_wasi_shim.staging/
 

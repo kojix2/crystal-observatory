@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.js';
 import { $, esc, brief } from './dom.js';
+import { icon } from './icons.js';
 import { flattenAST } from '../core/trace-model.js';
 import { renderActivities } from './inspector.js';
 import { astFamily } from '../core/ast-colors.js';
@@ -42,7 +43,16 @@ export function renderGraph(
     const hasKids =
       view === 'ast' &&
       (n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded);
-    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><title>${esc(t(`ast.family.${family}`))}</title><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text><text x="${width - 9}" y="16" text-anchor="end" class="svg-id">${activities.length ? '● ' : ''}${reference ? '↗ ' : ''}#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
+    // Activity and reference marks sit left of the id; 10px sans digits are about 5.7px wide.
+    let markX = width - 9 - String(n.id).length * 5.7 - 7;
+    let marks = '';
+    if (activities.length) {
+      marks += `<circle class="svg-dot" cx="${markX - 3}" cy="12.5" r="2.5"/>`;
+      markX -= 10;
+    }
+    if (reference)
+      marks += `<g class="svg-mark" transform="translate(${markX - 10} 7.5)">${icon('reference', { size: 10 })}</g>`;
+    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><title>${esc(t(`ast.family.${family}`))}</title><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text>${marks}<text x="${width - 9}" y="16" text-anchor="end" class="svg-id">#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
   }
   function wireGraph(container) {
     container.querySelectorAll('[data-node]').forEach((el) => {

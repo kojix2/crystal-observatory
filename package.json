@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@bjorn3/browser_wasi_shim": "0.4.2",
+    "lucide-static": "1.70.0",
     "prismjs": "1.30.0"
   }
 }

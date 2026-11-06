@@ -7,7 +7,7 @@ To serve the prebuilt app without Crystal, use
 
 ## Compile and inspect
 
-Enter Crystal in **Source** and choose **Compile & run**, or **Compile → IR** to
+Enter Crystal in **Source** and choose **Compile & run**, or **Compile to IR** to
 compile without execution. **Output** accepts stdin and a JSON array of arguments.
 **Parse only** uses a separate lightweight lexer/parser, without semantic analysis.
 

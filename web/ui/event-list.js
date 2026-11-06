@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.js';
 import { $, esc, brief } from './dom.js';
+import { icon } from './icons.js';
 import {
   eventLabel,
   shortVisitor,
@@ -171,7 +172,7 @@ export class EventList {
             `<span class="activity-summary" title="${esc(activitySummary(activity))}">#${activity.node_id} ${esc(brief(activitySummary(activity), 130))}</span>`,
         )
         .join('');
-      return `<tr class="event-group ${active ? 'active' : ''}" data-index="${group.start}" tabindex="0" aria-current="${active ? 'step' : 'false'}"><td>${group.start}–<wbr>${group.end}</td><td title="${esc(event.visitor)}"><span class="event-group-heading"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-label="${esc(label)}" title="${esc(label)}"><span class="event-group-arrow" aria-hidden="true">${expanded ? '▼' : '▶'}</span></button><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(visitor)}</span></span>${this.renderNode(event)}</td><td><span class="event-label">${esc(summary)}</span>${activities}${containsCurrent ? `<span class="event-result">${esc(t('event.group.current', { index: this.model.index }))}</span>` : ''}</td></tr>`;
+      return `<tr class="event-group ${active ? 'active' : ''}" data-index="${group.start}" tabindex="0" aria-current="${active ? 'step' : 'false'}"><td>${group.start}–<wbr>${group.end}</td><td title="${esc(event.visitor)}"><span class="event-group-heading"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-label="${esc(label)}" title="${esc(label)}">${icon('disclosure', { size: 12 })}</button><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(visitor)}</span></span>${this.renderNode(event)}</td><td><span class="event-label">${esc(summary)}</span>${activities}${containsCurrent ? `<span class="event-result">${esc(t('event.group.current', { index: this.model.index }))}</span>` : ''}</td></tr>`;
     }
     return `<tr class="${event.index === this.model.index ? 'active' : ''} ${esc(event.kind)}" data-index="${event.index}" tabindex="0" aria-current="${event.index === this.model.index ? 'step' : 'false'}"><td>${event.index}</td><td title="${esc(event.visitor)}"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(shortVisitor(event.visitor) || event.phase)}</span>${this.renderNode(event)}</td><td><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-result" title="${esc(this.result(event))}">${esc(brief(this.result(event), 130))}</span></td></tr>`;
   }

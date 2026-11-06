@@ -37,6 +37,10 @@ host. The complete build has been tested on Linux x86_64; macOS is unverified.
   mean unobserved, not an empty result. See [observation semantics](ARCHITECTURE.md).
 - Preserve upstream behavior in hooks, record successful operations only after
   they succeed, and mute recording while serializing observations.
+- Draw UI icons only through `web/ui/icons.js`; the vocabulary in
+  `web/ui/icon-names.js` selects which Lucide glyphs `make web-deps` copies.
+  Translated strings carry no control glyphs (play, stop, chevrons, arrows on
+  buttons); icons live in markup beside a `<span data-i18n>` label.
 
 ## Workarounds to revisit carefully
 

@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.js';
 import { $ } from './dom.js';
+import { icon, summaryLabel } from './icons.js';
 import { renderCrystal } from '../core/crystal-highlight.js';
 import { renderLLVM } from '../core/llvm-highlight.js';
 import {
@@ -179,7 +180,7 @@ function renderLinkDetails(event) {
   );
   const command = document.createElement('details');
   const summary = document.createElement('summary');
-  summary.textContent = t('link.command');
+  summaryLabel(summary, t('link.command'));
   const code = document.createElement('pre');
   // Quote arguments for display only; nothing here is evaluated as shell code.
   code.textContent = link.args
@@ -254,7 +255,7 @@ export function renderActivities(
     const section = document.createElement('details');
     section.open = entries.length <= 6;
     const title = document.createElement('summary');
-    title.textContent = `${phase} (${entries.length})`;
+    summaryLabel(title, `${phase} (${entries.length})`);
     section.append(title);
     for (const event of entries) {
       const button = document.createElement('button');
@@ -293,7 +294,7 @@ export function renderActivities(
     missing++;
   }
   if (!missing) return;
-  title.textContent = t('activity.unrecorded', { count: missing });
+  summaryLabel(title, t('activity.unrecorded', { count: missing }));
   container.append(coverage);
 }
 function renderLinks(trace, event) {
@@ -310,7 +311,8 @@ function renderLinks(trace, event) {
     link.href = `https://github.com/crystal-lang/crystal/blob/${browserVersion ? '1.22.0' : 'master'}/src/compiler/crystal/${file}`;
     link.target = '_blank';
     link.rel = 'noreferrer';
-    link.textContent = `${file} ↗`;
+    link.textContent = file;
+    link.insertAdjacentHTML('beforeend', icon('external', { size: 10 }));
     $('compiler-link').append(link);
   }
   if (!files.size)

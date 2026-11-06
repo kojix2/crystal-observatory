@@ -1,6 +1,7 @@
 import { t } from '../i18n/index.js';
 import { text } from './language.js';
 import { $, notify, download } from './dom.js';
+import { setIcon } from './icons.js';
 import { eventLabel, shortVisitor } from './event-labels.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
@@ -137,7 +138,7 @@ export class TraceView {
   stop() {
     clearInterval(this.playTimer);
     this.playTimer = null;
-    $('play').textContent = '▶';
+    setIcon($('play'), 'play');
     $('play').dataset.i18nAria = 'play';
     $('play').dataset.i18nTitle = 'play';
     $('play').setAttribute('aria-label', t('play'));
@@ -147,7 +148,7 @@ export class TraceView {
     if (this.playTimer) return this.stop();
     if (!this.trace?.events.length) return;
     if (this.model.index >= this.trace.events.length - 1) this.seek(0);
-    $('play').textContent = '⏸';
+    setIcon($('play'), 'pause');
     $('play').dataset.i18nAria = 'pause';
     $('play').dataset.i18nTitle = 'pause';
     $('play').setAttribute('aria-label', t('pause'));

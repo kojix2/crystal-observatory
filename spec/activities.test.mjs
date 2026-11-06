@@ -127,6 +127,7 @@ class Element {
   append(...children) {
     this.children.push(...children);
   }
+  insertAdjacentHTML() {}
 }
 
 test('node activities navigate history independently and distinguish missing coverage from no record', () => {

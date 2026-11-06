@@ -1,22 +1,10 @@
 import { getLocale, t } from '../i18n/index.js';
 import { $, esc } from './dom.js';
+import { icon } from './icons.js';
 import { compilerStage, compilerStages, pipelineGroups } from '../core/compiler-stages.js';
 
 const renderedMaps = new WeakMap();
 const disclosures = new WeakMap();
-const icons = {
-  parse: '<path d="m6 3-4 5 4 5m4-10 4 5-4 5"/>',
-  prepare: '<path d="m8 2 6 3-6 3-6-3 6-3Zm-6 6 6 3 6-3M2 11l6 3 6-3"/>',
-  infer:
-    '<circle cx="4" cy="3" r="1.5"/><circle cx="12" cy="7" r="1.5"/><circle cx="4" cy="13" r="1.5"/><path d="M4 4.5v7M5.5 7H9a3 3 0 0 0 3-2V3"/>',
-  codegen: '<path d="M6 2H3v12h3m4-12h3v12h-3M6 6l4 2-4 2"/>',
-  object:
-    '<rect x="4" y="4" width="8" height="8" rx="1"/><path d="M6 1v3m4-3v3M6 12v3m4-3v3M1 6h3m-3 4h3m8-4h3m-3 4h3"/>',
-  link: '<path d="m6.5 9.5 3-3m-5 1-1 1a3 3 0 0 0 4 4l1-1m-1-7 1-1a3 3 0 0 1 4 4l-1 1"/>',
-  run: '<path d="m5 3 8 5-8 5V3Z"/>',
-};
-const icon = (group) =>
-  `<svg class="pipeline-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[group]}</svg>`;
 
 export function renderCompilerMap(model, records, onSeek, { selectedStage, onSelectStage } = {}) {
   const root = $('compiler-map');
@@ -87,9 +75,9 @@ export function renderCompilerMap(model, records, onSeek, { selectedStage, onSel
       const name = t(`pipeline.${children ? 'section' : 'group'}.${group.id}`);
       const title = `${t(`pipeline.group.${group.id}`)} · ${t(`pipeline.artifact.${group.output}`)} · ${note}`;
       const toggle = children
-        ? `<button type="button" class="pipeline-disclosure" data-toggle-group="${group.id}" aria-expanded="${expanded}" aria-controls="pipeline-${group.id}" aria-label="${esc(t('pipeline.details', { stage: name }))}"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m4 2 4 4-4 4"/></svg></button>`
+        ? `<button type="button" class="pipeline-disclosure" data-toggle-group="${group.id}" aria-expanded="${expanded}" aria-controls="pipeline-${group.id}" aria-label="${esc(t('pipeline.details', { stage: name }))}">${icon('disclosure', { size: 12 })}</button>`
         : '';
-      return `<li class="pipeline-group" data-pipeline-group="${group.id}"><div class="pipeline-row"><button type="button" ${overview ? 'data-stage="link"' : first === undefined ? 'disabled' : `data-index="${first}"`} ${active && (!children || !expanded) ? 'aria-current="step"' : ''} title="${esc(title)}">${icon(group.id)}<span>${esc(name)}</span></button>${toggle}</div>${children}</li>`;
+      return `<li class="pipeline-group" data-pipeline-group="${group.id}"><div class="pipeline-row"><button type="button" ${overview ? 'data-stage="link"' : first === undefined ? 'disabled' : `data-index="${first}"`} ${active && (!children || !expanded) ? 'aria-current="step"' : ''} title="${esc(title)}">${icon(group.id, { className: 'pipeline-icon' })}<span>${esc(name)}</span></button>${toggle}</div>${children}</li>`;
     })
     .join('')}</ol>`;
   if (focused?.toggleGroup)
@@ -120,5 +108,5 @@ export function renderStageContext(event, stage = compilerStage(event)) {
   root.innerHTML = `<div class="stage-context-heading">${esc(t('pipeline.current'))} · ${esc(t(`pipeline.group.${stage.group}`))}</div>
     <strong>${esc(t(`pipeline.stage.${stage.id}`))}</strong><code>${esc(stage.phase)}</code>
     <div class="stage-handoff"><div><small>${esc(t('pipeline.input'))}</small><span>${esc(t(`pipeline.artifact.${stage.input}`))}</span></div><b aria-hidden="true">→</b><div><small>${esc(t('pipeline.output'))}</small><span>${esc(output)}</span></div></div>
-    <details class="stage-driver"><summary>${esc(t('pipeline.driver'))}</summary><code>${esc(stage.driver)}</code><p>${esc(t(`pipeline.action.${stage.id}`))}</p></details>`;
+    <details class="stage-driver"><summary>${icon('disclosure', { size: 12 })}<span>${esc(t('pipeline.driver'))}</span></summary><code>${esc(stage.driver)}</code><p>${esc(t(`pipeline.action.${stage.id}`))}</p></details>`;
 }

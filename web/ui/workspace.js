@@ -165,7 +165,6 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
       [$('toggle-workflow'), workflowCollapsed(), 'pipeline.expand', 'pipeline.collapse'],
     ]) {
       button.setAttribute('aria-expanded', !collapsed);
-      button.textContent = collapsed ? '›' : '‹';
       label(button, collapsed ? expand : collapse);
     }
     const [top, bottom] = heights();

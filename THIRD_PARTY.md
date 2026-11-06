@@ -11,6 +11,7 @@ copyright notices and exceptions listed below when updating dependencies.
 | WASI SDK runtimes, LLD, PCRE2 and Boehm GC | Component-specific licenses; exact source revisions and notices retained alongside the distribution | `vendor/WASM-NOTICES/`, `web/vendor/browser-crystal/THIRD-PARTY-NOTICES.md` |
 | browser_wasi_shim | Apache-2.0 OR MIT | Both licenses copied into generated `web/vendor/browser_wasi_shim/` |
 | Prism | [PrismJS/prism](https://github.com/PrismJS/prism); MIT | License copied into generated `web/vendor/prismjs/` |
+| Lucide icons | [lucide-icons/lucide](https://github.com/lucide-icons/lucide), `lucide-static`; ISC | License copied into generated `web/vendor/lucide/`; only the glyphs named in `web/ui/icon-names.js` are extracted |
 
 The full compiler uses patched Crystal 1.22.0; the lightweight syntax engine uses
 the separately pinned 1.23.0-dev source. Source archive pins are in

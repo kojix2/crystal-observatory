@@ -23,6 +23,7 @@ class Element {
   append(...children) {
     this.children.push(...children);
   }
+  insertAdjacentHTML() {}
 }
 
 test('node IR follows selection independently of playback and keeps all codegen contexts', () => {
@@ -196,7 +197,7 @@ test('stage handoff follows playback independently of the selected node, includi
     renderInspector(model, 1, () => {});
     assert.equal(get('visitor-title').textContent, 'Program#define_new_methods');
     assert(get('stage-context').innerHTML.includes(t('pipeline.stage.new')));
-    assert.equal(get('compiler-link').children[0].textContent, 'semantic/new.cr ↗');
+    assert.equal(get('compiler-link').children[0].textContent, 'semantic/new.cr');
     model.seek(1);
     renderInspector(model, 0, () => {});
     assert.equal(get('node-id').textContent, '—');

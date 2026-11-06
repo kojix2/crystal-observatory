@@ -1,5 +1,6 @@
 import { colorGroups, colorSettings, isColor, normalizeSettings } from '../core/settings.js';
 import { $, esc } from './dom.js';
+import { summaryLabel } from './icons.js';
 import { text } from './language.js';
 import { t } from '../i18n/index.js';
 
@@ -25,7 +26,7 @@ export function setupSettings() {
       details.className = 'settings-group';
       details.open = index === 0;
       const summary = document.createElement('summary');
-      summary.dataset.i18n = `settings.group.${group.id}`;
+      summaryLabel(summary).dataset.i18n = `settings.group.${group.id}`;
       const grid = document.createElement('div');
       grid.className = 'settings-colors';
       for (const { id, labelKey, label } of group.colors) {

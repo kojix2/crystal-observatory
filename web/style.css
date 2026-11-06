@@ -44,6 +44,18 @@ pre { margin:0; font:13px/1.65 var(--mono); tab-size:2; white-space:pre-wrap; ov
 .quiet { background:transparent; }
 .icon-button { display:inline-flex; align-items:center; justify-content:center; flex:0 0 24px; width:24px; height:24px; padding:2px; }
 .icon-button[aria-pressed=true] { background:#dedee6; color:#111; }
+/* Icons come from ui/icons.js only. Buttons with text place the icon first, then a span. */
+.icon { flex-shrink:0; vertical-align:-3px; }
+button>.icon+span,a>.icon+span { margin-left:5px; }
+/* Direction-only toggles rotate the same glyph; aria-expanded is the single source. */
+[data-icon="disclosure"],[data-icon="collapse"] { transition:transform .12s; }
+[aria-expanded="true"]>[data-icon="disclosure"],details[open]>summary>[data-icon="disclosure"] { transform:rotate(90deg); }
+[aria-expanded="false"]>[data-icon="collapse"] { transform:rotate(180deg); }
+summary { display:flex; align-items:center; gap:4px; list-style:none; }
+summary::-webkit-details-marker { display:none; }
+@media(prefers-reduced-motion:reduce) { [data-icon="disclosure"],[data-icon="collapse"] { transition:none; } }
+kbd { display:inline-block; min-width:14px; padding:0 3px; border-radius:2px; background:var(--soft-2); color:var(--ink); font:inherit; text-align:center; }
+kbd+kbd { margin-left:2px; }
 .link-button { color:#595968; border:0; background:transparent; padding:0; font-size:11px; }
 .link-button:hover { background:none; text-decoration:underline; }
 .spacer { flex:1; }
@@ -88,7 +100,6 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:var(--head
 .compiler-map button[aria-current="step"] { background:var(--selection); color:var(--ink); font-weight:600; }
 .compiler-map button:disabled { opacity:1; cursor:default; color:color-mix(in srgb,var(--muted) 75%,var(--paper)); }
 .compiler-map .pipeline-disclosure { display:flex; align-items:center; justify-content:center; flex:0 0 22px; height:28px; padding:0; }
-.pipeline-disclosure[aria-expanded="true"] svg { transform:rotate(90deg); }
 .semantic-map { margin:2px 0 6px 14px; padding-left:13px; border-left:1px solid var(--hairline); }
 .semantic-map li+li { margin-top:1px; }
 .semantic-map button { width:100%; min-height:28px; font-size:11px; line-height:1.5; padding:5px 8px; white-space:normal; overflow-wrap:anywhere; }
@@ -208,6 +219,8 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:var(--head
 .svg-code { font-size: 11px; fill: var(--node-secondary,var(--muted)); }
 .svg-type { font-size: 11px; fill: var(--type); }
 .svg-id { font-size: 10px; fill: var(--node-secondary,var(--muted)); }
+.svg-dot { fill: var(--node-secondary,var(--muted)); }
+.svg-mark { color: var(--node-secondary,var(--muted)); }
 .fold { font-size: 13px; fill: var(--node-secondary,var(--muted)); pointer-events: auto !important; cursor: pointer; }
 .dependency-path { stroke: var(--edge); fill: none; }
 .dependency-arrow { fill: var(--edge); }
@@ -323,7 +336,7 @@ body.resizing { user-select:none; }
 .trace-empty #node-panel .inspect-scroll>:not(#node-title),.trace-empty #event-panel .inspect-scroll>:not(#explanation) { display:none; }
 .trace-empty #node-title { font:13px/1.65 var(--sans); color:var(--muted); }
 .playback { display:flex; align-items:center; gap:3px; padding:3px 5px; min-width:0; }
-.playback button { padding:2px 5px; font:11px var(--mono); height:23px; }
+.playback .icon-button { height:23px; }
 #speed { padding:2px; height:22px; font-size:11px; background:var(--soft); }
 #position { margin-left:auto; font:11px var(--mono); white-space:nowrap; color:var(--muted); }
 .seek-bar { display:flex; align-items:center; padding:0 7px; }
@@ -349,18 +362,17 @@ td { padding:4px 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowra
 .event-group { background:var(--soft); }
 .event-group td:first-child { font-size:10px; white-space:normal; }
 .event-group-heading { display:flex; align-items:center; gap:4px; }
-.event-group-toggle { flex-shrink:0; padding:0 2px; border:0; background:transparent; }
+.event-group-toggle { display:inline-flex; align-items:center; flex-shrink:0; padding:0 2px; border:0; background:transparent; color:var(--muted); }
 .event-group-heading .event-visitor { min-width:0; }
-.event-group-arrow { flex-shrink:0; font-size:10px; color:var(--muted); }
 tbody tr { cursor:pointer; }
 tbody tr:hover { background:var(--soft); }
 tbody tr.active { background:var(--selection); color:var(--ink); }
 tbody tr.type .event-label { color:var(--type); }
 .table-footer { display:flex; gap:4px; align-items:center; padding:1px 4px; font-size:10px; color:var(--muted); background:var(--soft); white-space:nowrap; overflow:hidden; }
-.table-footer button { padding:0 5px; }
-.table-footer .spacer+span { overflow:hidden; text-overflow:ellipsis; font-size:9px; }
+.table-footer .icon-button { flex-basis:18px; width:18px; height:18px; padding:0; }
+.table-footer .keys { overflow:hidden; text-overflow:ellipsis; font-size:9px; }
 footer { height:18px; flex:0 0 18px; display:flex; gap:12px; align-items:center; padding:0 3px; font:10px var(--mono); color:#858592; white-space:nowrap; overflow:hidden; }
-footer a { text-decoration:none; }
+footer a { display:inline-flex; align-items:center; gap:3px; text-decoration:none; }
 #engine { color:#565465; }
 #versions { overflow:hidden; text-overflow:ellipsis; }
 /* Each collapsed navigation pane retains its own expand button. */
@@ -380,7 +392,8 @@ dialog h2 { font-size:21px; margin-bottom:12px; }
 dialog h3 { font-size:15px; margin:18px 0 6px; }
 dialog p,dialog li { font-size:13px; line-height:1.8; }
 dialog li { margin:5px 0; }
-dialog .close { position:absolute; right:7px; top:4px; border:0; font-size:22px; }
+dialog .close { position:absolute; right:10px; top:10px; border:0; background:transparent; color:var(--muted); }
+dialog .close:hover { color:var(--ink); }
 #notice-detail { max-height:65dvh; overflow:auto; }
 /* Keep the settings readable even while trying low-contrast custom colors. */
 #settings { --paper:#ffffff; --ink:#19191e; --muted:#73737e; --line:#dcdce2; --soft:#f5f5f7; width:min(620px,calc(100vw - 24px)); }
@@ -407,10 +420,15 @@ dialog .close { position:absolute; right:7px; top:4px; border:0; font-size:22px;
 .run-inputs textarea,.run-inputs input { width:100%; border:1px solid transparent; padding:5px; border-radius:3px; background:var(--soft-2); color:var(--ink); font:13px/1.5 var(--mono); }
 .run-inputs textarea { resize:vertical; min-height:50px; max-height:160px; }
 .console { flex:1; min-height:0; overflow:auto; padding:12px; background:var(--editor-bg); color:var(--editor-ink); font:14px/1.7 var(--mono); white-space:pre-wrap; overflow-wrap:anywhere; }
-@media(max-width:1100px) { .tabs { gap:8px; } .inspect-scroll { padding:10px; } .table-footer .spacer+span { display:none; } }
+@media(max-width:1100px) { .tabs { gap:8px; } .inspect-scroll { padding:10px; } .table-footer .keys { display:none; } }
 @media(max-width:680px) { h1 span { display:none; } .brand { gap:3px; } .command-row { gap:4px; } #versions { display:none; } }
 @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; } }
 
 .horizontal { cursor:row-resize; }
 .horizontal::after { width:28px; height:2px; top:2px; left:calc(50% - 14px); }
-@media(max-width:1000px) { .status-message { flex:0 0 30px; min-width:30px; } #notice { text-overflow:clip; font-size:0; } #notice::before { content:'ⓘ'; font-size:16px; } .commands { flex:1; } }
+/* Narrow headers show the status as an info mark; the icon overlays the still-clickable button. */
+.status-message { position:relative; }
+.notice-icon { display:none; position:absolute; left:7px; top:4px; pointer-events:none; color:var(--header-ink); }
+#notice.warning+.notice-icon { color:#f4cf86; }
+#notice.error+.notice-icon { color:#ffadb9; }
+@media(max-width:1000px) { .status-message { flex:0 0 30px; min-width:30px; } #notice { text-overflow:clip; font-size:0; height:24px; } .notice-icon { display:block; } .commands { flex:1; } }
