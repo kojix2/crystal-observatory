@@ -23,7 +23,7 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
     $('learning-search-tools').hidden = current === 'workflow';
     if (current === 'workflow') {
       content.innerHTML = `<div class="learning-slides">
-        <iframe src="https://www.slideshare.net/slideshow/embed_code/key/efm7Tuz5vpYSU2" width="610" height="515" title="Crystal internals (part 1)" scrolling="no" allowfullscreen></iframe>
+        <iframe src="https://www.slideshare.net/slideshow/embed_code/key/efm7Tuz5vpYSU2" width="1600" height="900" title="Crystal internals (part 1)" scrolling="no" allowfullscreen></iframe>
         <p><strong><a href="https://www.slideshare.net/slideshow/crystal-internals-part-1-70673255/70673255" title="Crystal internals (part 1)" target="_blank" rel="noopener noreferrer">Crystal internals (part 1)</a></strong> from <strong><a href="https://www.slideshare.net/crystallanguage" target="_blank" rel="noopener noreferrer">Crystal Language</a></strong></p>
       </div>`;
       return;

@@ -112,8 +112,9 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .learning-card .learning-file { display:block; margin-top:12px; color:var(--muted); font:var(--text-small)/1.6 var(--mono); }
 .learning-node { border-left:3px solid var(--node-color,var(--line)); }
 .learning-node p { color:var(--muted); font-size:var(--text-small); }
-.learning-slides { width:min(100%,610px); }
-.learning-slides iframe { display:block; width:100%; height:auto; aspect-ratio:610/515; border:1px solid #ccc; margin-bottom:5px; }
+.learning-inner:has(.learning-slides) { width:100%; }
+.learning-slides { width:100%; }
+.learning-slides iframe { display:block; width:100%; height:auto; aspect-ratio:16/9; border:1px solid #ccc; margin-bottom:5px; }
 .learning-slides p { font-size:var(--text-small); overflow-wrap:anywhere; }
 .stage-context { border-left:3px solid var(--type); border-radius:0 3px 3px 0; background:var(--soft); padding:8px 10px; margin-bottom:12px; overflow-wrap:anywhere; }
 .stage-context-heading { font-size:var(--text-small); color:var(--muted); margin-bottom:5px; }
