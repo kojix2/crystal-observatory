@@ -63,7 +63,8 @@ kbd+kbd { margin-left:2px; }
 .tiny { font:11px var(--mono); color:var(--muted); }
 #chrome { flex:0 0 40px; height:40px; min-width:0; }
 .command-row { height:40px; padding:5px 8px; display:flex; align-items:center; gap:7px; background:var(--header-bg); color:var(--header-ink); }
-.brand { display:flex; align-items:center; flex-shrink:0; gap:6px; }
+.brand { display:flex; align-items:center; flex-shrink:0; gap:6px; text-decoration:none; }
+.brand:hover { color:inherit; }
 .mark { width:24px; height:28px; display:block; }
 h1 { font-size:15px; line-height:1; font-weight:700; white-space:nowrap; }
 h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:var(--header-ink); opacity:.75; }
