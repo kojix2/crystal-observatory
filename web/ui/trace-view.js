@@ -22,6 +22,7 @@ const scrollTargets = {
   run: 'console',
 };
 const label = (view) => viewLabel(view) || t(viewLabelKey(view));
+const AST_LAYOUT_KEY = 'crystal-observatory.ast-layout.v1';
 
 // Selection/playback is a presentation concern. This class never starts Workers.
 export class TraceView {
@@ -34,6 +35,13 @@ export class TraceView {
     this.scrollPositions = new Map();
     this.pendingReveals = new Set();
     this.collapsed = new Set();
+    this.astLayout = 'cards';
+    this.astZoom = 1;
+    try {
+      if (localStorage.getItem(AST_LAYOUT_KEY) === 'radial') this.astLayout = 'radial';
+    } catch {
+      /* Optional preference. */
+    }
     this.events = new EventList((index) => this.selectEvent(index));
     this.ir = new IRView();
     this.bindControls();
@@ -57,6 +65,7 @@ export class TraceView {
     this.selectedType = 0;
     this.snapshot = 0;
     this.collapsed.clear();
+    this.astZoom = 1;
     this.editor.setRecord(trace.source, preserveEdits, trace.mode !== 'empty');
     $('app').classList.toggle('trace-empty', trace.mode === 'empty');
     $('export').disabled = trace.mode === 'empty';
@@ -292,10 +301,16 @@ export class TraceView {
         },
       });
     } else {
-      if (view === 'ast')
-        $('expand').hidden = !this.trace.snapshots[this.snapshot]?.nodes.some((node) =>
-          this.collapsed.has(node.id),
-        );
+      if (view === 'ast') {
+        const radial = this.astLayout === 'radial';
+        $('ast-layout').value = this.astLayout || 'cards';
+        $('ast-radial-controls').hidden = !radial;
+        $('ast-zoom').value = Math.round((this.astZoom || 1) * 100);
+        $('ast-zoom-value').value = `${$('ast-zoom').value}%`;
+        $('expand').hidden =
+          radial ||
+          !this.trace.snapshots[this.snapshot]?.nodes.some((node) => this.collapsed.has(node.id));
+      }
       renderGraph(
         {
           model: this.model,
@@ -304,6 +319,8 @@ export class TraceView {
           view,
           collapsed: this.collapsed,
           reveal,
+          astLayout: this.astLayout,
+          astZoom: this.astZoom,
         },
         (id) => this.selectNode(id),
         (id) => {
@@ -325,6 +342,18 @@ export class TraceView {
       const element = $(id);
       this.scrollPositions.set(view, [element.scrollLeft, element.scrollTop]);
     }
+  }
+  zoomAST(zoom) {
+    const graph = $('graph'),
+      previous = this.astZoom || 1,
+      x = graph.scrollLeft + graph.clientWidth / 2,
+      y = graph.scrollTop + graph.clientHeight / 2;
+    this.astZoom = Math.max(1, Math.min(8, Number(zoom) || 1));
+    this.renderObservation();
+    graph.scrollLeft =
+      this.astZoom === 1 ? 0 : (x * this.astZoom) / previous - graph.clientWidth / 2;
+    graph.scrollTop =
+      this.astZoom === 1 ? 0 : (y * this.astZoom) / previous - graph.clientHeight / 2;
   }
   renderComparisonControls() {
     const comparing = Boolean(this.layout.secondary);
@@ -487,6 +516,21 @@ export class TraceView {
       $('follow').checked = false;
       this.renderObservation();
     };
+    $('ast-layout').value = this.astLayout;
+    $('ast-layout').onchange = () => {
+      this.astLayout = $('ast-layout').value === 'radial' ? 'radial' : 'cards';
+      this.astZoom = 1;
+      this.scrollPositions.delete('ast');
+      $('graph').scrollLeft = $('graph').scrollTop = 0;
+      try {
+        localStorage.setItem(AST_LAYOUT_KEY, this.astLayout);
+      } catch {
+        /* Optional preference. */
+      }
+      this.renderObservation();
+    };
+    $('ast-zoom').oninput = () => this.zoomAST(Number($('ast-zoom').value) / 100);
+    $('ast-fit').onclick = () => this.zoomAST(1);
     $('follow').onchange = () => {
       if ($('follow').checked) this.seek(this.model.index);
       else this.renderObservation();

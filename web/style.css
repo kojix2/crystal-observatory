@@ -172,6 +172,23 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:var(--head
 .graph-scroll { flex: 1; overflow: auto; min-height: 0; min-width: 0; position: relative; background: var(--graph-bg); }
 .panel-foot { max-height:43px; overflow:auto; flex-shrink: 0; font-size: 10px; line-height: 15px; color: var(--muted); padding: 5px 10px; background:var(--soft); }
 .ast-svg, .dep-svg { display: block; min-width: 100%; }
+.ast-svg.radial-svg { min-width:0; margin:12px auto; }
+.radial-svg .edge { vector-effect:non-scaling-stroke; stroke-width:1; }
+.radial-hit { fill:transparent; }
+.radial-dot { fill:var(--muted); stroke:var(--graph-bg); stroke-width:1; vector-effect:non-scaling-stroke; }
+[data-ast-colors="true"] .radial-dot { fill:var(--node-color); }
+.radial-node.reference .radial-dot { fill:var(--graph-bg); stroke:var(--muted); }
+[data-ast-colors="true"] .radial-node.reference .radial-dot { stroke:var(--node-color); }
+.radial-node.changed .radial-dot { fill:var(--type); }
+.radial-svg .radial-node.selected .radial-dot,.radial-svg .radial-node:hover .radial-dot,.radial-svg .radial-node:focus-visible .radial-dot { stroke:var(--ink); stroke-width:2; }
+.radial-node:focus-visible { outline:none; }
+.ast-tools { flex-wrap:wrap; }
+.ast-tools #ast-layout { flex:0 1 140px; }
+.ast-tools #snapshot { flex:1 1 150px; }
+.ast-tools label { flex-shrink:0; }
+.radial-controls { flex-shrink:0; gap:8px; }
+.radial-controls input { flex:1; min-width:40px; }
+.radial-controls output { min-width:4ch; font:11px var(--mono); text-align:right; }
 .ast-svg text,.dep-svg text { font-family: var(--mono); pointer-events: none; }
 .node { cursor: pointer; --node-secondary:color-mix(in srgb,var(--muted) 90%,var(--ink)); }
 [data-node-family="literal"] { --node-color:var(--ast-literal); }
@@ -276,7 +293,7 @@ tr.activity { border-left:3px solid #599c83; }
 .ir-view .token.label { color:var(--syntax-symbol); }
 .ir-view .token.type { color:var(--syntax-type); }
 #token-view table { background: var(--paper); }
-#token-view th:nth-child(1) { width: 14%; } #token-view th:nth-child(2) { width: 28%; } #token-view th:nth-child(3) { width: 37%; } #token-view th:nth-child(4) { width: 21%; }
+#token-view th:nth-child(1) { width: 37%; } #token-view th:nth-child(2) { width: 28%; } #token-view th:nth-child(3) { width: 14%; } #token-view th:nth-child(4) { width: 21%; }
 .dep-caption { padding: 9px 12px; font-size: 11px; color: var(--muted); background: var(--soft); }
 .token-selected { background: var(--selection); }
 

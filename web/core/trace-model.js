@@ -155,24 +155,29 @@ export class TraceModel {
 export function flattenAST(snapshot, collapsed = new Set()) {
   const nodes = new Map(snapshot.nodes.map((n) => [n.id, n]));
   const rows = [],
-    seen = new Set();
-  function walk(id, depth, parent, edge) {
+    seen = new Set(),
+    pending = snapshot.roots.map((id) => ({ id, depth: 0, parent: -1, edge: 'root' })).reverse();
+  while (pending.length) {
+    const { id, depth, parent, edge } = pending.pop();
     const node = nodes.get(id);
-    if (!node) return;
+    if (!node) continue;
     if (seen.has(id)) {
       rows.push({ node, depth, parent, edge, reference: true });
-      return;
+      continue;
     }
     seen.add(id);
     const row = rows.length;
     rows.push({ node, depth, parent, edge, reference: false });
-    if (collapsed.has(id)) return;
-    for (const child of node.children) walk(child, depth + 1, row, 'child');
-    if (node.expanded) walk(node.expanded, depth + 1, row, 'expanded');
-    for (const hook of node.hook_expansions || []) walk(hook, depth + 1, row, 'hook');
-    for (const target of node.targets) walk(target, depth + 1, row, 'target');
+    if (collapsed.has(id)) continue;
+    const children = [
+      ...node.children.map((id) => ({ id, edge: 'child' })),
+      ...(node.expanded ? [{ id: node.expanded, edge: 'expanded' }] : []),
+      ...(node.hook_expansions || []).map((id) => ({ id, edge: 'hook' })),
+      ...node.targets.map((id) => ({ id, edge: 'target' })),
+    ];
+    for (let i = children.length - 1; i >= 0; i--)
+      pending.push({ ...children[i], depth: depth + 1, parent: row });
   }
-  for (const id of snapshot.roots) walk(id, 0, -1, 'root');
   return rows;
 }
 

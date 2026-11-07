@@ -77,6 +77,14 @@ to keep the current view and AST snapshot while selecting events. A comparison t
 already includes AST stays open. Playback and stepping update the event without
 switching tabs. **Expand all** appears when the current AST has folded nodes.
 
+The AST layout selector switches between **Cards** and **Radial tree**. The radial
+view shows the whole snapshot as dots and circular branches, including descendants
+folded in Cards. Roots sit at the center and leaves around the rim. Select a dot
+to inspect its node, or hover for its name, code and type. Hollow dots mark repeated
+references. The zoom slider spreads the branches out; scroll to explore and use
+**Fit all** to return to the overview. Switching layouts preserves selection,
+playback, the snapshot and card folds; the chosen layout is saved in the browser.
+
 The desktop workspace uses three columns: **History**, the selected observation
 (AST, source, IR or output), and node/operation details. Drag the column dividers
 to resize them, or collapse History with its header button. Widths and the

@@ -47,7 +47,9 @@ test('translations and markup carry no control glyphs; icons come from icons.js 
     for (const match of source.matchAll(/<svg\b[^>]*>/g)) {
       const tag = match[0];
       const allowed =
-        file === 'ui/icons.js' || /data-icon="/.test(tag) || /class="(ast-svg|dep-svg)"/.test(tag);
+        file === 'ui/icons.js' ||
+        /data-icon="/.test(tag) ||
+        /class="(ast-svg|dep-svg)(?:\s|")/.test(tag);
       assert(allowed, `${file}: inline <svg> outside the icon vocabulary: ${tag}`);
     }
   }

@@ -4,6 +4,9 @@ import { icon } from './icons.js';
 import { flattenAST } from '../core/trace-model.js';
 import { renderActivities } from './inspector.js';
 import { astFamily } from '../core/ast-colors.js';
+import { layoutRadialAST, radialBranch } from '../core/radial-ast.js';
+
+const radialLayouts = new WeakMap();
 
 const mutations = new Set([
   'assign_type',
@@ -18,14 +21,14 @@ const mutations = new Set([
 
 // A render takes one explicit trace selection; no compiler/job state lives here.
 export function renderGraph(
-  { model, selected, snapshot, view, collapsed, reveal = true },
+  { model, selected, snapshot, view, collapsed, reveal = true, astLayout = 'cards', astZoom = 1 },
   onSelect,
   onFold,
   onSeek = () => {},
 ) {
   const caption = $(`${view}-caption`);
   const liveTypes = view === 'types' || $('follow').checked;
-  function svgNode(n, x, y, width = 270, reference = false) {
+  function nodeState(n) {
     const family = astFamily(n.kind);
     const type = liveTypes ? model.types.get(n.id) || '' : n.inferred_type || '';
     const activities = model.activities.get(n.id) || [];
@@ -39,6 +42,10 @@ export function renderGraph(
           event.phase === model.event?.phase &&
           event.visitor === model.event?.visitor,
       );
+    return { family, type, activities, changed };
+  }
+  function svgNode(n, x, y, width = 270, reference = false) {
+    const { family, type, activities, changed } = nodeState(n);
     const folded = collapsed.has(n.id);
     const hasKids =
       view === 'ast' &&
@@ -62,7 +69,10 @@ export function renderGraph(
       };
       el.addEventListener('click', activate);
       el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') activate(e);
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activate(e);
+        }
       });
     });
     container.querySelectorAll('[data-fold]').forEach(
@@ -81,8 +91,49 @@ export function renderGraph(
       caption.textContent = t('graph.prompt');
       return;
     }
+    if (astLayout === 'radial') renderRadial(s);
+    else renderCards(s);
+    wireGraph($('graph'));
+    const activeNode = $('graph').querySelector('.node.selected');
+    if (activeNode && $('follow').checked && reveal) {
+      const nodeRect = activeNode.getBoundingClientRect(),
+        area = $('graph').getBoundingClientRect();
+      if (nodeRect.top < area.top || nodeRect.bottom > area.bottom)
+        $('graph').scrollTop += nodeRect.top - area.top - area.height * 0.38;
+      if (nodeRect.left < area.left || nodeRect.right > area.right)
+        $('graph').scrollLeft += nodeRect.left - area.left - 16;
+    }
+    caption.textContent =
+      t('graph.caption', {
+        name: s.name,
+        count: s.nodes.length,
+        time: t($('follow').checked ? 'graph.eventTypes' : 'graph.snapshotTypes'),
+        outside: selected && !s.nodes.some((n) => n.id === selected) ? t('graph.outside') : '',
+      }) + (astLayout === 'radial' ? ` · ${t('ast.radialHint')}` : '');
+  }
+  function renderRadial(s) {
+    if (!radialLayouts.has(s)) radialLayouts.set(s, layoutRadialAST(s));
+    const rows = radialLayouts.get(s),
+      graph = $('graph'),
+      fit = Math.max(1, Math.min(graph.clientWidth || 600, graph.clientHeight || 600) - 24),
+      diameter = fit * astZoom,
+      unit = 1000 / diameter;
+    let edges = '',
+      nodes = '';
+    for (const row of rows) {
+      if (row.parent >= 0)
+        edges += `<path class="edge ${row.edge}" d="${radialBranch(rows[row.parent], row)}"/>`;
+      else if (row.radius > 0) edges += `<path class="edge root" d="M500 500 L${row.x} ${row.y}"/>`;
+      const { family, type, changed } = nodeState(row.node),
+        active = row.node.id === selected,
+        label = t('graph.node', { kind: row.node.kind, type, id: row.node.id });
+      nodes += `<g class="node radial-node ${active ? 'selected' : ''} ${changed ? 'changed' : ''} ${row.reference ? 'reference' : ''}" data-node="${row.node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${row.x} ${row.y})"><title>${esc(label)}\n${esc(row.node.label || '')}${row.reference ? `\n${esc(t('ast.reference'))}` : ''}</title><circle class="radial-hit" r="${7 * unit}"/><circle class="radial-dot" r="${(active ? 4.5 : 2.5) * unit}"/></g>`;
+    }
+    graph.innerHTML = `<svg class="ast-svg radial-svg" xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}" viewBox="0 0 1000 1000" aria-label="${esc(t('ast.layout.radial'))}">${edges}${nodes}</svg>`;
+  }
+  function renderCards(s) {
     const rows = flattenAST(s, collapsed);
-    const maxDepth = Math.max(0, ...rows.map((r) => r.depth));
+    const maxDepth = rows.reduce((max, row) => Math.max(max, row.depth), 0);
     const nodeWidth = Math.max(270, Math.min(400, $('graph').clientWidth - maxDepth * 27 - 44));
     const w = Math.max($('graph').clientWidth, maxDepth * 27 + nodeWidth + 40);
     let edges = '',
@@ -110,22 +161,6 @@ export function renderGraph(
     }
     $('graph').innerHTML =
       `<svg class="ast-svg" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${Math.max(390, rows.length * 65 + 28)}" aria-label="${esc(t('ast'))}">${edges}${nodes}</svg>`;
-    wireGraph($('graph'));
-    const activeNode = $('graph').querySelector('.node.selected');
-    if (activeNode && $('follow').checked && reveal) {
-      const nodeRect = activeNode.getBoundingClientRect(),
-        area = $('graph').getBoundingClientRect();
-      if (nodeRect.top < area.top || nodeRect.bottom > area.bottom)
-        $('graph').scrollTop += nodeRect.top - area.top - area.height * 0.38;
-      if (nodeRect.left < area.left || nodeRect.right > area.right)
-        $('graph').scrollLeft += nodeRect.left - area.left - 16;
-    }
-    caption.textContent = t('graph.caption', {
-      name: s.name,
-      count: s.nodes.length,
-      time: t($('follow').checked ? 'graph.eventTypes' : 'graph.snapshotTypes'),
-      outside: selected && !s.nodes.some((n) => n.id === selected) ? t('graph.outside') : '',
-    });
   }
   function renderTypes() {
     const edges = [...model.edges.values()].filter(([a, b]) => a === selected || b === selected);
