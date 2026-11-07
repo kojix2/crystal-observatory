@@ -5,6 +5,7 @@ import { setIcon } from './icons.js';
 import { eventLabel, shortVisitor } from './event-labels.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
+import { bindGraphNavigation, zoomGraphAt } from './graph-navigation.js';
 import { renderInspector } from './inspector.js';
 import { setupNodeTabs } from './node-tabs.js';
 import { setupEventTabs } from './event-tabs.js';
@@ -39,6 +40,7 @@ export class TraceView {
     this.collapsed = new Set();
     this.astLayout = 'cards';
     this.astZoom = 1;
+    this.typesZoom = 1;
     try {
       const saved = localStorage.getItem(AST_LAYOUT_KEY);
       if (['radial', 'mindmap'].includes(saved)) this.astLayout = saved;
@@ -71,6 +73,7 @@ export class TraceView {
     this.snapshot = 0;
     this.collapsed.clear();
     this.astZoom = 1;
+    this.typesZoom = 1;
     this.editor.setRecord(trace.source, preserveEdits, trace.mode !== 'empty');
     $('app').classList.toggle('trace-empty', trace.mode === 'empty');
     $('export').disabled = trace.mode === 'empty';
@@ -334,14 +337,16 @@ export class TraceView {
         const radial = this.astLayout === 'radial';
         $('ast-layout').value = this.astLayout || 'cards';
         $('ast-radial-controls').hidden = this.astLayout === 'cards';
-        $('ast-zoom').min = this.astLayout === 'mindmap' ? 0.0001 : 100;
-        $('ast-zoom').step = this.astLayout === 'mindmap' ? 'any' : 25;
-        $('ast-zoom').value = Number(((this.astZoom || 1) * 100).toPrecision(3));
-        $('ast-zoom-value').value = `${$('ast-zoom').value}%`;
+        $('ast-zoom-label').hidden = !radial;
+        $('ast-zoom').hidden = !radial;
+        $('ast-zoom').value = (this.astZoom || 1) * 100;
+        $('ast-zoom-value').value = `${Number(((this.astZoom || 1) * 100).toPrecision(3))}%`;
         $('expand').hidden =
           radial ||
           !this.trace.snapshots[this.snapshot]?.nodes.some((node) => this.collapsed.has(node.id));
       }
+      if (view === 'types')
+        $('types-zoom-value').value = `${Number(((this.typesZoom || 1) * 100).toPrecision(3))}%`;
       renderGraph(
         {
           model: this.model,
@@ -352,6 +357,7 @@ export class TraceView {
           reveal,
           astLayout: this.astLayout,
           astZoom: this.astZoom,
+          typesZoom: this.typesZoom,
         },
         (id) => this.selectNode(id),
         (id) => {
@@ -374,7 +380,7 @@ export class TraceView {
       this.scrollPositions.set(view, [element.scrollLeft, element.scrollTop]);
     }
   }
-  zoomAST(zoom) {
+  zoomAST(zoom, point) {
     const graph = $('graph'),
       previous = this.astZoom || 1,
       x = graph.scrollLeft + graph.clientWidth / 2,
@@ -383,6 +389,16 @@ export class TraceView {
       this.astLayout === 'mindmap' ? 0.000001 : 1,
       Math.min(8, Number(zoom) || 1),
     );
+    if (point) {
+      zoomGraphAt(
+        graph,
+        '.mindmap-svg',
+        this.astZoom / previous,
+        () => this.renderView('ast', false),
+        point,
+      );
+      return;
+    }
     this.renderObservation();
     graph.scrollLeft =
       this.astLayout === 'radial' && this.astZoom === 1
@@ -392,6 +408,19 @@ export class TraceView {
       this.astLayout === 'radial' && this.astZoom === 1
         ? 0
         : (y * this.astZoom) / previous - graph.clientHeight / 2;
+  }
+  zoomTypes(zoom, point) {
+    const graph = $('types'),
+      previous = this.typesZoom || 1;
+    this.typesZoom = Math.max(0.05, Math.min(8, Number(zoom) || 1));
+    const area = graph.getBoundingClientRect();
+    zoomGraphAt(
+      graph,
+      '.dep-svg',
+      this.typesZoom / previous,
+      () => this.renderView('types', false),
+      point || { x: area.left + graph.clientWidth / 2, y: area.top + graph.clientHeight / 2 },
+    );
   }
   renderComparisonControls() {
     const comparing = Boolean(this.layout.secondary);
@@ -579,41 +608,29 @@ export class TraceView {
       );
       graph.scrollLeft = graph.scrollTop = 0;
     };
-    const graph = $('graph');
-    let pan;
-    graph.addEventListener('pointerdown', (event) => {
-      if (
-        this.astLayout !== 'mindmap' ||
-        event.pointerType !== 'mouse' ||
-        event.button !== 0 ||
-        event.target.closest('.node')
-      )
-        return;
-      pan = {
-        id: event.pointerId,
-        x: event.clientX,
-        y: event.clientY,
-        left: graph.scrollLeft,
-        top: graph.scrollTop,
-      };
-      graph.setPointerCapture(event.pointerId);
-      graph.classList.add('panning');
-      event.preventDefault();
+    bindGraphNavigation($('graph'), {
+      enabled: () => this.astLayout === 'mindmap',
+      selector: '.mindmap-svg',
+      zoom: (factor, point) => this.zoomAST((this.astZoom || 1) * factor, point),
     });
-    graph.addEventListener('pointermove', (event) => {
-      if (!pan || event.pointerId !== pan.id) return;
-      graph.scrollLeft = pan.left + pan.x - event.clientX;
-      graph.scrollTop = pan.top + pan.y - event.clientY;
+    bindGraphNavigation($('types'), {
+      selector: '.dep-svg',
+      zoom: (factor, point) => this.zoomTypes((this.typesZoom || 1) * factor, point),
     });
-    const endPan = (event) => {
-      if (!pan || event.pointerId !== pan.id) return;
-      pan = null;
-      graph.classList.remove('panning');
-      if (graph.hasPointerCapture(event.pointerId)) graph.releasePointerCapture(event.pointerId);
+    $('types-fit').onclick = () => {
+      const graph = $('types'),
+        bounds = graph.querySelector('.dep-svg')?.viewBox.baseVal;
+      if (!bounds) return;
+      const captionHeight = graph.querySelector('.dep-caption').offsetHeight;
+      this.zoomTypes(
+        Math.min(
+          1,
+          (graph.clientWidth - 24) / bounds.width,
+          (graph.clientHeight - captionHeight - 24) / bounds.height,
+        ),
+      );
+      graph.scrollLeft = graph.scrollTop = 0;
     };
-    graph.addEventListener('pointerup', endPan);
-    graph.addEventListener('pointercancel', endPan);
-    graph.addEventListener('lostpointercapture', endPan);
     $('follow').onchange = () => {
       if ($('follow').checked) this.seek(this.model.index);
       else this.renderObservation();

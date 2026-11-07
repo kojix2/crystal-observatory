@@ -43,7 +43,17 @@ const mutations = new Set([
 
 // A render takes one explicit trace selection; no compiler/job state lives here.
 export function renderGraph(
-  { model, selected, snapshot, view, collapsed, reveal = true, astLayout = 'cards', astZoom = 1 },
+  {
+    model,
+    selected,
+    snapshot,
+    view,
+    collapsed,
+    reveal = true,
+    astLayout = 'cards',
+    astZoom = 1,
+    typesZoom = 1,
+  },
   onSelect,
   onFold,
   onSeek = () => {},
@@ -295,7 +305,7 @@ export function renderGraph(
         if (n) nodes += svgNode(n, x, y, dependencyWidth);
       }
       $('types').innerHTML =
-        `<div class="dep-caption">${esc(t('graph.edges'))}</div><svg class="dep-svg" xmlns="http://www.w3.org/2000/svg" width="908" height="${height}"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" class="dependency-arrow"/></marker></defs>${paths}${nodes}</svg>`;
+        `<div class="dep-caption">${esc(t('graph.edges'))}</div><svg class="dep-svg" xmlns="http://www.w3.org/2000/svg" width="${908 * typesZoom}" height="${height * typesZoom}" viewBox="0 0 908 ${height}"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" class="dependency-arrow"/></marker></defs>${paths}${nodes}</svg>`;
       wireGraph($('types'));
     }
     const history = document.createElement('section');

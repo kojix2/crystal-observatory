@@ -103,9 +103,13 @@ Mind map arranges compact, labeled nodes in branches extending to the left and r
 root. Select a node to inspect its code and type. Use its **+ / −** button (or focus
 the node and press **+ / −**) to expand or collapse a branch. Folds are shared with
 Cards; **Expand all** opens every branch. Dashed node outlines mark repeated references.
-The zoom slider changes the size of the map; **Fit all** fits the visible branches
-in the panel. Scroll or drag the background to explore a larger map; on touch
+Use the mouse wheel to zoom around the pointer; **Fit all** fits the visible branches
+in the panel. Drag the background to move around a larger map; on touch
 screens, swipe to scroll.
+
+The **Types** dependency diagram uses the same mouse controls: wheel to zoom and
+drag the background to move. **Fit all** fits the diagram in the panel. The type
+activity history below the diagram scrolls normally.
 
 The radial
 view shows the whole snapshot as dots and circular branches, including descendants

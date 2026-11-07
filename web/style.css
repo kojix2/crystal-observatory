@@ -211,6 +211,7 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .radial-svg .radial-node.selected .radial-dot,.radial-svg .radial-node:hover .radial-dot,.radial-svg .radial-node:focus-visible .radial-dot { stroke:var(--ink); stroke-width:2; }
 .radial-node:focus-visible { outline:none; }
 .ast-svg.mindmap-svg { min-width:0; margin:12px auto; cursor:grab; }
+.dep-svg { min-width:0; cursor:grab; }
 .graph-scroll.panning,.graph-scroll.panning * { cursor:grabbing; user-select:none; }
 .mindmap-svg .edge { stroke-width:1.6; }
 .mindmap-node .svg-kind { font-size:12px; }
