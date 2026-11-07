@@ -1566,6 +1566,15 @@ export const messages = {
     de: 'Echte Parser-Tokens; Duplikate mit gleicher Position, Art und gleichem Wert werden ausgelassen.',
     ru: 'Реальные токены парсера; повторы с одинаковыми позицией, видом и значением пропущены.',
   },
+  'token.resize': {
+    ja: 'Tokensの「{column}」列の幅',
+    en: 'Tokens {column} column width',
+    es: 'Ancho de la columna {column} de tokens',
+    'zh-CN': '词法单元的{column}列宽度',
+    fr: 'Largeur de la colonne {column} des tokens',
+    de: 'Breite der Token-Spalte {column}',
+    ru: 'Ширина столбца «{column}» токенов',
+  },
   'token.position': {
     ja: '位置',
     en: 'Position',

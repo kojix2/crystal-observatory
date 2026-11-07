@@ -401,7 +401,11 @@ tr.activity { border-left:3px solid #599c83; }
 .ir-view .token.label { color:var(--syntax-symbol); }
 .ir-view .token.type { color:var(--syntax-type); }
 #token-view table { background: var(--paper); }
-#token-view th:nth-child(1) { width: 37%; } #token-view th:nth-child(2) { width: 28%; } #token-view th:nth-child(3) { width: 14%; } #token-view th:nth-child(4) { width: 21%; }
+#token-table { min-width:288px; }
+#token-table th { padding-right:10px; }
+#token-table th:nth-child(1) { z-index:4; }
+#token-table th:nth-child(2) { z-index:3; }
+#token-table th:nth-child(3) { z-index:2; }
 .dep-caption { padding: 9px 12px; font-size: var(--text-small); color: var(--muted); background: var(--soft); }
 .token-selected { background: var(--selection); }
 
@@ -462,10 +466,10 @@ td { padding:4px 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowra
 #history-table th { padding-right:10px; }
 #history-table th:first-child { z-index:3; }
 #history-table th:nth-child(2) { z-index:2; }
-.history-column-label { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.history-column-divider { position:absolute; top:0; right:-6px; bottom:0; width:12px; cursor:col-resize; touch-action:none; }
-.history-column-divider::after { content:""; position:absolute; top:3px; bottom:3px; left:5px; width:2px; background:var(--line); }
-.history-column-divider:hover,.history-column-divider:focus-visible,.history-column-divider.dragging { background:var(--selection); outline:1px solid var(--type); outline-offset:-1px; }
+.history-column-label,.table-column-label { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.history-column-divider,.table-column-divider { position:absolute; top:0; right:-6px; bottom:0; width:12px; cursor:col-resize; touch-action:none; }
+.history-column-divider::after,.table-column-divider::after { content:""; position:absolute; top:3px; bottom:3px; left:5px; width:2px; background:var(--line); }
+.history-column-divider:hover,.history-column-divider:focus-visible,.history-column-divider.dragging,.table-column-divider:hover,.table-column-divider:focus-visible,.table-column-divider.dragging { background:var(--selection); outline:1px solid var(--type); outline-offset:-1px; }
 #trace-content td { height:56px; vertical-align:top; }
 #trace-content td:first-child { color:var(--muted); font-size:var(--text-small); padding-top:6px; }
 .event-visitor,.event-result,.event-label,.event-node { display:block; overflow:hidden; text-overflow:ellipsis; }

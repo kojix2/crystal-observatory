@@ -4,6 +4,7 @@ import { setupLanguage } from './ui/language.js';
 import { setupSettings } from './ui/settings.js';
 import { mountIcons } from './ui/icons.js';
 import { setupHistoryColumns } from './ui/history-columns.js';
+import { resetTokenColumns } from './ui/tokens.js';
 import { setupLearningNavigation } from './ui/learning-navigation.js';
 
 mountIcons();
@@ -21,6 +22,7 @@ app.trace.workspace = setupWorkspace(
     onReset: () => {
       app.trace.endComparison();
       historyColumns.reset();
+      resetTokenColumns();
     },
   },
 );

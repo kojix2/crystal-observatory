@@ -94,6 +94,10 @@ are saved across reloads. Double-click a divider to restore the default column
 widths; **Reset layout** also resets them. With a divider focused, Left/Right changes
 the width, Shift moves in larger steps, and Home restores the defaults.
 
+The **Tokens** table supports the same column resizing controls. Drag any header
+divider to resize its adjacent columns. Token column widths are saved separately
+and survive language changes and recording reloads; **Reset layout** resets them too.
+
 With **Follow history** enabled, clicking a History event or Visitor name opens its
 node in AST, selecting a recorded snapshot containing it and opening folded ancestors.
 The arrow beside a Visitor only opens or closes its event group. Disable Follow history

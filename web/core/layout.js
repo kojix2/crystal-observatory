@@ -20,7 +20,7 @@ export function paneWidths(available, weights, minimums = MIN_PANES) {
     available,
     minimums.reduce((a, b) => a + b, 0),
   );
-  const pending = new Set(DEFAULT_PANES.map((_, i) => i)),
+  const pending = new Set(weights.map((_, i) => i)),
     result = [];
   while (pending.size) {
     const total = [...pending].reduce((sum, i) => sum + weights[i], 0);
@@ -45,7 +45,8 @@ export function moveDivider(widths, index, delta, minimums = MIN_PANES) {
     Math.min(pair - minimums[index + 1], widths[index] + delta),
   );
   result[index + 1] = pair - result[index];
-  return paneWeights(result);
+  const total = sum(result);
+  return result.map((value) => (value / total) * 100);
 }
 
 function workspaceConstraints({ historyCollapsed, comparing }) {
