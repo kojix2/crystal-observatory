@@ -6,7 +6,7 @@ import { compileSource } from '../web/runtime/compiler-pipeline.js';
 import { TraceModel, flattenAST } from '../web/core/trace-model.js';
 import { readFile } from 'node:fs/promises';
 import { LINKER_ARGS } from '../web/runtime/linker-args.js';
-import { indexCompilerStages } from '../web/core/compiler-stages.js';
+import { compilerStage } from '../web/core/compiler-stages.js';
 
 let assets;
 before(async () => {
@@ -82,7 +82,7 @@ test('arbitrary edited source drives actual semantics, LLVM, linking and executi
   assert.match(dispatches, /power_sum\(Float64\)/);
   const event = result.trace.events.at(-1);
   assert.equal(event.kind, 'link');
-  assert.equal(indexCompilerStages(result.trace).get('link').first, event.index);
+  assert.equal(compilerStage(event).id, 'link');
   assert.deepEqual(event.link.args.slice(0, LINKER_ARGS.length), LINKER_ARGS);
   assert.equal(event.link.elapsedMs, result.timings.link);
   assert(event.link.objectBytes > 0);
@@ -106,7 +106,7 @@ puts Missing.observatory_missing
   assert.notEqual(event.link.exitCode, 0);
   assert.equal(event.link.outputBytes, null);
   assert.match(event.link.stderr, /observatory_missing/);
-  assert.equal(indexCompilerStages(result.trace).get('link').first, event.index);
+  assert.equal(compilerStage(event).id, 'link');
   assert.equal(new TraceModel(result.trace).seek(event.index).event, event);
 });
 
@@ -138,7 +138,7 @@ test('stdin, argv and regex libraries are real WASI inputs', async () => {
 test('type and syntax errors return genuine diagnostics without an executable', async () => {
   const wrongType = await compile('puts 42 + "crystal"\n');
   assert.ok(wrongType.trace.errors.length);
-  assert(!indexCompilerStages(wrongType.trace).has('link'));
+  assert(!wrongType.trace.events.some((event) => compilerStage(event)?.id === 'link'));
   assert.match(wrongType.trace.errors.join('\n'), /String|Int32/);
   assert.equal(wrongType.wasm, undefined);
   const wrongSyntax = await compile('def broken(\n');

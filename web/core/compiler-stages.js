@@ -130,34 +130,9 @@ export const compilerStages = [
   },
 ];
 
-export const pipelineGroups = [
-  { id: 'parse', output: 'ast' },
-  { id: 'prepare', output: 'initializers' },
-  { id: 'infer', output: 'codegenReady' },
-  { id: 'codegen', output: 'ir' },
-  { id: 'object', output: 'object' },
-  { id: 'link', output: 'wasm' },
-  { id: 'run', output: 'result', outsideTrace: true },
-].map((group) => ({
-  ...group,
-  stages: compilerStages.filter((stage) => stage.group === group.id),
-}));
-
 export function compilerStage(event) {
   if (!event) return undefined;
   const phase =
     event.phase || (['phase_enter', 'phase_leave'].includes(event.kind) ? event.detail : '');
   return compilerStages.find((stage) => stage.phase === phase || stage.aliases?.includes(phase));
-}
-
-// Keep observed availability separate from playback state. No event means no
-// evidence, even if a later stage was recorded (e.g. imported/partial recordings).
-export function indexCompilerStages(trace) {
-  const records = new Map();
-  for (const event of trace.events) {
-    const stage = compilerStage(event);
-    if (!stage) continue;
-    if (!records.has(stage.id)) records.set(stage.id, { first: event.index });
-  }
-  return records;
 }

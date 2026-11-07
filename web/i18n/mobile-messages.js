@@ -17,15 +17,6 @@ export const mobileMessages = {
     de: 'Eingabe und Argumente',
     ru: 'Ввод и аргументы',
   },
-  'mobile.workflow': {
-    en: 'Workflow',
-    ja: '工程',
-    es: 'Etapas',
-    'zh-CN': '流程',
-    fr: 'Étapes',
-    de: 'Ablauf',
-    ru: 'Этапы',
-  },
   'mobile.work': {
     en: 'Work',
     ja: '作業',
@@ -79,15 +70,6 @@ export const mobileMessages = {
     fr: 'Analyser',
     de: 'Parsen',
     ru: 'Разбор',
-  },
-  'mobile.noWorkflow': {
-    en: 'Workflow is available for full compiler recordings.',
-    ja: '工程はコンパイラの完全な記録で利用できます。',
-    es: 'El flujo de trabajo está disponible para las grabaciones completas del compilador.',
-    'zh-CN': '完整的编译器记录支持查看流程。',
-    fr: 'Le parcours est disponible pour les enregistrements complets du compilateur.',
-    de: 'Der Ablauf ist bei vollständigen Compiler-Aufzeichnungen verfügbar.',
-    ru: 'Этапы доступны для полных записей компилятора.',
   },
   'mobile.guide': {
     en: 'Use the existing tabs and bottom navigation to switch screens. Selecting a node updates its Details and source location without leaving AST. A new selection reveals the related information; returning to the same selection preserves your reading position. History filters and jumps open from its toolbar. Extra compile commands and Compare are in the top menu.',

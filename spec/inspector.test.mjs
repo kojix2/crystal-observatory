@@ -294,7 +294,7 @@ test('link details survive localization and node selection, then clear when seek
   }
 });
 
-test('an unrecorded link stage shows its description without stale event results', () => {
+test('stage context follows recorded events without separate navigation', () => {
   const elements = new Map();
   const get = (id) => {
     if (!elements.has(id)) elements.set(id, new Element());
@@ -311,31 +311,28 @@ test('an unrecorded link stage shows its description without stale event results
     events: [{ index: 0, kind: 'phase_enter', phase: 'Semantic (new)' }],
   }).seek(0);
   const initial = JSON.stringify(model.trace);
-  const render = (stage) =>
-    renderInspector(model, 1, () => {}, undefined, undefined, undefined, stage);
+  const render = () => renderInspector(model, 1, () => {});
   try {
     setLocale('ja');
-    render('link');
+    render();
     assert.equal(get('node-id').textContent, '#1');
-    assert.equal(get('event-id').textContent, '—');
-    assert.equal(get('visitor-title').textContent, 'LLD (wasm-ld)');
-    assert.equal(get('event-kind').textContent, t('pipeline.unrecordedShort'));
-    assert.equal(get('explanation').textContent, t('link.unrecorded'));
-    assert.equal(get('visitor-role').textContent, t('pipeline.action.link'));
-    assert(get('stage-context').innerHTML.includes(t('pipeline.artifact.object')));
-    assert(get('stage-context').innerHTML.includes(t('pipeline.artifact.wasm')));
+    assert.equal(get('event-id').textContent, '#0');
+    assert.equal(get('visitor-title').textContent, 'Program#define_new_methods');
+    assert(get('stage-context').innerHTML.includes(t('pipeline.stage.new')));
+    assert(get('stage-context').innerHTML.includes(t('pipeline.action.new')));
     assert.equal(get('link-details').hidden, true);
     assert.equal(get('event-node').hidden, true);
     assert.equal(get('stack').textContent, '—');
     assert.equal(model.index, 0);
     assert.equal(JSON.stringify(model.trace), initial);
     setLocale('en');
-    render('link');
-    assert.equal(get('explanation').textContent, t('link.unrecorded'));
-    render(null);
-    assert.equal(get('event-id').textContent, '#0');
-    assert.equal(get('visitor-title').textContent, 'Program#define_new_methods');
+    render();
     assert(get('stage-context').innerHTML.includes(t('pipeline.stage.new')));
+    model.event.phase = 'Unknown phase';
+    render();
+    assert.equal(get('stage-context').hidden, true);
+    assert.equal(get('stage-context').children.length, 0);
+    assert.equal(get('event-id').textContent, '#0');
   } finally {
     globalThis.document = original;
     setLocale('en');

@@ -13,6 +13,16 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   };
   const elements = new Map();
   const element = (id) => {
+    assert(
+      ![
+        'workflow-column',
+        'workflow-splitter',
+        'compiler-map',
+        'toggle-workflow',
+        'workflow-unavailable',
+      ].includes(id),
+      `Removed element accessed: ${id}`,
+    );
     if (elements.has(id)) return elements.get(id);
     const attributes = new Map(),
       classes = new Set(),
@@ -84,7 +94,7 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
     elements.set(id, node);
     return node;
   };
-  const buttons = ['work', 'history', 'workflow', 'details'].map((pane) => {
+  const buttons = ['work', 'history', 'details'].map((pane) => {
     const button = element(`nav-${pane}`);
     button.dataset.pane = pane;
     button.parent = element('mobile-navigation');
@@ -100,7 +110,6 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   ])
     for (const id of children) element(parent).append(element(id));
   element('runtime-inputs').open = true;
-  element('workflow-column').hidden = true;
   const mediaListeners = [];
   const media = { matches: mobile, addEventListener: (_, fn) => mediaListeners.push(fn) };
   const viewportListeners = [];
@@ -162,9 +171,11 @@ test('mobile navigation exposes one accessible pane and retains history scroll a
     assert.equal(element('timeline').inert, true);
     assert.equal(element('graph-panel').inert, false);
     assert.equal(element('header-options').getAttribute('popover'), 'auto');
-    assert.equal(buttons[2].disabled, true);
-    assert.equal(element('workflow-unavailable').hidden, false);
-    assert.equal(controller.showPane('workflow'), false);
+    assert.deepEqual(
+      buttons.map((button) => button.dataset.pane),
+      ['work', 'history', 'details'],
+    );
+    assert.equal(controller.showPane('missing'), false);
     element('trace-content').scrollTop = 237;
     element('search').value = 'MainVisitor';
     buttons[1].onclick();
@@ -178,13 +189,6 @@ test('mobile navigation exposes one accessible pane and retains history scroll a
     buttons[1].onclick();
     assert.equal(element('trace-content').scrollTop, 237);
     assert.equal(element('search').value, 'MainVisitor');
-    element('workflow-column').hidden = false;
-    controller.refresh();
-    assert.equal(buttons[2].disabled, false);
-    assert.equal(controller.showPane('workflow'), true);
-    element('workflow-column').hidden = true;
-    controller.refresh();
-    assert.equal(element('app').dataset.mobilePane, 'work');
   });
 });
 
@@ -229,12 +233,14 @@ test('phone and desktop transitions preserve saved layout and disable every phon
   };
   workspace({ mobile: false, saved }, ({ controller, element, storage, storageKey, resize }) => {
     const desktop = controller.capture();
+    assert(!('workflowWidth' in desktop));
+    assert(!('workflowCollapsed' in desktop));
+    assert.deepEqual(desktop.weights, saved.weights);
     const originalPreference = storage.get(storageKey);
     assert.equal(controller.showPane('history'), false);
     resize(true);
     controller.showPane('details');
     for (const id of [
-      'workflow-splitter',
       'timeline-splitter',
       'inspector-splitter',
       'detail-splitter',
@@ -259,7 +265,7 @@ test('phone and desktop transitions preserve saved layout and disable every phon
   });
 });
 
-test('explicit event and stage selection opens Details even without a followable AST node', () => {
+test('explicit event selection opens Details even without a followable AST node', () => {
   const oldDocument = globalThis.document;
   globalThis.document = { getElementById: () => ({ checked: false }) };
   try {
@@ -274,9 +280,7 @@ test('explicit event and stage selection opens Details even without a followable
       renderSelection() {},
     });
     view.selectEvent(0);
-    view.selectStage('link');
-    assert.deepEqual(destinations, ['details', 'details']);
-    assert.equal(view.selectedStage, 'link');
+    assert.deepEqual(destinations, ['details']);
   } finally {
     globalThis.document = oldDocument;
   }
@@ -327,19 +331,19 @@ test('existing Details navigation follows a new node and preserves reading posit
   workspace({}, ({ controller, element, buttons }) => {
     const node = { id: 7 };
     controller.setDetailContext('node', node);
-    buttons[3].onclick();
+    buttons[2].onclick();
     assert.equal(document.activeElement.id, 'node-heading');
     assert.equal(element('node-panel').scrolled, true);
     element('inspector-panel').scrollTop = 330;
     buttons[0].onclick();
     controller.setDetailContext('node', node);
-    buttons[3].onclick();
+    buttons[2].onclick();
     assert.equal(element('inspector-panel').scrollTop, 330);
     controller.setDetailContext('node', { id: 8 });
-    buttons[3].onclick();
+    buttons[2].onclick();
     assert.equal(element('inspector-panel').scrollTop, 0);
     controller.setDetailContext('event', { index: 4 });
-    buttons[3].onclick();
+    buttons[2].onclick();
     assert.equal(document.activeElement.id, 'event-heading');
   });
 });

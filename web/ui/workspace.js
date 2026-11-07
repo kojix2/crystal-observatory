@@ -4,12 +4,9 @@ import { t } from '../i18n/index.js';
 import { comparisonRatio, comparisonWidths } from '../core/view-layout.js';
 import {
   DEFAULT_PANES,
-  DEFAULT_WORKFLOW_WIDTH,
-  MIN_WORKFLOW_WIDTH,
   PANE_GAP,
   paneWeights,
   moveDivider,
-  moveWorkflowDivider,
   workspaceLayout,
   workspaceMinimumWidth,
   detailHeights,
@@ -74,16 +71,14 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   const app = $('app'),
     bench = $('workbench');
   const handles = ['timeline-splitter', 'inspector-splitter'].map($);
-  const workflowHandle = $('workflow-splitter');
   const mobile = setupMobileWorkspace(() => {
     apply();
     onResize();
   });
-  // Workflow now has an independent pixel width; old history widths included it.
+  // Retain the saved proportions of History, observations and Details.
   const key = 'crystal-observatory.workspace.v5';
   const comparisonKey = 'crystal-observatory.comparison.v1';
   let weights = [...DEFAULT_PANES],
-    workflowWidth = DEFAULT_WORKFLOW_WIDTH,
     detailRatio = 0.42,
     compareRatio = 0.5,
     resizeFrame;
@@ -96,9 +91,6 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     weights = paneWeights(saved?.weights);
     if (Number.isFinite(details?.detailRatio) && details.detailRatio > 0 && details.detailRatio < 1)
       detailRatio = details.detailRatio;
-    if (Number.isFinite(saved?.workflowWidth) && saved.workflowWidth >= MIN_WORKFLOW_WIDTH)
-      workflowWidth = saved.workflowWidth;
-    app.classList.toggle('workflow-collapsed', saved?.workflowCollapsed === true);
     app.classList.toggle('trace-collapsed', saved?.collapsed === true);
   } catch {
     /* Optional preference. */
@@ -109,13 +101,8 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     /* Optional preference. */
   }
   const comparing = () => app.classList.contains('comparing');
-  const workflowAvailable = () => !$('workflow-column').hidden;
   const historyCollapsed = () => app.classList.contains('trace-collapsed');
-  const workflowCollapsed = () => app.classList.contains('workflow-collapsed');
   const layoutOptions = () => ({
-    workflowWidth,
-    workflowAvailable: workflowAvailable(),
-    workflowCollapsed: workflowCollapsed(),
     historyCollapsed: historyCollapsed(),
     comparing: comparing(),
   });
@@ -126,10 +113,8 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
         key,
         JSON.stringify({
           weights,
-          workflowWidth,
           detailRatio,
           collapsed: historyCollapsed(),
-          workflowCollapsed: workflowCollapsed(),
         }),
       );
     } catch {
@@ -153,37 +138,19 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     mobile.refresh();
     if (mobile.active) {
       bench.style.minWidth = '0';
-      for (const handle of [
-        ...handles,
-        workflowHandle,
-        $('detail-splitter'),
-        $('comparison-splitter'),
-      ])
+      for (const handle of [...handles, $('detail-splitter'), $('comparison-splitter')])
         setHandleEnabled(handle, false);
       return;
     }
     bench.style.minWidth = enabled() ? `${workspaceMinimumWidth(layoutOptions())}px` : '0';
-    const { workflow, panes, minimums, workflowMinimum, workflowGap } = sizes();
-    bench.style.setProperty(
-      '--pane-columns',
-      `${workflow}px ${workflowGap}px ${panes.map((n) => `${n}px`).join(` ${PANE_GAP}px `)}`,
-    );
+    const { panes, minimums } = sizes();
+    bench.style.setProperty('--pane-columns', panes.map((n) => `${n}px`).join(` ${PANE_GAP}px `));
     handles.forEach((handle, i) => {
       range(handle, panes[i], minimums[i], panes[i] + panes[i + 1] - minimums[i + 1]);
       setHandleEnabled(handle, enabled() && (i !== 0 || !historyCollapsed()));
     });
-    range(workflowHandle, workflow, workflowMinimum, workflow + panes[0] - minimums[0]);
-    setHandleEnabled(
-      workflowHandle,
-      enabled() && workflowAvailable() && !workflowCollapsed() && !historyCollapsed(),
-    );
-    for (const [button, collapsed, expand, collapse] of [
-      [$('toggle-trace'), historyCollapsed(), 'trace.expand', 'trace.collapse'],
-      [$('toggle-workflow'), workflowCollapsed(), 'pipeline.expand', 'pipeline.collapse'],
-    ]) {
-      button.setAttribute('aria-expanded', !collapsed);
-      label(button, collapsed ? expand : collapse);
-    }
+    $('toggle-trace').setAttribute('aria-expanded', !historyCollapsed());
+    label($('toggle-trace'), historyCollapsed() ? 'trace.expand' : 'trace.collapse');
     const [top, bottom] = heights();
     $('inspector-panel').style.gridTemplateRows = `${top}px 6px ${bottom}px`;
     range($('detail-splitter'), top, 150, top + bottom - 190);
@@ -196,20 +163,6 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     }
   }
   const enabled = () => !mobile.active && !app.classList.contains('graph-maximized');
-  bindDivider(workflowHandle, {
-    axis: 'x',
-    enabled: () => enabled() && workflowAvailable() && !workflowCollapsed() && !historyCollapsed(),
-    measure: sizes,
-    persist,
-    move: (layout, delta) => {
-      ({ workflowWidth, weights } = moveWorkflowDivider(layout, delta));
-      apply();
-    },
-    reset: () => {
-      workflowWidth = DEFAULT_WORKFLOW_WIDTH;
-      apply();
-    },
-  });
   handles.forEach((handle, i) =>
     bindDivider(handle, {
       axis: 'x',
@@ -278,18 +231,11 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     collapse(!historyCollapsed());
     persist();
   };
-  $('toggle-workflow').onclick = () => {
-    app.classList.toggle('workflow-collapsed', !workflowCollapsed());
-    apply();
-    persist();
-  };
   $('reset-layout').onclick = () => {
     onReset();
     weights = [...DEFAULT_PANES];
-    workflowWidth = DEFAULT_WORKFLOW_WIDTH;
     detailRatio = 0.42;
     compareRatio = 0.5;
-    app.classList.remove('workflow-collapsed');
     mobile.showPane('work');
     maximize(false);
     collapse(false);
@@ -320,16 +266,12 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     capture: () => ({
       weights: [...weights],
       detailRatio,
-      workflowWidth,
-      workflowCollapsed: workflowCollapsed(),
       maximized: app.classList.contains('graph-maximized'),
       collapsed: app.classList.contains('trace-collapsed'),
     }),
     restore: (saved) => {
       weights = [...saved.weights];
       detailRatio = saved.detailRatio;
-      workflowWidth = saved.workflowWidth;
-      app.classList.toggle('workflow-collapsed', saved.workflowCollapsed);
       collapse(saved.collapsed);
       maximize(saved.maximized);
       persist();

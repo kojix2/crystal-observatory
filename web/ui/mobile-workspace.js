@@ -25,7 +25,6 @@ export function setupMobileWorkspace(onModeChange) {
   const panes = {
     work: $('graph-panel'),
     history: $('timeline'),
-    workflow: $('workflow-column'),
     details: $('inspector-panel'),
   };
   const buttons = [...navigation.querySelectorAll('[data-pane]')];
@@ -43,8 +42,6 @@ export function setupMobileWorkspace(onModeChange) {
       relocated.some(
         ({ node, destination }) => destination === options && node.contains(document.activeElement),
       );
-    const workflowAvailable = !panes.workflow.hidden;
-    if (current === 'workflow' && !workflowAvailable) current = 'work';
     app.classList.toggle('mobile', mobile);
     app.dataset.mobilePane = current;
     navigation.hidden = !mobile;
@@ -73,12 +70,7 @@ export function setupMobileWorkspace(onModeChange) {
     }
     for (const button of buttons) {
       button.setAttribute('aria-pressed', String(button.dataset.pane === current));
-      if (button.dataset.pane === 'workflow') {
-        button.disabled = !workflowAvailable;
-        button.setAttribute('aria-describedby', workflowAvailable ? '' : 'workflow-unavailable');
-      }
     }
-    $('workflow-unavailable').hidden = !mobile || workflowAvailable;
     // Do not leave keyboard focus inside a panel that just became hidden.
     const hiddenFocus = Object.values(panes).some(
       (panel) => panel.inert && panel.contains(document.activeElement),
@@ -95,8 +87,7 @@ export function setupMobileWorkspace(onModeChange) {
     detailContext = { section, key };
   }
   function showPane(name, { focus = false, section = detailContext.section } = {}) {
-    if (!media.matches || !panes[name] || (name === 'workflow' && panes.workflow.hidden))
-      return false;
+    if (!media.matches || !panes[name]) return false;
     current = name;
     refresh();
     const newDetail =

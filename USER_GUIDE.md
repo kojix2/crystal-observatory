@@ -26,19 +26,19 @@ Editing source does not update an existing AST or IR. Escape exits maximization;
 ## On a smartphone
 
 At widths up to 960 px, use the bottom navigation: **Work**, **History**,
-**Workflow**, and **Details**. Work contains the source editor and all observation
-tabs. Swipe the tab row to reach more views. Compile & run and Stop remain
+and **Details**. Work contains the source editor and all observation tabs.
+Swipe the tab row to reach more views. Compile & run and Stop remain
 in a single top toolbar; its options button opens Compile to IR, Parse only,
 Compare, language, settings, help, layout reset, and GitHub. Editing remains available while compilation runs.
 
-Selecting a History event or Workflow stage opens Details, with the operation
+Selecting a History event or stage heading opens Details, with the operation
 above the node information. Return to History to continue from the same selection,
 filters, and scroll position. Playback and stepping stay in the current screen.
 Selecting an AST node updates its details and source location without leaving
 AST. The existing Details navigation opens that node's information; the Source
 tab reveals its line when the source still matches the recording. Returning
-without a new selection keeps the reading position. History events and workflow
-stages open their operation details, while playback and stepping stay in place.
+without a new selection keeps the reading position. History events and stage
+headings open their operation details, while playback and stepping stay in place.
 The active observation tab stays visible as views change.
 
 Previous, Play, Next and the seek bar stay visible in History. Its filter button
@@ -47,9 +47,8 @@ controls. Closing this popup gives the space back to the event list. A highlight
 filter button indicates an active filter. Output initially folds stdin and
 arguments under **Input & arguments**; expanding it preserves the entered values.
 
-Workflow is available only for full compiler recordings. Comparisons stack the
-two views vertically and scroll within Work. Code and graphs can scroll sideways
-inside their own panels.
+Comparisons stack the two views vertically and scroll within Work. Code and graphs
+can scroll sideways inside their own panels.
 When a keyboard leaves very little vertical space during source editing, the
 editor and compile controls take priority. Dismiss the keyboard to restore the
 navigation and other controls.
@@ -78,27 +77,21 @@ to keep the current view and AST snapshot while selecting events. A comparison t
 already includes AST stays open. Playback and stepping update the event without
 switching tabs. **Expand all** appears when the current AST has folded nodes.
 
-Full compiler recordings use four independent columns: **Workflow**, **History**,
-the selected observation (AST, source, IR or output), and node/operation details.
-Workflow starts narrow at 180 px. Resize it using its own divider, or collapse
-Workflow and History separately with their header buttons. Widths and collapsed
-states are saved in the browser. The outline follows the selected event; selecting
-a stage jumps History to its first recorded event while retaining its filters.
-Semantic steps appear under their parent stages, from registering definitions
-through type inference and final checks. The current group opens automatically;
-use its arrow to show or hide the steps without moving History. Manual choices
-last until another recording is loaded. Hover a stage for its output and recording
-availability. The operation inspector shows the stage's
-incoming state, outgoing state and implementation, followed by the observed Visitor
-and operation.
+The desktop workspace uses three columns: **History**, the selected observation
+(AST, source, IR or output), and node/operation details. Drag the column dividers
+to resize them, or collapse History with its header button. Widths and the
+collapsed state are saved in the browser. Select a stage heading in History to
+jump to its recorded start; its arrow opens or closes the stage without moving
+playback. The operation inspector shows the selected event's stage, incoming
+state, outgoing state and implementation, followed by the observed Visitor and
+operation.
 These handoffs describe compiler responsibilities, not additional measured events.
-Select **Link (LLD)** to inspect the input object, specified libraries, output
-size, elapsed time, exit code, diagnostics and actual link command. New full
-compilations record the link result in History, including failures; saved traces
-retain these details. Older recordings without a link result still let you select
-the stage to read its role and input/output descriptions, marked as unrecorded.
-Execution remains outside the trace. Parse-only uses a separate syntax engine and
-does not display the full compiler pipeline.
+Select the **Link (LLD)** event in History to inspect the input object, specified
+libraries, output size, elapsed time, exit code, diagnostics and actual link
+command. New full compilations record the link result in History, including failures; saved traces
+retain these details. Older recordings without a link result do not show a link
+event; compile the source again to inspect its measurements. Execution remains
+outside the trace. Parse-only uses a separate syntax engine.
 
 Activities record measured decisions and changes. **Not instrumented** and
 **No covered activity recorded** have different meanings; neither proves that

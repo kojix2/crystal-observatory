@@ -1,7 +1,5 @@
 export const DEFAULT_PANES = [34, 39, 27];
 export const MIN_PANES = [310, 360, 270];
-export const DEFAULT_WORKFLOW_WIDTH = 180;
-export const MIN_WORKFLOW_WIDTH = 160;
 export const PANE_GAP = 6;
 const COLLAPSED_WIDTH = 32;
 const sum = (values) => values.reduce((total, value) => total + value, 0);
@@ -50,30 +48,17 @@ export function moveDivider(widths, index, delta, minimums = MIN_PANES) {
   return paneWeights(result);
 }
 
-function workspaceConstraints({
-  workflowAvailable,
-  workflowCollapsed,
-  historyCollapsed,
-  comparing,
-}) {
+function workspaceConstraints({ historyCollapsed, comparing }) {
   const minimums = [
     historyCollapsed ? COLLAPSED_WIDTH : MIN_PANES[0],
     comparing ? 646 : MIN_PANES[1],
     MIN_PANES[2],
   ];
-  const workflowMinimum = !workflowAvailable
-    ? 0
-    : workflowCollapsed
-      ? COLLAPSED_WIDTH
-      : MIN_WORKFLOW_WIDTH;
-  const workflowGap = workflowAvailable ? PANE_GAP : 0;
-  const gaps = 2 * PANE_GAP + workflowGap;
+  const gaps = 2 * PANE_GAP;
   return {
     minimums,
-    workflowMinimum,
-    workflowGap,
     gaps,
-    minimumWidth: sum(minimums) + workflowMinimum + gaps,
+    minimumWidth: sum(minimums) + gaps,
   };
 }
 
@@ -81,36 +66,17 @@ export function workspaceMinimumWidth(options = {}) {
   return workspaceConstraints(options).minimumWidth;
 }
 
-// Workflow keeps its own pixel width; the other panes share the remaining space.
-// Collapsing either navigation pane releases space without losing its saved size.
+// Collapsing History releases space without losing its saved size.
 export function workspaceLayout(available, weights, options = {}) {
   const constraints = workspaceConstraints(options);
-  const { minimumWidth, minimums, gaps, workflowMinimum } = constraints;
+  const { minimumWidth, minimums, gaps } = constraints;
   const space = Math.max(available, minimumWidth) - gaps;
-  const preferred = Number.isFinite(options.workflowWidth)
-    ? Math.max(MIN_WORKFLOW_WIDTH, options.workflowWidth)
-    : DEFAULT_WORKFLOW_WIDTH;
-  const workflow = !options.workflowAvailable
-    ? 0
-    : options.workflowCollapsed
-      ? workflowMinimum
-      : Math.min(preferred, space - sum(minimums));
-  const panes = paneWidths(space - workflow, weights, minimums);
+  const panes = paneWidths(space, weights, minimums);
   if (options.historyCollapsed) {
     panes[1] += panes[0] - COLLAPSED_WIDTH;
     panes[0] = COLLAPSED_WIDTH;
   }
-  return { ...constraints, workflow, panes };
-}
-
-export function moveWorkflowDivider({ workflow, panes, minimums }, delta) {
-  const workflowWidth = Math.max(
-    MIN_WORKFLOW_WIDTH,
-    Math.min(workflow + panes[0] - minimums[0], workflow + delta),
-  );
-  const next = [...panes];
-  next[0] += workflow - workflowWidth;
-  return { workflowWidth, weights: paneWeights(next) };
+  return { ...constraints, panes };
 }
 
 export function detailHeights(available, ratio = 0.42) {

@@ -14,11 +14,11 @@ import {
   activityLabel,
 } from './event-labels.js';
 import { activityVisitors, coverageFor } from '../core/activities.js';
-import { compilerStage, compilerStages } from '../core/compiler-stages.js';
-import { renderStageContext } from './compiler-map.js';
+import { compilerStage } from '../core/compiler-stages.js';
+import { renderStageContext } from './stage-context.js';
 
 // Node selection can move independently of playback. The lower inspector follows
-// model.event unless an unrecorded stage description is explicitly selected.
+// model.event, including its compiler stage context.
 export function renderInspector(
   model,
   selected,
@@ -26,13 +26,10 @@ export function renderInspector(
   onDeclaration = () => {},
   onSeek = () => {},
   onIR = () => {},
-  selectedStage = null,
 ) {
   const node = model.nodes.get(selected),
-    event = selectedStage ? undefined : model.event,
-    stage = selectedStage
-      ? compilerStages.find((item) => item.id === selectedStage)
-      : compilerStage(event),
+    event = model.event,
+    stage = compilerStage(event),
     nodeEvents = node ? model.eventsFor(selected) : [];
   $('node-id').textContent = node ? `#${node.id}` : '—';
   $('node-title').textContent =
@@ -77,13 +74,9 @@ export function renderInspector(
     ? shortVisitor(event.visitor) || stage?.driver.split(' → ')[0] || t('event.noVisitor')
     : stage?.driver || '—';
   $('visitor-title').dataset.visitor = visitorKey(event?.visitor);
-  $('visitor-role').textContent = selectedStage
-    ? t(`pipeline.action.${stage.id}`)
-    : visitorRole(event, model);
-  $('event-kind').textContent = selectedStage
-    ? t('pipeline.unrecordedShort')
-    : eventLabel(event?.kind);
-  $('explanation').textContent = selectedStage ? t('link.unrecorded') : explanation(event, model);
+  $('visitor-role').textContent = visitorRole(event, model);
+  $('event-kind').textContent = eventLabel(event?.kind);
+  $('explanation').textContent = explanation(event, model);
   renderLinkDetails(event);
   $('event-declaration').hidden = event?.kind !== 'declaration';
   $('event-declaration').textContent = t('decl.title');
@@ -131,7 +124,7 @@ export function renderInspector(
     if (['rewrite', 'expand'].includes(event?.kind)) renderCrystal($(id), value);
     else $(id).textContent = value;
   }
-  const stack = selectedStage ? [] : model.stack.slice(-15);
+  const stack = model.stack.slice(-15);
   $('stack').replaceChildren(
     ...stack.map((frame, i) => {
       const button = document.createElement('button');

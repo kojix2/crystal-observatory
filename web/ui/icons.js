@@ -2,7 +2,7 @@ import glyphs from '../vendor/lucide/icons.js';
 import { lucideNames } from './icon-names.js';
 
 // Every icon in the UI is drawn here: Lucide strokes on a 24-grid, shown at 16px
-// (toolbars, workflow) or 12px (inline disclosure). Text labels never carry glyphs,
+// (toolbars) or 12px (inline disclosure). Text labels never carry glyphs,
 // so translations stay plain and icons keep one weight across platforms.
 const STROKE =
   'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';

@@ -10,8 +10,6 @@ import { renderTokens } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
 import { renderDeclarations } from './declarations.js';
-import { indexCompilerStages } from '../core/compiler-stages.js';
-import { renderCompilerMap } from './compiler-map.js';
 import { ViewLayout, comparisonTargets, viewLabel, viewLabelKey } from '../core/view-layout.js';
 
 const scrollTargets = {
@@ -55,8 +53,6 @@ export class TraceView {
     const model = new TraceModel(trace); // Validate before replacing a usable view.
     this.stop();
     this.model = model;
-    this.stageRecords = indexCompilerStages(trace);
-    this.selectedStage = null;
     this.selected = 0;
     this.selectedType = 0;
     this.snapshot = 0;
@@ -120,23 +116,9 @@ export class TraceView {
   }
   renderPhase() {
     const event = this.model?.event;
-    const workflowHidden = $('workflow-column').hidden;
-    renderCompilerMap(
-      this.model,
-      this.stageRecords,
-      (index) => {
-        this.stop();
-        this.seek(index);
-        this.workspace?.showPane('details', { focus: true });
-      },
-      { selectedStage: this.selectedStage, onSelectStage: (id) => this.selectStage(id) },
-    );
-    if (workflowHidden !== $('workflow-column').hidden) this.workspace?.refresh();
-    $('phase-status').textContent = this.selectedStage
-      ? `${t(`pipeline.stage.${this.selectedStage}`)} / ${t('pipeline.unrecordedShort')}`
-      : event
-        ? `${event.phase} / ${shortVisitor(event.visitor)} / ${eventLabel(event.kind)}`
-        : t('state.waiting');
+    $('phase-status').textContent = event
+      ? `${event.phase} / ${shortVisitor(event.visitor)} / ${eventLabel(event.kind)}`
+      : t('state.waiting');
   }
 
   stop() {
@@ -167,7 +149,6 @@ export class TraceView {
   }
   seek(index) {
     if (!this.model) return;
-    this.selectedStage = null;
     this.model.seek(index);
     const event = this.model.event;
     this.workspace?.setDetailContext?.('event', event);
@@ -202,14 +183,6 @@ export class TraceView {
         this.renderObservation({ reveal: true });
       }
     }
-    this.workspace?.showPane('details', { focus: true });
-  }
-  selectStage(id) {
-    this.stop();
-    this.selectedStage = id;
-    this.workspace?.setDetailContext?.('event', id);
-    this.renderPhase();
-    this.renderSelection({ reveal: false });
     this.workspace?.showPane('details', { focus: true });
   }
   selectNode(id) {
@@ -275,7 +248,6 @@ export class TraceView {
         this.setView('ir');
         this.ir.follow(event.llvm_function, event.llvm_block, true);
       },
-      this.selectedStage,
     );
     this.editor.highlight(this.model.nodes.get(this.selected));
   }
