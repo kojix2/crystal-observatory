@@ -70,6 +70,11 @@ and matching event counts; declaration-only filtering shows operations directly.
 Playback marks the current event inside a collapsed group without opening it.
 Stages missing an end event stay visible individually, including compiler errors.
 
+Drag the dividers in the History table header to resize its columns. You can also
+focus a divider and use Left/Right (Shift for larger steps). Column widths are
+saved across reloads. Double-click a divider or press Home to restore the default
+column widths; **Reset layout** also resets them.
+
 With **Follow history** enabled, clicking a History event or Visitor name opens its
 node in AST, selecting a recorded snapshot containing it and opening folded ancestors.
 The arrow beside a Visitor only opens or closes its event group. Disable Follow history

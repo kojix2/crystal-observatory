@@ -3,11 +3,13 @@ import { setupWorkspace } from './ui/workspace.js';
 import { setupLanguage } from './ui/language.js';
 import { setupSettings } from './ui/settings.js';
 import { mountIcons } from './ui/icons.js';
+import { setupHistoryColumns } from './ui/history-columns.js';
 
 mountIcons();
 setupSettings();
 setupLanguage();
 const app = new Application();
+const historyColumns = setupHistoryColumns();
 app.trace.workspace = setupWorkspace(
   () => {
     app.editor.refresh();
@@ -15,7 +17,10 @@ app.trace.workspace = setupWorkspace(
     app.trace.revealActiveTab();
   },
   {
-    onReset: () => app.trace.endComparison(),
+    onReset: () => {
+      app.trace.endComparison();
+      historyColumns.reset();
+    },
   },
 );
 app.loadManifest();
