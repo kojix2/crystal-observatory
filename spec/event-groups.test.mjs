@@ -230,8 +230,12 @@ function withList(trace, run) {
 
 test('stage disclosure preserves selection, nested state, localized names and filter counts', () => {
   withList(load('06_cleanup'), (list, element, seeks) => {
-    assert.equal(list.rows.length, 14);
+    assert.equal(list.rows.length, 15);
     assert.equal(list.rows.filter((row) => row.group?.kind === 'phase').length, 13);
+    assert.deepEqual(
+      list.rows.filter((row) => row.event).map((row) => row.event.kind),
+      ['complete', 'link'],
+    );
     assert.equal(element('page-state').textContent, '1 / 1');
     const visitor = list.groups.find(
         (group) => group.event.visitor === 'Crystal::CleanupTransformer',

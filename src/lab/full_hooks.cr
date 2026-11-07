@@ -183,16 +183,17 @@ class Observatory::Recorder
     return if block.to_unsafe.null?
     function = block.parent
     return unless function
+    instructions = block.instructions.to_a
     event("ir", node, visitor.class.name,
       detail: "Builder insertion point after this visit (includes child emission; not exclusive instruction attribution)",
-      after: block.instructions.to_a.last(6).map(&.to_s).join("\n"))
+      after: instructions.map(&.to_s).join("\n"))
     if e = bundle.events.last?
       if e.kind == "ir" && e.node_id == id(node)
         e.llvm_function = function.name
         e.llvm_block = block.name || ""
       end
     end
-    emitted = block.instructions.to_a
+    emitted = instructions
     if before
       emitted = emitted.reject { |instruction| before.includes?(instruction.to_unsafe.address) }
     end

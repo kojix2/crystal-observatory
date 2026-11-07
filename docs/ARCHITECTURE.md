@@ -41,6 +41,10 @@ LLVM instruction observations include child emission and only cover the final
 insertion block. They are neither exclusive per-node output nor complete
 multi-block diffs. Function-signature creation does not imply that generating
 the function body succeeded. LLVM optimization and linker internals are unobserved.
+IR position events retain all instructions in that block at the end of the visit;
+emission activities retain the newly emitted instructions in the same block.
+Older recordings can contain only a block tail; missing instructions cannot be
+recovered from those events.
 The browser appends a `link` event after LLD returns, recording its invocation,
 input/output sizes, elapsed time, exit code and diagnostics. This is an invocation
 result, not a trace of symbol resolution or proof that every specified library

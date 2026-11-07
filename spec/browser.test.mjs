@@ -125,6 +125,31 @@ test('WASM exceptions unwind through rescue and ensure', async () => {
   assert.equal(await execute(result), 'caught: boom\nensure\nafter\n');
 });
 
+test('IR position records keep the entire insertion block beyond six instructions', async () => {
+  const calls = Array.from({ length: 12 }, () => '  x = RecordedIR.abs(x)').join('\n');
+  const result = await compile(`
+lib RecordedIR
+  fun abs(x : Int32) : Int32
+end
+def recorded_steps(x)
+${calls}
+  x
+end
+puts recorded_steps(-7)
+`);
+  assert.equal(await execute(result), '7\n');
+  const positions = result.trace.events.filter(
+    (event) => event.kind === 'ir' && event.llvm_function.includes('recorded_steps'),
+  );
+  const complete = positions.find(
+    (event) => event.after.split('\n').filter((line) => /call i32 @abs\(/.test(line)).length === 12,
+  );
+  assert(complete, 'The recorded block must retain the first and last of all twelve calls');
+  assert(complete.after.split('\n').length > 6);
+  const restored = new TraceModel(JSON.parse(JSON.stringify(result.trace)));
+  assert.equal(restored.trace.events[complete.index].after, complete.after);
+});
+
 test('stdin, argv and regex libraries are real WASI inputs', async () => {
   const result = await compile(
     'name = gets.not_nil!.strip\nputs "hello #{name}"\nputs ARGV.join(",")\nputs "a12b345".scan(/\\d+/).map(&.[0]).join(";")\n',
