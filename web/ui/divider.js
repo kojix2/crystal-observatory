@@ -1,5 +1,8 @@
 // Columns and the stacked inspector share keyboard/pointer behavior.
-export function bindDivider(handle, { axis, enabled, measure, move, reset, persist }) {
+export function bindDivider(
+  handle,
+  { axis, enabled, measure, move, reset, persist, keyboard = true },
+) {
   const coordinate = axis === 'x' ? 'clientX' : 'clientY';
   const keys = axis === 'x' ? ['ArrowLeft', 'ArrowRight'] : ['ArrowUp', 'ArrowDown'];
   let drag;
@@ -29,14 +32,15 @@ export function bindDivider(handle, { axis, enabled, measure, move, reset, persi
       persist();
     }
   });
-  handle.addEventListener('keydown', (event) => {
-    if (!enabled() || ![...keys, 'Home'].includes(event.key)) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.key === 'Home') reset();
-    else move(measure(), (event.key === keys[1] ? 1 : -1) * (event.shiftKey ? 40 : 12));
-    persist();
-  });
+  if (keyboard)
+    handle.addEventListener('keydown', (event) => {
+      if (!enabled() || ![...keys, 'Home'].includes(event.key)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.key === 'Home') reset();
+      else move(measure(), (event.key === keys[1] ? 1 : -1) * (event.shiftKey ? 40 : 12));
+      persist();
+    });
 }
 export function range(handle, value, min, max) {
   handle.setAttribute('aria-valuemin', min);
