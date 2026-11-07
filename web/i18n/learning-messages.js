@@ -46,15 +46,6 @@ export const learningMessages = {
     'Visitor-Katalog',
     'Каталог Visitor',
   ),
-  'learning.workflow.intro': entry(
-    'ソースコードから実行可能なWASMまで、各工程の役割と入出力をたどります。',
-    'Follow each stage, its responsibilities, inputs and outputs, from source code to executable WASM.',
-    'Recorre las etapas, sus tareas, entradas y salidas, desde el código fuente hasta WASM ejecutable.',
-    '从源代码到可执行 WASM，了解各编译阶段的职责、输入和输出。',
-    'Suivez les étapes, leurs rôles, entrées et sorties, du code source au WASM exécutable.',
-    'Von Quellcode bis zu ausführbarem WASM: Aufgaben, Eingaben und Ausgaben jeder Phase.',
-    'От исходного кода до исполняемого WASM: задачи, входные и выходные данные каждого этапа.',
-  ),
   'learning.nodes.intro': entry(
     'アプリで分類している主なASTノードを、名前や種類から探せます。',
     'Browse the main AST nodes classified by this app, by name or syntax family.',

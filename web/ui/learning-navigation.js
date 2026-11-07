@@ -1,10 +1,9 @@
-import { compilerStages } from '../core/compiler-stages.js';
 import { astFamily, astNodeKinds } from '../core/ast-colors.js';
 import { t, onLocaleChange } from '../i18n/index.js';
 import { $, esc } from './dom.js';
 import { sourceFiles, visitorRole } from './event-labels.js';
 
-// Learning pages share the compiler's existing stage, node and Visitor metadata.
+// Catalogs share the compiler's existing node and Visitor metadata.
 // Switching pages never replaces the editor or the current recording.
 export function setupLearningNavigation({ onLeave, onReturn }) {
   const navigation = $('learning-navigation');
@@ -19,20 +18,14 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
   function render() {
     if (current === 'observatory') return;
     $('learning-title').textContent = t(`learning.${current}`);
-    $('learning-intro').textContent = t(`learning.${current}.intro`);
+    $('learning-intro').hidden = current === 'workflow';
+    $('learning-intro').textContent = current === 'workflow' ? '' : t(`learning.${current}.intro`);
     $('learning-search-tools').hidden = current === 'workflow';
     if (current === 'workflow') {
-      content.innerHTML = `<ol class="learning-workflow">${compilerStages
-        .map(
-          (
-            stage,
-            index,
-          ) => `<li class="learning-stage"><span class="learning-step">${index + 1}</span>
-            <h3>${esc(t(`pipeline.stage.${stage.id}`))}</h3>
-            <p>${esc(t(`pipeline.action.${stage.id}`))}</p><code>${esc(stage.driver)}</code>
-            <dl class="learning-artifacts"><div><dt>${esc(t('pipeline.input'))}</dt><dd>${esc(t(`pipeline.artifact.${stage.input}`))}</dd></div><div><dt>${esc(t('pipeline.output'))}</dt><dd>${esc(t(`pipeline.artifact.${stage.output}`))}</dd></div></dl></li>`,
-        )
-        .join('')}</ol>`;
+      content.innerHTML = `<div class="learning-slides">
+        <iframe src="https://www.slideshare.net/slideshow/embed_code/key/efm7Tuz5vpYSU2" width="610" height="515" title="Crystal internals (part 1)" scrolling="no" allowfullscreen></iframe>
+        <p><strong><a href="https://www.slideshare.net/slideshow/crystal-internals-part-1-70673255/70673255" title="Crystal internals (part 1)" target="_blank" rel="noopener noreferrer">Crystal internals (part 1)</a></strong> from <strong><a href="https://www.slideshare.net/crystallanguage" target="_blank" rel="noopener noreferrer">Crystal Language</a></strong></p>
+      </div>`;
       return;
     }
 
