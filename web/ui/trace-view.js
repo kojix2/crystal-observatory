@@ -478,11 +478,7 @@ export class TraceView {
     if (!this.model) return;
     this.stop();
     const index = this.trace.events.findIndex(
-      (event) =>
-        event.index > this.model.index &&
-        (event.kind === kind ||
-          (kind === 'rewrite' && event.kind === 'expand') ||
-          (kind === 'phase_enter' && event.kind === 'link')),
+      (event) => event.index > this.model.index && event.kind === kind,
     );
     if (index >= 0) this.seek(index);
     else notify(() => t('notice.noNext'));
@@ -528,18 +524,10 @@ export class TraceView {
       this.stop();
       this.seek(Number($('scrubber').value));
     };
-    for (const [id, kind] of [
-      ['next-type', 'type'],
-      ['next-rewrite', 'rewrite'],
-      ['next-phase', 'phase_enter'],
-      ['next-declaration', 'declaration'],
-      ['next-activity', 'activity'],
-    ])
-      $(id).onclick = () => {
-        if (kind === 'declaration') this.setView('declarations', { reveal: false });
-        this.nextKind(kind);
-        if (kind === 'activity') this.showNodeEventTab();
-      };
+    $('next-activity').onclick = () => {
+      this.nextKind('activity');
+      this.showNodeEventTab();
+    };
     $('snapshot').onchange = () => {
       this.snapshot = Number($('snapshot').value);
       $('follow').checked = false;
