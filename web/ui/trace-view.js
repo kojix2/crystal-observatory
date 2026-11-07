@@ -40,7 +40,8 @@ export class TraceView {
     this.astLayout = 'cards';
     this.astZoom = 1;
     try {
-      if (localStorage.getItem(AST_LAYOUT_KEY) === 'radial') this.astLayout = 'radial';
+      const saved = localStorage.getItem(AST_LAYOUT_KEY);
+      if (['radial', 'mindmap'].includes(saved)) this.astLayout = saved;
     } catch {
       /* Optional preference. */
     }
@@ -332,8 +333,10 @@ export class TraceView {
       if (view === 'ast') {
         const radial = this.astLayout === 'radial';
         $('ast-layout').value = this.astLayout || 'cards';
-        $('ast-radial-controls').hidden = !radial;
-        $('ast-zoom').value = Math.round((this.astZoom || 1) * 100);
+        $('ast-radial-controls').hidden = this.astLayout === 'cards';
+        $('ast-zoom').min = this.astLayout === 'mindmap' ? 0.0001 : 100;
+        $('ast-zoom').step = this.astLayout === 'mindmap' ? 'any' : 25;
+        $('ast-zoom').value = Number(((this.astZoom || 1) * 100).toPrecision(3));
         $('ast-zoom-value').value = `${$('ast-zoom').value}%`;
         $('expand').hidden =
           radial ||
@@ -376,12 +379,19 @@ export class TraceView {
       previous = this.astZoom || 1,
       x = graph.scrollLeft + graph.clientWidth / 2,
       y = graph.scrollTop + graph.clientHeight / 2;
-    this.astZoom = Math.max(1, Math.min(8, Number(zoom) || 1));
+    this.astZoom = Math.max(
+      this.astLayout === 'mindmap' ? 0.000001 : 1,
+      Math.min(8, Number(zoom) || 1),
+    );
     this.renderObservation();
     graph.scrollLeft =
-      this.astZoom === 1 ? 0 : (x * this.astZoom) / previous - graph.clientWidth / 2;
+      this.astLayout === 'radial' && this.astZoom === 1
+        ? 0
+        : (x * this.astZoom) / previous - graph.clientWidth / 2;
     graph.scrollTop =
-      this.astZoom === 1 ? 0 : (y * this.astZoom) / previous - graph.clientHeight / 2;
+      this.astLayout === 'radial' && this.astZoom === 1
+        ? 0
+        : (y * this.astZoom) / previous - graph.clientHeight / 2;
   }
   renderComparisonControls() {
     const comparing = Boolean(this.layout.secondary);
@@ -535,7 +545,8 @@ export class TraceView {
     };
     $('ast-layout').value = this.astLayout;
     $('ast-layout').onchange = () => {
-      this.astLayout = $('ast-layout').value === 'radial' ? 'radial' : 'cards';
+      const layout = $('ast-layout').value;
+      this.astLayout = ['radial', 'mindmap'].includes(layout) ? layout : 'cards';
       this.astZoom = 1;
       this.scrollPositions.delete('ast');
       $('graph').scrollLeft = $('graph').scrollTop = 0;
@@ -545,9 +556,64 @@ export class TraceView {
         /* Optional preference. */
       }
       this.renderObservation();
+      if (this.astLayout === 'mindmap') {
+        const graph = $('graph');
+        (graph.querySelector('.node.selected') || graph.querySelector('.node'))?.scrollIntoView({
+          block: 'center',
+          inline: 'center',
+        });
+      }
     };
     $('ast-zoom').oninput = () => this.zoomAST(Number($('ast-zoom').value) / 100);
-    $('ast-fit').onclick = () => this.zoomAST(1);
+    $('ast-fit').onclick = () => {
+      const graph = $('graph'),
+        bounds = graph.querySelector('.mindmap-svg')?.viewBox.baseVal;
+      this.zoomAST(
+        bounds
+          ? Math.min(
+              1,
+              (graph.clientWidth - 24) / bounds.width,
+              (graph.clientHeight - 24) / bounds.height,
+            )
+          : 1,
+      );
+      graph.scrollLeft = graph.scrollTop = 0;
+    };
+    const graph = $('graph');
+    let pan;
+    graph.addEventListener('pointerdown', (event) => {
+      if (
+        this.astLayout !== 'mindmap' ||
+        event.pointerType !== 'mouse' ||
+        event.button !== 0 ||
+        event.target.closest('.node')
+      )
+        return;
+      pan = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        left: graph.scrollLeft,
+        top: graph.scrollTop,
+      };
+      graph.setPointerCapture(event.pointerId);
+      graph.classList.add('panning');
+      event.preventDefault();
+    });
+    graph.addEventListener('pointermove', (event) => {
+      if (!pan || event.pointerId !== pan.id) return;
+      graph.scrollLeft = pan.left + pan.x - event.clientX;
+      graph.scrollTop = pan.top + pan.y - event.clientY;
+    });
+    const endPan = (event) => {
+      if (!pan || event.pointerId !== pan.id) return;
+      pan = null;
+      graph.classList.remove('panning');
+      if (graph.hasPointerCapture(event.pointerId)) graph.releasePointerCapture(event.pointerId);
+    };
+    graph.addEventListener('pointerup', endPan);
+    graph.addEventListener('pointercancel', endPan);
+    graph.addEventListener('lostpointercapture', endPan);
     $('follow').onchange = () => {
       if ($('follow').checked) this.seek(this.model.index);
       else this.renderObservation();

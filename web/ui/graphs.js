@@ -5,6 +5,7 @@ import { flattenAST } from '../core/trace-model.js';
 import { renderActivities } from './inspector.js';
 import { astFamily } from '../core/ast-colors.js';
 import { layoutRadialAST, radialBranch } from '../core/radial-ast.js';
+import { layoutMindmapAST, mindmapBranch } from '../core/mindmap-ast.js';
 
 const radialLayouts = new WeakMap();
 const nodeHeight = 76;
@@ -76,20 +77,38 @@ export function renderGraph(
       };
       el.addEventListener('click', activate);
       el.addEventListener('keydown', (e) => {
+        if (
+          view === 'ast' &&
+          astLayout === 'mindmap' &&
+          !e.target.dataset.fold &&
+          ['+', '-', '='].includes(e.key)
+        ) {
+          const fold = el.querySelector('[data-fold]');
+          if (fold && (e.key === '-') !== collapsed.has(Number(el.dataset.node))) {
+            e.preventDefault();
+            e.stopPropagation();
+            onFold(Number(el.dataset.node));
+          }
+          return;
+        }
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           activate(e);
         }
       });
     });
-    container.querySelectorAll('[data-fold]').forEach(
-      (el) =>
-        (el.onclick = (e) => {
-          e.stopPropagation();
-          const id = Number(el.dataset.fold);
-          onFold(id);
-        }),
-    );
+    container.querySelectorAll('[data-fold]').forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        onFold(Number(el.dataset.fold));
+      };
+      el.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          el.onclick(e);
+        }
+      };
+    });
   }
   function renderAST() {
     const s = model.trace.snapshots[snapshot];
@@ -99,6 +118,7 @@ export function renderGraph(
       return;
     }
     if (astLayout === 'radial') renderRadial(s);
+    else if (astLayout === 'mindmap') renderMindmap(s);
     else renderCards(s);
     wireGraph($('graph'));
     const activeNode = $('graph').querySelector('.node.selected');
@@ -116,7 +136,34 @@ export function renderGraph(
         count: s.nodes.length,
         time: t($('follow').checked ? 'graph.eventTypes' : 'graph.snapshotTypes'),
         outside: selected && !s.nodes.some((n) => n.id === selected) ? t('graph.outside') : '',
-      }) + (astLayout === 'radial' ? ` · ${t('ast.radialHint')}` : '');
+      }) +
+      (astLayout === 'radial'
+        ? ` · ${t('ast.radialHint')}`
+        : astLayout === 'mindmap'
+          ? ` · ${t('ast.mindmapHint')}`
+          : '');
+  }
+  function renderMindmap(s) {
+    const { rows, width, height } = layoutMindmapAST(s, collapsed);
+    let edges = '',
+      nodes = '';
+    for (const row of rows) {
+      if (row.parent >= 0)
+        edges += `<path class="edge ${row.edge}" d="${mindmapBranch(rows[row.parent], row)}"/>`;
+      const n = row.node,
+        { family, type, changed } = nodeState(n),
+        folded = collapsed.has(n.id),
+        hasKids =
+          !row.reference &&
+          (n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded),
+        label = t('graph.node', { kind: n.kind, type, id: n.id }),
+        headingLength = Math.max(1, Math.floor((row.width - 36 - `#${n.id}`.length * 7) / 7.2)),
+        codeLength = Math.floor((row.width - 24) / 7.2),
+        typeLength = Math.floor((row.width - (hasKids ? 48 : 24)) / 7.2);
+      nodes += `<g class="node mindmap-node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${row.reference ? 'reference' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${row.x} ${row.y})"><title>${esc(label)}\n${esc(n.label || '')}${row.reference ? `\n${esc(t('ast.reference'))}` : ''}</title><rect class="tile" width="${row.width}" height="${row.height}" rx="8"/><rect class="accent" width="3" height="${row.height - 16}" x="0" y="8" rx="1.5"/><text x="12" y="18" class="svg-kind">${esc(brief(n.kind, headingLength))}</text><text x="${row.width - 12}" y="18" text-anchor="end" class="svg-id">#${n.id}</text><text x="12" y="36" class="svg-code">${esc(brief(n.label, codeLength))}</text><text x="12" y="53" class="svg-type">${esc(brief(type || '—', typeLength))}</text>${hasKids ? `<g class="mindmap-fold" data-fold="${n.id}" tabindex="0" role="button" aria-expanded="${!folded}" aria-label="${esc(t(folded ? 'ast.expandNode' : 'ast.collapseNode', { id: n.id }))}" transform="translate(${row.width - 19} 48)"><circle r="10"/><text text-anchor="middle" y="4">${folded ? '+' : '−'}</text></g>` : ''}</g>`;
+    }
+    $('graph').innerHTML =
+      `<svg class="ast-svg mindmap-svg" xmlns="http://www.w3.org/2000/svg" width="${width * astZoom}" height="${height * astZoom}" viewBox="0 0 ${width} ${height}" aria-label="${esc(t('ast.layout.mindmap'))}">${edges}${nodes}</svg>`;
   }
   function renderRadial(s) {
     if (!radialLayouts.has(s)) radialLayouts.set(s, layoutRadialAST(s));
