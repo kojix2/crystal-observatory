@@ -9,13 +9,6 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<nav id="learning-navigation" class="learning-navigation" data-i18n-aria="learning.navigation">
-  <button type="button" data-learning-view="observatory" aria-current="page" aria-controls="app" data-i18n-aria="learning.observatory" data-i18n-title="learning.observatory"><img src="./mark.svg" alt="" width="24" height="28"></button>
-  <div class="learning-navigation-divider" aria-hidden="true"></div>
-  <button type="button" data-learning-view="workflow" aria-controls="learning-panel" data-i18n-aria="learning.workflow" data-i18n-title="learning.workflow"><svg data-icon="workflow" data-size="20"></svg></button>
-  <button type="button" data-learning-view="nodes" aria-controls="learning-panel" data-i18n-aria="learning.nodes" data-i18n-title="learning.nodes"><svg data-icon="nodes" data-size="20"></svg></button>
-  <button type="button" data-learning-view="visitors" aria-controls="learning-panel" data-i18n-aria="learning.visitors" data-i18n-title="learning.visitors"><svg data-icon="visitors" data-size="20"></svg></button>
-</nav>
 <header id="chrome">
   <div class="command-row">
     <a class="brand" href="./"><img class="mark" src="./mark.svg" alt="" width="24" height="28"><h1>CRYSTAL <span>OBSERVATORY</span></h1></a>
@@ -36,6 +29,13 @@
     </div>
   </div>
 </header>
+<nav id="learning-navigation" class="learning-navigation" data-i18n-aria="learning.navigation">
+  <button type="button" data-learning-view="observatory" aria-current="page" aria-controls="app" data-i18n-aria="learning.observatory" data-i18n-title="learning.observatory"><svg data-icon="observatory" data-size="20"></svg></button>
+  <div class="learning-navigation-divider" aria-hidden="true"></div>
+  <button type="button" data-learning-view="workflow" aria-controls="learning-panel" data-i18n-aria="learning.workflow" data-i18n-title="learning.workflow"><svg data-icon="workflow" data-size="20"></svg></button>
+  <button type="button" data-learning-view="nodes" aria-controls="learning-panel" data-i18n-aria="learning.nodes" data-i18n-title="learning.nodes"><svg data-icon="nodes" data-size="20"></svg></button>
+  <button type="button" data-learning-view="visitors" aria-controls="learning-panel" data-i18n-aria="learning.visitors" data-i18n-title="learning.visitors"><svg data-icon="visitors" data-size="20"></svg></button>
+</nav>
 <main id="app" tabindex="-1">
   <div class="workbench-scroll">
   <section class="workbench" id="workbench" data-i18n-aria="workspace">

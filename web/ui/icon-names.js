@@ -26,6 +26,7 @@ export const lucideNames = {
   filter: 'list-filter',
   history: 'rotate-ccw-clock',
   reference: 'arrow-up-right',
+  observatory: 'telescope',
   workflow: 'workflow',
   nodes: 'boxes',
   visitors: 'scan-eye',
