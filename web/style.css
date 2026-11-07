@@ -18,8 +18,8 @@
   --visitor-initializers:#246d81; --visitor-macros:#8a542c;
   --type:#6b45a0; --type-bg:#f2ecfa; --type-line:#c9b8e2;
   --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
-  /* UI sizes follow the browser's default font size; small text starts at 14px. */
-  --text-small:.875rem; --text-body:1rem; --text-heading:1.125rem; --text-title:1.25rem; --text-large:1.5rem;
+  /* UI sizes follow the browser's default font size; small text starts at 13px. */
+  --text-small:.8125rem; --text-body:.9375rem; --text-heading:1.0625rem; --text-title:1.1875rem; --text-large:1.375rem;
   --code-line-height:1.5rem;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;
 }
@@ -219,13 +219,13 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .edge.expanded,.edge.hook { stroke: var(--type); stroke-dasharray: 3 3; }
 .edge.target { stroke: var(--visitor-top-level); stroke-dasharray: 4 3; }
 /* SVG labels share coordinate units with the card dimensions in graphs.js. */
-.svg-kind { font-size: 16px; fill: var(--ink); font-weight: 600; }
-.svg-code { font-size: 14px; fill: var(--node-secondary,var(--muted)); }
-.svg-type { font-size: 14px; fill: var(--type); }
-.svg-id { font-size: 14px; fill: var(--node-secondary,var(--muted)); }
+.svg-kind { font-size: 15px; fill: var(--ink); font-weight: 600; }
+.svg-code { font-size: 13px; fill: var(--node-secondary,var(--muted)); }
+.svg-type { font-size: 13px; fill: var(--type); }
+.svg-id { font-size: 13px; fill: var(--node-secondary,var(--muted)); }
 .svg-dot { fill: var(--node-secondary,var(--muted)); }
 .svg-mark { color: var(--node-secondary,var(--muted)); }
-.fold { font-size: 16px; fill: var(--node-secondary,var(--muted)); pointer-events: auto !important; cursor: pointer; }
+.fold { font-size: 15px; fill: var(--node-secondary,var(--muted)); pointer-events: auto !important; cursor: pointer; }
 .dependency-path { stroke: var(--edge); fill: none; }
 .dependency-arrow { fill: var(--edge); }
 .declaration-note { padding:10px 12px; margin:0; font-size:var(--text-body); line-height:1.6; color:var(--muted); background:var(--soft); }
@@ -583,6 +583,7 @@ dialog .close:hover { color:var(--ink); }
   .mobile button,.mobile select,.mobile input:not([type=checkbox]):not([type=range]),.mobile .link-button { min-height:44px; }
   #header-options .icon-button,dialog .icon-button,#more-actions { width:44px; height:44px; }
   select,input:not([type=checkbox]):not([type=range]),textarea { font-size:max(16px,var(--text-body))!important; }
+  #source,#source-colors { font-size:max(16px,var(--text-body)); }
   .mobile .source-tools { flex-wrap:wrap; gap:4px; }
   .mobile .source-tools label { display:none; }
   .mobile #example { flex:1 1 140px; }

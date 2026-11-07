@@ -54,7 +54,7 @@ export function renderGraph(
     const hasKids =
       view === 'ast' &&
       (n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded);
-    // Reserve the id and marks before truncating the 16px monospace heading.
+    // Reserve the id and marks before truncating the monospace heading.
     let markX = width - 12 - `#${n.id}`.length * 8.4 - 8;
     let marks = '';
     if (activities.length) {
