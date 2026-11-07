@@ -13,6 +13,7 @@ import { renderTokens } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
 import { renderDeclarations } from './declarations.js';
+import { stateObservation } from '../core/compiler-state.js';
 import { ViewLayout, comparisonTargets, viewLabel, viewLabelKey } from '../core/view-layout.js';
 
 const scrollTargets = {
@@ -33,6 +34,8 @@ export class TraceView {
     this.editor = editor;
     this.selected = 0;
     this.selectedType = 0;
+    this.stateSection = 'types';
+    this.stateExpanded = new Set();
     this.snapshot = 0;
     this.view = 'source';
     this.scrollPositions = new Map();
@@ -73,6 +76,8 @@ export class TraceView {
     this.model = model;
     this.selected = 0;
     this.selectedType = 0;
+    this.stateSection = 'types';
+    this.stateExpanded = new Set();
     this.snapshot = 0;
     this.collapsed.clear();
     this.astZoom = 1;
@@ -173,7 +178,13 @@ export class TraceView {
     const event = this.model.event;
     this.workspace?.setDetailContext?.('event', event);
     this.selected = event?.node_id || this.selected;
-    if (event?.kind === 'declaration') this.selectedType = event.type_id;
+    if (event?.kind === 'declaration') {
+      this.selectedType = event.type_id;
+      this.stateSection = 'types';
+    } else if (event) {
+      const observation = stateObservation(event);
+      if (observation) this.stateSection = observation.category;
+    }
     if ($('follow').checked) {
       this.snapshot = this.model.snapshotAt();
       $('snapshot').value = this.snapshot;
@@ -187,6 +198,10 @@ export class TraceView {
     if (this.layout.has('declarations') && event?.kind === 'declaration')
       $('declarations')
         .querySelector('.declaration-details .declaration-changed')
+        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (this.layout.has('declarations') && event?.kind === 'activity')
+      $('declarations')
+        .querySelector('.compiler-state .declaration-changed')
         ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
   selectEvent(index) {
@@ -227,6 +242,7 @@ export class TraceView {
     this.renderSelection();
   }
   selectType(id) {
+    this.stateSection = 'types';
     this.selectedType = id;
     const state = this.model.declarations.get(id);
     const site = state?.declarations.at(-1);
@@ -328,6 +344,12 @@ export class TraceView {
       );
     } else if (view === 'declarations') {
       renderDeclarations(this.model, this.selectedType, {
+        section: this.stateSection,
+        expanded: (this.stateExpanded ??= new Set()),
+        onSection: (section) => {
+          this.stateSection = section;
+          this.renderObservation();
+        },
         onType: (id) => this.selectType(id),
         onNode: (id, target) => this.selectDeclarationNode(id, target),
         onSeek: (index) => {

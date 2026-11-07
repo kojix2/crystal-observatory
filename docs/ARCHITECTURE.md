@@ -21,6 +21,14 @@ Replacing a method must use the compiler's reported replacement identity, rather
 than guessing from its name. A declaration expression's `Nil` type is unrelated
 to the return type of invoking that method.
 
+The compiler state view projects selected activity hooks into categories of
+external state observations. Holder categories describe the relevant compiler
+storage, not the identity of its instance. Preserve context as compiler-provided
+text: do not parse it into identity keys or join it to semantic type names.
+Keep the observation site and related AST node distinct from the state holder.
+Replay includes only the selected event prefix; these observations do not imply
+complete environments, initializer order, or cache insertion/reuse.
+
 ## Observation boundaries
 
 Visits record actual dispatch, while activities record selected decisions and

@@ -1,6 +1,7 @@
 import { UIError } from '../i18n/index.js';
 import { applyDeclaration, validateDeclarations } from './declarations.js';
 import { validateActivities } from './activities.js';
+import { indexStateObservations } from './compiler-state.js';
 
 export function validateTrace(t) {
   if (
@@ -75,6 +76,7 @@ export class TraceModel {
   constructor(trace) {
     this.trace = validateTrace(trace);
     this.nodes = new Map(trace.nodes.map((n) => [n.id, n]));
+    this.stateObservations = indexStateObservations(trace);
     this.activities = new Map();
     for (const event of trace.events) {
       if (event.kind !== 'activity') continue;

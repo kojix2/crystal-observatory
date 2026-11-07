@@ -10,8 +10,10 @@ import { mobileMessages } from './mobile-messages.js';
 import { nodeMessages } from './node-messages.js';
 import { eventMessages } from './event-messages.js';
 import { learningMessages } from './learning-messages.js';
+import { stateMessages } from './state-messages.js';
 
 export const messages = {
+  ...stateMessages,
   ...learningMessages,
   ...eventMessages,
   ...nodeMessages,

@@ -351,6 +351,37 @@ class Element {
   }
 }
 
+test('State opens a type by default and switching sections does not seek History', () => {
+  const root = new Element(),
+    caption = new Element();
+  const originalDocument = globalThis.document;
+  globalThis.document = { getElementById: (id) => (id === 'declarations' ? root : caption) };
+  const model = new TraceModel(fixture()).seek(6);
+  const callbacks = {
+    onType() {},
+    onNode() {},
+    onSeek() {
+      assert.fail('section changes must not seek');
+    },
+  };
+  try {
+    renderDeclarations(model, 0, callbacks);
+    assert(root.innerHTML.includes('data-semantic-type="2" aria-pressed="true"'));
+    assert(root.innerHTML.includes('<h3>Outer::Child</h3>'));
+    const event = model.event;
+    renderDeclarations(model, 0, { ...callbacks, section: 'constants' });
+    assert(root.innerHTML.includes('data-state-section="constants" aria-pressed="true"'));
+    assert(!root.innerHTML.includes('class="declaration-layout"'));
+    assert(root.innerHTML.includes(t('state.unobserved')));
+    assert.equal(model.event, event);
+    model.trace.truncated = true;
+    renderDeclarations(model, 0, callbacks);
+    assert(caption.textContent.includes(t('notice.truncated')));
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});
+
 test('declaration UI distinguishes missing observation, empty state and referenced context', () => {
   const root = new Element(),
     caption = new Element();

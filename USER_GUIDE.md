@@ -18,7 +18,7 @@ recordings.
 Compilation always analyzes the current editor contents.
 
 **Compare…** shows any two different views of the same recording side by side:
-Source, Tokens, AST, Declarations, Types, LLVM IR, or Output. AST snapshots and history
+Source, Tokens, AST, State, Types, LLVM IR, or Output. AST snapshots and history
 playback can refer to different times; Types follows the selected history event.
 Editing source does not update an existing AST or IR. Escape exits maximization;
 **End comparison** returns to one view.
@@ -65,6 +65,23 @@ separate from phone navigation. The phone view always starts in Work on reload.
 History selects an event; the node inspector independently follows the selected
 node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
+
+**State** groups types and methods, constant registrations, variable declarations
+and environments, initializer processing, and method specializations through the
+selected event. Use the section buttons and their counts to choose what to inspect.
+The types section initially selects an observed type. Operation rows show a short
+context and result; expand a row for its holder, before/after values and navigation.
+**Coverage** explains the observation boundaries. Operation buttons seek History;
+source and AST buttons select nodes without moving History. Related-node buttons
+can reveal a specialized method or initializer expression.
+
+These entries are operations, not complete snapshots of Program, Type or Visitor
+objects. Recorded context names are displayed as text, never used to merge object
+identities. Specialization analysis does not establish cache insertion or reuse,
+and initializer observations do not reconstruct a complete execution order. Each
+section shows at most its latest 60 entries; **Earlier observations** rewinds to the
+preceding entries. Missing observation metadata is distinguished from an empty
+history prefix. Older and syntax-only traces remain usable.
 
 Node details keeps the node kind, expression type and source location above
 **Overview**, **Activities** and **IR** tabs. Code initially shows three lines;
