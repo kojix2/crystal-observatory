@@ -26,7 +26,9 @@ Editing source does not update an existing AST or IR. Escape exits maximization;
 ## On a smartphone
 
 At widths up to 960 px, use the bottom navigation: **Work**, **History**,
-and **Details**. Work contains the source editor and all observation tabs.
+and **Details**. The initial screen is History, where bundled recordings open
+with one tap without compiling. Opening a recording switches to Work to inspect it.
+Work contains the source editor and all observation tabs.
 Swipe the tab row to reach more views. Compile & run and Stop remain
 in a single top toolbar; its options button opens Compile to IR, Parse only,
 Compare, language, settings, help, layout reset, and GitHub. Editing remains available while compilation runs.

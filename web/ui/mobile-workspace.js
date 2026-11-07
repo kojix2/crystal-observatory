@@ -28,7 +28,8 @@ export function setupMobileWorkspace(onModeChange) {
     details: $('inspector-panel'),
   };
   const buttons = [...navigation.querySelectorAll('[data-pane]')];
-  let current = 'work';
+  // Start with bundled recordings; opening one reveals Work without compiling.
+  let current = 'history';
   let wasMobile = false;
   let mobileInputsOpen = false;
   let detailContext = { section: 'event', key: null };

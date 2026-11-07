@@ -164,18 +164,23 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   }
 }
 
-test('mobile navigation exposes one accessible pane and retains history scroll and selection', () => {
+test('mobile starts in History and navigation retains scroll and selection', () => {
   workspace({}, ({ controller, element, buttons }) => {
     assert.equal(controller.mobile, true);
-    assert.equal(element('app').dataset.mobilePane, 'work');
-    assert.equal(element('timeline').inert, true);
-    assert.equal(element('graph-panel').inert, false);
+    assert.equal(element('app').dataset.mobilePane, 'history');
+    assert.equal(element('timeline').inert, false);
+    assert.equal(element('graph-panel').inert, true);
+    assert.equal(buttons[1].getAttribute('aria-pressed'), 'true');
     assert.equal(element('header-options').getAttribute('popover'), 'auto');
     assert.deepEqual(
       buttons.map((button) => button.dataset.pane),
       ['work', 'history', 'details'],
     );
     assert.equal(controller.showPane('missing'), false);
+    buttons[0].onclick();
+    controller.refresh();
+    assert.equal(element('app').dataset.mobilePane, 'work');
+    assert.equal(element('graph-panel').inert, false);
     element('trace-content').scrollTop = 237;
     element('search').value = 'MainVisitor';
     buttons[1].onclick();
