@@ -47,7 +47,10 @@ export class TraceView {
     } catch {
       /* Optional preference. */
     }
-    this.events = new EventList((index) => this.selectEvent(index));
+    this.events = new EventList(
+      (index) => this.selectEvent(index),
+      () => this.stop(),
+    );
     this.ir = new IRView();
     this.nodeTabs = setupNodeTabs();
     this.eventTabs = setupEventTabs();
@@ -125,7 +128,7 @@ export class TraceView {
   localize() {
     this.renderComparisonControls();
     this.renderPhase();
-    this.events.render();
+    this.events.filter(this.events.nodeFilter, { preservePosition: true });
     this.events.localizeActivities();
     if (this.trace) renderTokens(this.trace, (node) => this.editor.highlight(node));
     this.renderSelection({ reveal: false });
@@ -516,10 +519,10 @@ export class TraceView {
   nextKind(kind) {
     if (!this.model) return;
     this.stop();
-    const index = this.trace.events.findIndex(
+    const next = this.events.filtered.find(
       (event) => event.index > this.model.index && event.kind === kind,
     );
-    if (index >= 0) this.seek(index);
+    if (next) this.seek(next.index);
     else notify(() => t('notice.noNext'));
   }
   moveNode(direction) {

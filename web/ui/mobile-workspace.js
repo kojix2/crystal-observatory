@@ -117,9 +117,6 @@ export function setupMobileWorkspace(onModeChange) {
     const button = event.target.closest('button');
     if (media.matches && button && button.id !== 'clear-filter') historyControls.hidePopover();
   });
-  historyControls.addEventListener('change', () => {
-    if (media.matches) historyControls.hidePopover();
-  });
   media.addEventListener('change', onModeChange);
 
   // Mobile keyboards can resize only the visual viewport, leaving 100dvh unchanged.

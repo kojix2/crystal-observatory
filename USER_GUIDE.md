@@ -44,7 +44,10 @@ The active observation tab stays visible as views change.
 Previous, Play, Next and the seek bar stay visible in History. Its filter button
 opens search, filters, jumps, speed, first/last event, and recording Open/Save
 controls. Closing this popup gives the space back to the event list. A highlighted
-filter button indicates an active filter. Output initially folds stdin and
+filter button indicates an active filter. Search and filter changes keep the popup
+open so conditions can be combined. History rows place names and results on separate
+lines; a single-page list hides its unused page controls.
+Output initially folds stdin and
 arguments under **Input & arguments**; expanding it preserves the entered values.
 
 Comparisons stack the two views vertically and scroll within Work. Code and graphs
@@ -82,10 +85,14 @@ then open a Visitor to see individual events. Filtering keeps the enclosing stag
 and matching event counts; declaration-only filtering shows operations directly.
 Playback marks the current event inside a collapsed group without opening it.
 Stages missing an end event stay visible individually, including compiler errors.
+**Next activity** uses the current search, node and activity filters. Search for
+`#7`, for example, to match node 7 exactly. Manually changing History pages stops
+playback and shows the beginning of the page.
 
 Drag the dividers in the History table header to resize its columns. Column widths
 are saved across reloads. Double-click a divider to restore the default column
-widths; **Reset layout** also resets them.
+widths; **Reset layout** also resets them. With a divider focused, Left/Right changes
+the width, Shift moves in larger steps, and Home restores the defaults.
 
 With **Follow history** enabled, clicking a History event or Visitor name opens its
 node in AST, selecting a recorded snapshot containing it and opening folded ancestors.

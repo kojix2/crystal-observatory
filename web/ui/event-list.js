@@ -16,7 +16,7 @@ import { declarationSummary } from './declarations.js';
 const PAGE_SIZE = 70;
 
 export class EventList {
-  constructor(onSeek) {
+  constructor(onSeek, onBrowse = () => {}) {
     this.page = 0;
     this.nodeFilter = 0;
     this.filtered = [];
@@ -31,12 +31,16 @@ export class EventList {
       this.filter();
     };
     $('page-prev').onclick = () => {
+      onBrowse();
       this.page--;
-      this.render();
+      this.render(false);
+      $('trace-content').scrollTop = 0;
     };
     $('page-next').onclick = () => {
+      onBrowse();
       this.page++;
-      this.render();
+      this.render(false);
+      $('trace-content').scrollTop = 0;
     };
     // Delegated once instead of installing a handler on every re-rendered row.
     const activate = (event) => {
@@ -57,6 +61,12 @@ export class EventList {
         activate(event);
       }
     };
+    // A recording can seek while History is hidden on mobile. Reveal that
+    // position once the list has dimensions, preserving ordinary round trips.
+    if (typeof ResizeObserver !== 'undefined')
+      new ResizeObserver(() => {
+        if (this.pendingReveal) this.revealCurrent();
+      }).observe($('trace-content'));
   }
   load(model) {
     this.model = model;
@@ -73,12 +83,13 @@ export class EventList {
     $('activity-kind').value = '';
     this.filter();
   }
-  filter(node = this.nodeFilter) {
+  filter(node = this.nodeFilter, { preservePosition = false } = {}) {
     if (!this.model) return;
     this.nodeFilter = node;
     const query = $('search').value.trim().toLowerCase(),
       kind = $('kind').value,
-      activity = $('activity-kind').value;
+      activity = $('activity-kind').value,
+      nodeQuery = /^#(\d+)$/.exec(query);
     $('history-tools')?.classList.toggle('filtered', Boolean(query || kind || activity || node));
     this.filtered = this.model.trace.events.filter(
       (event) =>
@@ -86,9 +97,11 @@ export class EventList {
         (!activity || (event.kind === 'activity' && event.activity === activity)) &&
         (!node || event.node_id === node) &&
         (!query ||
-          `${event.visitor} ${event.node_id} ${this.model.nodes.get(event.node_id)?.kind || ''} ${this.result(event)} ${event.phase} ${this.stageLabel(event)}`
-            .toLowerCase()
-            .includes(query)),
+          (nodeQuery
+            ? event.node_id === Number(nodeQuery[1])
+            : `${event.visitor} ${event.node_id} ${this.model.nodes.get(event.node_id)?.kind || ''} ${this.result(event)} ${event.phase} ${this.stageLabel(event)}`
+                .toLowerCase()
+                .includes(query))),
     );
     this.matchingIndices = new Set(this.filtered.map((event) => event.index));
     this.summaries = new Map(
@@ -102,8 +115,9 @@ export class EventList {
       kind === 'declaration' ? [] : this.historyGroups,
       this.expanded,
     );
-    this.page = 0;
-    this.render();
+    if (!preservePosition) this.page = 0;
+    this.render(false);
+    if (!preservePosition) $('trace-content').scrollTop = 0;
   }
   localizeActivities() {
     const select = $('activity-kind'),
@@ -147,6 +161,9 @@ export class EventList {
     this.activeGroup = this.rows[this.currentRowIndex()]?.group?.start;
     $('history-start').hidden = !empty;
     $('history-no-match').hidden = empty || !this.model.trace.events.length || this.rows.length > 0;
+    const focused = document.activeElement,
+      focusedRow = focused?.closest?.('#events [data-index]'),
+      focusedGroup = focused?.closest?.('[data-group]');
     $('events').innerHTML = this.rows
       .slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE)
       .map((row) => this.renderRow(row))
@@ -157,13 +174,28 @@ export class EventList {
     $('page-state').textContent = `${this.page + 1} / ${pages}`;
     $('page-prev').disabled = this.page === 0;
     $('page-next').disabled = this.page >= pages - 1;
-    const active = $('events').querySelector('.active');
-    if (active && scrollToActive) {
-      const wrap = $('trace-content'),
-        y = active.offsetTop - $('events').offsetTop;
-      if (y < wrap.scrollTop || y > wrap.scrollTop + wrap.clientHeight - 55)
-        wrap.scrollTop = Math.max(0, y - 65);
+    if (focusedRow) {
+      const selector = focusedGroup
+        ? `[data-group="${focusedGroup.dataset.group}"]`
+        : `tr${focusedRow.classList.contains('event-group') ? '.event-group' : ':not(.event-group)'}[data-index="${focusedRow.dataset.index}"]`;
+      $('events').querySelector(selector)?.focus({ preventScroll: true });
     }
+    this.pendingReveal = false;
+    if (scrollToActive) this.revealCurrent();
+  }
+  revealCurrent() {
+    const active = $('events').querySelector('.active');
+    if (!active) return;
+    const wrap = $('trace-content');
+    this.pendingReveal = !wrap.clientHeight;
+    if (this.pendingReveal) return;
+    const bounds = active.getBoundingClientRect(),
+      viewport = wrap.getBoundingClientRect(),
+      header = $('history-table').tHead.getBoundingClientRect().height,
+      top = viewport.top + header;
+    if (bounds.top < top || bounds.height > viewport.bottom - top)
+      wrap.scrollTop += bounds.top - top;
+    else if (bounds.bottom > viewport.bottom) wrap.scrollTop += bounds.bottom - viewport.bottom;
   }
   renderRow({ event, group, count }) {
     if (group) {

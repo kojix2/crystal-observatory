@@ -5,6 +5,7 @@ import { gunzipSync } from 'node:zlib';
 import { groupEvents, groupStages, eventRows } from '../web/core/event-groups.js';
 import { TraceModel } from '../web/core/trace-model.js';
 import { EventList } from '../web/ui/event-list.js';
+import { TraceView } from '../web/ui/trace-view.js';
 import { setLocale } from '../web/i18n/index.js';
 
 const load = (name, directory = '../web/traces/') =>
@@ -210,7 +211,8 @@ test('stages require matching recorded boundaries and never conceal compiler err
 function withList(trace, run) {
   const originalDocument = globalThis.document,
     elements = new Map(),
-    seeks = [];
+    seeks = [],
+    browses = [];
   const element = (id) => {
     if (!elements.has(id))
       elements.set(id, { value: '', querySelector: () => null, classList: { toggle() {} } });
@@ -219,9 +221,12 @@ function withList(trace, run) {
   globalThis.document = { getElementById: element };
   setLocale('en');
   try {
-    const list = new EventList((index) => seeks.push(index));
+    const list = new EventList(
+      (index) => seeks.push(index),
+      () => browses.push(true),
+    );
     list.load(new TraceModel(trace));
-    run(list, element, seeks);
+    run(list, element, seeks, browses);
   } finally {
     globalThis.document = originalDocument;
     setLocale('en');
@@ -429,5 +434,100 @@ test('paging follows visible rows and a collapsed group tracks its hidden curren
     list.follow();
     assert.equal(element('page-state').textContent, `${pages} / ${pages}`);
     assert(element('events').innerHTML.includes(`Current: #${last}`));
+  });
+});
+
+test('manual paging starts at the top and signals browsing without moving the selected event', () => {
+  withList(load('07_struct'), (list, element, seeks, browses) => {
+    for (const group of list.historyGroups) {
+      list.expanded.add(group.start);
+      for (const visitor of group.children || []) list.expanded.add(visitor.start);
+    }
+    list.filter();
+    list.model.seek(195);
+    element('trace-content').scrollTop = 3000;
+    element('page-next').onclick();
+    assert.equal(list.page, 1);
+    assert.equal(element('trace-content').scrollTop, 0);
+    assert.equal(list.model.index, 195);
+    element('trace-content').scrollTop = 700;
+    element('page-prev').onclick();
+    assert.equal(list.page, 0);
+    assert.equal(element('trace-content').scrollTop, 0);
+    assert.deepEqual(browses, [true, true]);
+    assert.deepEqual(seeks, []);
+  });
+});
+
+test('a hash-prefixed node query matches exactly the displayed node ID', () => {
+  withList(load('07_struct'), (list, element) => {
+    element('search').value = '#7';
+    element('search').oninput();
+    assert(list.filtered.length > 0);
+    assert(list.filtered.every((event) => event.node_id === 7));
+    assert.equal(
+      list.filtered.length,
+      list.model.trace.events.filter((event) => event.node_id === 7).length,
+    );
+    const typedNode = list.model.trace.events.find((event) => event.kind === 'type').node_id;
+    element('search').value = `#${typedNode}`;
+    element('kind').value = 'type';
+    element('kind').onchange();
+    assert(list.filtered.length > 0);
+    assert(list.filtered.every((event) => event.node_id === typedNode && event.kind === 'type'));
+    element('search').value = '#700';
+    element('search').oninput();
+    assert.equal(list.filtered.length, 0);
+  });
+});
+
+test('re-evaluating translated search results preserves playback, scroll and expanded groups', () => {
+  withList(load('06_cleanup'), (list, element) => {
+    setLocale('ja');
+    element('search').value = '構文解析';
+    list.filter();
+    assert.equal(list.filtered.length, 25);
+    list.toggle(0);
+    list.model.seek(118);
+    element('trace-content').scrollTop = 80;
+    setLocale('en');
+    list.filter(list.nodeFilter, { preservePosition: true });
+    assert.equal(list.filtered.length, 0);
+    assert.equal(element('trace-content').scrollTop, 80);
+    assert.equal(list.model.index, 118);
+    assert(list.expanded.has(0));
+  });
+});
+
+test('next activity uses the current search, node and activity filters', () => {
+  withList(load('06_cleanup'), (list, element) => {
+    element('activity-kind').value = 'simplify_condition';
+    list.filter();
+    assert.equal(list.filtered.length, 1);
+    const expected = list.filtered[0],
+      view = Object.create(TraceView.prototype);
+    let stopped = false;
+    Object.assign(view, {
+      model: list.model,
+      events: list,
+      stop() {
+        stopped = true;
+      },
+      seek(index) {
+        list.model.seek(index);
+      },
+    });
+    list.model.seek(0);
+    view.nextKind('activity');
+    assert(stopped);
+    assert.equal(list.model.index, expected.index);
+    assert.equal(list.model.event.activity, 'simplify_condition');
+    element('activity-kind').value = '';
+    element('search').value = `#${expected.node_id}`;
+    list.filter(expected.node_id);
+    list.model.seek(0);
+    view.nextKind('activity');
+    assert.equal(list.model.event.node_id, expected.node_id);
+    assert.equal(list.model.index, list.filtered.find((event) => event.kind === 'activity').index);
   });
 });

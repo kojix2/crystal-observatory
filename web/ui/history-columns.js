@@ -1,5 +1,5 @@
 import { $ } from './dom.js';
-import { bindDivider } from './divider.js';
+import { bindDivider, range } from './divider.js';
 import { paneWidths, moveDivider } from '../core/layout.js';
 
 const KEY = 'crystal-observatory.history-columns.v1';
@@ -39,6 +39,15 @@ export function setupHistoryColumns() {
     columns.forEach((column, index) => {
       column.style.width = `${(widths[index] / total) * 100}%`;
     });
+    handles.forEach((handle, index) => {
+      handle.tabIndex = 0;
+      range(
+        handle,
+        widths[index],
+        MINIMUMS[index],
+        widths[index] + widths[index + 1] - MINIMUMS[index + 1],
+      );
+    });
   }
   const reset = () => {
     weights = null;
@@ -47,7 +56,6 @@ export function setupHistoryColumns() {
   handles.forEach((handle, index) =>
     bindDivider(handle, {
       axis: 'x',
-      keyboard: false,
       enabled: () => true,
       measure,
       persist,
