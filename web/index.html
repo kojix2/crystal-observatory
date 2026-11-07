@@ -9,6 +9,13 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+<nav id="learning-navigation" class="learning-navigation" data-i18n-aria="learning.navigation">
+  <button type="button" data-learning-view="observatory" aria-current="page" aria-controls="app" data-i18n-aria="learning.observatory" data-i18n-title="learning.observatory"><img src="./mark.svg" alt="" width="24" height="28"></button>
+  <div class="learning-navigation-divider" aria-hidden="true"></div>
+  <button type="button" data-learning-view="workflow" aria-controls="learning-panel" data-i18n-aria="learning.workflow" data-i18n-title="learning.workflow"><svg data-icon="workflow" data-size="20"></svg></button>
+  <button type="button" data-learning-view="nodes" aria-controls="learning-panel" data-i18n-aria="learning.nodes" data-i18n-title="learning.nodes"><svg data-icon="nodes" data-size="20"></svg></button>
+  <button type="button" data-learning-view="visitors" aria-controls="learning-panel" data-i18n-aria="learning.visitors" data-i18n-title="learning.visitors"><svg data-icon="visitors" data-size="20"></svg></button>
+</nav>
 <header id="chrome">
   <div class="command-row">
     <a class="brand" href="./"><img class="mark" src="./mark.svg" alt="" width="24" height="28"><h1>CRYSTAL <span>OBSERVATORY</span></h1></a>
@@ -29,7 +36,7 @@
     </div>
   </div>
 </header>
-<main id="app">
+<main id="app" tabindex="-1">
   <div class="workbench-scroll">
   <section class="workbench" id="workbench" data-i18n-aria="workspace">
     <section class="timeline panel" id="timeline" tabindex="-1">
@@ -179,6 +186,13 @@
     <button type="button" data-pane="details" aria-controls="inspector-panel" aria-pressed="false"><svg data-icon="info"></svg><span data-i18n="mobile.details">Details</span></button>
   </nav>
   <footer><span id="engine"></span><span id="meta"></span><span class="spacer"></span><span id="versions"></span><a href="https://github.com/crystal-lang/crystal" target="_blank" rel="noreferrer">Crystal<svg data-icon="external" data-size="10"></svg></a></footer>
+</main>
+<main id="learning-panel" class="learning-panel" hidden>
+  <div class="learning-inner">
+    <header class="learning-heading"><h2 id="learning-title" tabindex="-1"></h2><p id="learning-intro"></p></header>
+    <div id="learning-search-tools" class="learning-search-tools" hidden><input id="learning-search" type="search" data-i18n-placeholder="learning.search" data-i18n-aria="learning.search"><span id="learning-count" class="subtle" aria-live="polite"></span></div>
+    <div id="learning-content"></div>
+  </div>
 </main>
 <dialog id="status-dialog"><button id="close-status" class="close icon-button" data-i18n-aria="close"><svg data-icon="close"></svg></button><h2 data-i18n="status.detail">Status and diagnostics</h2><pre id="notice-detail"></pre></dialog>
 <dialog id="guide"><button id="close-guide" class="close icon-button" data-i18n-aria="close"><svg data-icon="close"></svg></button><h2 data-i18n="guide.title">Explore the compiler with your own code</h2><p data-i18n="guide.intro">Edit the Source tab and choose Compile &amp; run. The actual Crystal compiler and LLVM run in your browser; LLD links the WASM program before execution.</p><ol><li data-i18n="guide.step1">Choose initial code in Source, or write your own. Example trace opens a saved recording for the selected example.</li><li data-i18n="guide.step2">Choose Compile &amp; run, Compile → IR, or Parse only.</li><li data-i18n="guide.step3">Select an event in History. Inspect its AST in the center, its node at the upper right, and the visitor role and operation below.</li><li data-i18n="guide.step4">Open or save traces in History. Set stdin and arguments, or rerun a compiled program, in Output.</li></ol><h3 data-i18n="guide.layout.title">Layout and language</h3><p data-i18n="guide.layout">Drag the column dividers or the horizontal inspector divider. Focus a divider and use arrow keys, or Home to reset it. Escape exits maximized view. English is the default; your language choice is saved.</p><p data-i18n="mobile.guide">On phones, use the bottom navigation to switch between Work, History and Details. Selecting an event opens Details. Comparisons are stacked vertically; extra commands are in the toolbar menu.</p><h3 data-i18n="guide.runtime.title">Runtime</h3><p data-i18n="guide.runtime">The first run loads the compiler, LLVM, LLD and standard library. A static HTTP server or GitHub Pages is enough. Source code is not uploaded. The browser must support WebAssembly exception handling.</p><p data-i18n="guide.limits">Programs target WASI. OS processes, sockets, native shards and host files are unavailable. Program memory is limited to 256 MiB and execution to 10 seconds.</p><h3 data-i18n="guide.reading.title">Reading the trace</h3><p data-i18n="guide.reading">ASTs are snapshots taken after stages, expansions and call resolution. Type dependencies and the visitor stack reflect the selected event. IR insertion positions include instructions emitted by children. Recorded traces are historical measurements; Syntax uses a separate lightweight engine. Code, compiler diagnostics and internal identifiers remain unchanged.</p></dialog>

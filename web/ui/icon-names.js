@@ -26,4 +26,7 @@ export const lucideNames = {
   filter: 'list-filter',
   history: 'rotate-ccw-clock',
   reference: 'arrow-up-right',
+  workflow: 'workflow',
+  nodes: 'boxes',
+  visitors: 'scan-eye',
 };

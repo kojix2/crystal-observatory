@@ -92,5 +92,7 @@ const familyByKind = new Map(
   Object.entries(families).flatMap(([family, kinds]) => kinds.map((kind) => [kind, family])),
 );
 
+export const astNodeKinds = Object.freeze([...familyByKind.keys(), 'Expressions', 'Block']);
+
 // Containers and unfamiliar compiler nodes stay neutral rather than imply a role.
 export const astFamily = (kind) => familyByKind.get(kind) || 'structure';

@@ -9,8 +9,10 @@ import { pipelineMessages } from './pipeline-messages.js';
 import { mobileMessages } from './mobile-messages.js';
 import { nodeMessages } from './node-messages.js';
 import { eventMessages } from './event-messages.js';
+import { learningMessages } from './learning-messages.js';
 
 export const messages = {
+  ...learningMessages,
   ...eventMessages,
   ...nodeMessages,
   ...mobileMessages,

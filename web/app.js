@@ -4,6 +4,7 @@ import { setupLanguage } from './ui/language.js';
 import { setupSettings } from './ui/settings.js';
 import { mountIcons } from './ui/icons.js';
 import { setupHistoryColumns } from './ui/history-columns.js';
+import { setupLearningNavigation } from './ui/learning-navigation.js';
 
 mountIcons();
 setupSettings();
@@ -23,4 +24,13 @@ app.trace.workspace = setupWorkspace(
     },
   },
 );
+setupLearningNavigation({
+  onLeave: () => app.trace.stop(),
+  onReturn: () => {
+    app.trace.workspace.refresh();
+    app.editor.refresh();
+    app.trace.renderObservation();
+    app.trace.revealActiveTab();
+  },
+});
 app.loadManifest();
