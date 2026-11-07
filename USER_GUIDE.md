@@ -94,8 +94,12 @@ to keep the current view and AST snapshot while selecting events. A comparison t
 already includes AST stays open. Playback and stepping update the event without
 switching tabs. **Expand all** appears when the current AST has folded nodes.
 
-The AST layout selector offers **Cards**, **Mind map** and **Radial tree**. Mind map
-arranges compact, labeled nodes in branches extending to the left and right of each
+The AST layout selector offers **Cards**, **Mind map** and **Radial tree**. Cards use
+a compact, indented list with the node kind, code and type on three closely spaced
+lines. Hover a card to read its full code and type. Select it for details, or use
+its **+ / −** button (or focus the card and press **+ / −**) to fold a branch.
+
+Mind map arranges compact, labeled nodes in branches extending to the left and right of each
 root. Select a node to inspect its code and type. Use its **+ / −** button (or focus
 the node and press **+ / −**) to expand or collapse a branch. Folds are shared with
 Cards; **Expand all** opens every branch. Dashed node outlines mark repeated references.

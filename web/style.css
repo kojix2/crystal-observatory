@@ -222,6 +222,13 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .mindmap-fold text { fill:var(--ink); font-size:14px; }
 .mindmap-fold:hover circle,.mindmap-fold:focus-visible circle { stroke:var(--ink); stroke-width:2; }
 .mindmap-fold:focus-visible { outline:none; }
+.card-node .svg-kind { font-size:13px; }
+.card-node:focus-visible .tile { stroke:var(--ink); stroke-width:2; }
+.card-node:focus-visible { outline:none; }
+.card-fold rect { fill:var(--paper); stroke:var(--hairline); }
+.card-fold text { fill:var(--node-secondary,var(--muted)); font-size:15px; }
+.card-fold:hover rect,.card-fold:focus-visible rect { stroke:var(--ink); }
+.card-fold:focus-visible { outline:none; }
 .ast-tools { flex-wrap:wrap; }
 .ast-tools #ast-layout { flex:0 1 140px; }
 .ast-tools #snapshot { flex:1 1 150px; }

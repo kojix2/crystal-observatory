@@ -9,9 +9,26 @@ import { layoutMindmapAST, mindmapBranch } from '../core/mindmap-ast.js';
 
 const radialLayouts = new WeakMap();
 const nodeHeight = 76;
-const cardStride = 96;
+const cardHeight = 56;
+const cardGap = 8;
+const cardIndent = 20;
+const cardInset = 12;
 const dependencyWidth = 260;
 const dependencyStride = 104;
+
+// Allow two monospace columns for non-Latin characters, including CJK and emoji.
+// Keep full text in the tooltip instead of squeezing it into a narrower card.
+function cardText(value, columns) {
+  let text = '',
+    used = 0;
+  for (const char of brief(value, Infinity)) {
+    const size = char.codePointAt(0) > 0xff ? 2 : 1;
+    if (used + size > columns - 1) return `${text}…`;
+    text += char;
+    used += size;
+  }
+  return text;
+}
 
 const mutations = new Set([
   'assign_type',
@@ -51,23 +68,42 @@ export function renderGraph(
   }
   function svgNode(n, x, y, width = 320, reference = false) {
     const { family, type, activities, changed } = nodeState(n);
+    const compact = view === 'ast',
+      height = compact ? cardHeight : nodeHeight,
+      inset = compact ? 10 : 13,
+      headingY = compact ? 17 : 20,
+      codeY = compact ? 33 : 43,
+      typeY = compact ? 49 : 65,
+      letterWidth = compact ? 7.8 : 8.4;
     const folded = collapsed.has(n.id);
     const hasKids =
       view === 'ast' &&
       (n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded);
     // Reserve the id and marks before truncating the monospace heading.
-    let markX = width - 12 - `#${n.id}`.length * 8.4 - 8;
+    let markX = width - 12 - `#${n.id}`.length * letterWidth - 8;
     let marks = '';
     if (activities.length) {
-      marks += `<circle class="svg-dot" cx="${markX - 3}" cy="15.5" r="2.5"/>`;
+      marks += `<circle class="svg-dot" cx="${markX - 3}" cy="${headingY - 4.5}" r="2.5"/>`;
       markX -= 10;
     }
     if (reference)
-      marks += `<g class="svg-mark" transform="translate(${markX - 10} 10.5)">${icon('reference', { size: 10 })}</g>`;
-    const headingLength = Math.floor((markX - (reference ? 12 : 0) - 20) / 9.6);
-    const codeLength = Math.floor((width - 26) / 8.4);
-    const typeLength = Math.floor((width - (hasKids && !reference ? 48 : 26)) / 8.4);
-    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><title>${esc(t(`ast.family.${family}`))}</title><rect class="tile" width="${width}" height="${nodeHeight}" rx="2"/><rect class="accent" width="3" height="${nodeHeight}" rx="1"/><text x="13" y="20" class="svg-kind">${esc(brief(n.kind, headingLength))}</text>${marks}<text x="${width - 12}" y="20" text-anchor="end" class="svg-id">#${n.id}</text><text x="13" y="43" class="svg-code">${esc(brief(n.label, codeLength))}</text><text x="13" y="65" class="svg-type">${esc(brief(type || '—', typeLength))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 24}" y="65">${folded ? '+' : '−'}</text>` : ''}</g>`;
+      marks += `<g class="svg-mark" transform="translate(${markX - 10} ${headingY - 9.5})">${icon('reference', { size: 10 })}</g>`;
+    const headingLength = Math.max(
+      1,
+      Math.floor((markX - (reference ? 12 : 0) - 20) / (compact ? 8.4 : 9.6)),
+    );
+    const codeLength = Math.floor((width - inset * 2) / letterWidth);
+    const typeLength = Math.floor((width - (hasKids && !reference ? 48 : inset * 2)) / letterWidth);
+    const nodeText = compact ? cardText : brief;
+    const label = t('graph.node', { kind: n.kind, type, id: n.id });
+    const tooltip = compact
+      ? `${label}\n${n.label || ''}\n${t(`ast.family.${family}`)}${reference ? `\n${t('ast.reference')}` : ''}`
+      : t(`ast.family.${family}`);
+    const fold =
+      hasKids && !reference
+        ? `<g class="card-fold" data-fold="${n.id}" tabindex="0" role="button" aria-expanded="${!folded}" aria-label="${esc(t(folded ? 'ast.expandNode' : 'ast.collapseNode', { id: n.id }))}" transform="translate(${width - 18} ${typeY - 3})"><rect x="-10" y="-10" width="20" height="20" rx="3"/><text text-anchor="middle" y="4">${folded ? '+' : '−'}</text></g>`
+        : '';
+    return `<g class="node ${compact ? 'card-node' : ''} ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(tooltip)}</title><rect class="tile" width="${width}" height="${height}" rx="${compact ? 4 : 2}"/><rect class="accent" width="3" height="${height}" rx="1"/><text x="${inset}" y="${headingY}" class="svg-kind">${esc(nodeText(n.kind, headingLength))}</text>${marks}<text x="${width - 12}" y="${headingY}" text-anchor="end" class="svg-id">#${n.id}</text><text x="${inset}" y="${codeY}" class="svg-code">${esc(nodeText(n.label, codeLength))}</text><text x="${inset}" y="${typeY}" class="svg-type">${esc(nodeText(type || '—', typeLength))}</text>${fold}</g>`;
   }
   function wireGraph(container) {
     container.querySelectorAll('[data-node]').forEach((el) => {
@@ -79,7 +115,7 @@ export function renderGraph(
       el.addEventListener('keydown', (e) => {
         if (
           view === 'ast' &&
-          astLayout === 'mindmap' &&
+          astLayout !== 'radial' &&
           !e.target.dataset.fold &&
           ['+', '-', '='].includes(e.key)
         ) {
@@ -187,21 +223,24 @@ export function renderGraph(
   }
   function renderCards(s) {
     const rows = flattenAST(s, collapsed);
-    const maxDepth = rows.reduce((max, row) => Math.max(max, row.depth), 0);
-    const nodeWidth = Math.max(320, Math.min(480, $('graph').clientWidth - maxDepth * 27 - 44));
-    const w = Math.max($('graph').clientWidth, maxDepth * 27 + nodeWidth + 40);
+    const tops = [];
     let edges = '',
-      nodes = '';
+      nodes = '',
+      w = $('graph').clientWidth,
+      nextY = cardInset;
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i],
-        x = 20 + r.depth * 27,
-        y = 16 + i * cardStride;
+        x = cardInset + r.depth * cardIndent,
+        annotated = r.parent >= 0 && r.edge !== 'child',
+        y = nextY + (annotated ? 16 : 0),
+        nodeWidth = Math.max(220, Math.min(380, $('graph').clientWidth - x - cardInset));
+      tops.push(y);
       if (r.parent >= 0) {
         const p = rows[r.parent],
-          px = 20 + p.depth * 27 + 8,
-          py = 16 + r.parent * cardStride + nodeHeight;
-        edges += `<path class="edge ${r.edge}" d="M ${px} ${py} V ${y + nodeHeight / 2} H ${x}"/>`;
-        if (r.edge !== 'child') {
+          px = cardInset + p.depth * cardIndent + 6,
+          py = tops[r.parent] + cardHeight;
+        edges += `<path class="edge ${r.edge}" d="M ${px} ${py} V ${y + cardHeight / 2} H ${x}"/>`;
+        if (annotated) {
           const label =
             r.edge === 'target'
               ? 'typed method'
@@ -212,9 +251,11 @@ export function renderGraph(
         }
       }
       nodes += svgNode(r.node, x, y, nodeWidth, r.reference);
+      w = Math.max(w, x + nodeWidth + cardInset);
+      nextY = y + cardHeight + cardGap;
     }
     $('graph').innerHTML =
-      `<svg class="ast-svg" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${Math.max(390, rows.length * cardStride + 28)}" aria-label="${esc(t('ast'))}">${edges}${nodes}</svg>`;
+      `<svg class="ast-svg cards-svg" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${Math.max(cardInset * 2, nextY - cardGap + cardInset)}" aria-label="${esc(t('ast'))}">${edges}${nodes}</svg>`;
   }
   function renderTypes() {
     const edges = [...model.edges.values()].filter(([a, b]) => a === selected || b === selected);
