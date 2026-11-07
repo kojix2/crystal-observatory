@@ -7,6 +7,10 @@ import { astFamily } from '../core/ast-colors.js';
 import { layoutRadialAST, radialBranch } from '../core/radial-ast.js';
 
 const radialLayouts = new WeakMap();
+const nodeHeight = 76;
+const cardStride = 96;
+const dependencyWidth = 260;
+const dependencyStride = 104;
 
 const mutations = new Set([
   'assign_type',
@@ -44,22 +48,25 @@ export function renderGraph(
       );
     return { family, type, activities, changed };
   }
-  function svgNode(n, x, y, width = 270, reference = false) {
+  function svgNode(n, x, y, width = 320, reference = false) {
     const { family, type, activities, changed } = nodeState(n);
     const folded = collapsed.has(n.id);
     const hasKids =
       view === 'ast' &&
       (n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded);
-    // Activity and reference marks sit left of the id; 10px sans digits are about 5.7px wide.
-    let markX = width - 9 - String(n.id).length * 5.7 - 7;
+    // Reserve the id and marks before truncating the 16px monospace heading.
+    let markX = width - 12 - `#${n.id}`.length * 8.4 - 8;
     let marks = '';
     if (activities.length) {
-      marks += `<circle class="svg-dot" cx="${markX - 3}" cy="12.5" r="2.5"/>`;
+      marks += `<circle class="svg-dot" cx="${markX - 3}" cy="15.5" r="2.5"/>`;
       markX -= 10;
     }
     if (reference)
-      marks += `<g class="svg-mark" transform="translate(${markX - 10} 7.5)">${icon('reference', { size: 10 })}</g>`;
-    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><title>${esc(t(`ast.family.${family}`))}</title><rect class="tile" width="${width}" height="52" rx="2"/><rect class="accent" width="3" height="52" rx="1"/><text x="13" y="17" class="svg-kind">${esc(brief(n.kind, 26))}</text>${marks}<text x="${width - 9}" y="16" text-anchor="end" class="svg-id">#${n.id}</text><text x="13" y="34" class="svg-code">${esc(brief(n.label, Math.floor(width / 6.7)))}</text><text x="13" y="46" class="svg-type">${esc(brief(type || '—', 38))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 20}" y="46">${folded ? '+' : '−'}</text>` : ''}</g>`;
+      marks += `<g class="svg-mark" transform="translate(${markX - 10} 10.5)">${icon('reference', { size: 10 })}</g>`;
+    const headingLength = Math.floor((markX - (reference ? 12 : 0) - 20) / 9.6);
+    const codeLength = Math.floor((width - 26) / 8.4);
+    const typeLength = Math.floor((width - (hasKids && !reference ? 48 : 26)) / 8.4);
+    return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(t('graph.node', { kind: n.kind, type, id: n.id }))}" transform="translate(${x} ${y})"><title>${esc(t(`ast.family.${family}`))}</title><rect class="tile" width="${width}" height="${nodeHeight}" rx="2"/><rect class="accent" width="3" height="${nodeHeight}" rx="1"/><text x="13" y="20" class="svg-kind">${esc(brief(n.kind, headingLength))}</text>${marks}<text x="${width - 12}" y="20" text-anchor="end" class="svg-id">#${n.id}</text><text x="13" y="43" class="svg-code">${esc(brief(n.label, codeLength))}</text><text x="13" y="65" class="svg-type">${esc(brief(type || '—', typeLength))}</text>${hasKids && !reference ? `<text class="fold" data-fold="${n.id}" x="${width - 24}" y="65">${folded ? '+' : '−'}</text>` : ''}</g>`;
   }
   function wireGraph(container) {
     container.querySelectorAll('[data-node]').forEach((el) => {
@@ -134,19 +141,19 @@ export function renderGraph(
   function renderCards(s) {
     const rows = flattenAST(s, collapsed);
     const maxDepth = rows.reduce((max, row) => Math.max(max, row.depth), 0);
-    const nodeWidth = Math.max(270, Math.min(400, $('graph').clientWidth - maxDepth * 27 - 44));
+    const nodeWidth = Math.max(320, Math.min(480, $('graph').clientWidth - maxDepth * 27 - 44));
     const w = Math.max($('graph').clientWidth, maxDepth * 27 + nodeWidth + 40);
     let edges = '',
       nodes = '';
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i],
         x = 20 + r.depth * 27,
-        y = 16 + i * 65;
+        y = 16 + i * cardStride;
       if (r.parent >= 0) {
         const p = rows[r.parent],
           px = 20 + p.depth * 27 + 8,
-          py = 16 + r.parent * 65 + 52;
-        edges += `<path class="edge ${r.edge}" d="M ${px} ${py} V ${y + 27} H ${x}"/>`;
+          py = 16 + r.parent * cardStride + nodeHeight;
+        edges += `<path class="edge ${r.edge}" d="M ${px} ${py} V ${y + nodeHeight / 2} H ${x}"/>`;
         if (r.edge !== 'child') {
           const label =
             r.edge === 'target'
@@ -160,7 +167,7 @@ export function renderGraph(
       nodes += svgNode(r.node, x, y, nodeWidth, r.reference);
     }
     $('graph').innerHTML =
-      `<svg class="ast-svg" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${Math.max(390, rows.length * 65 + 28)}" aria-label="${esc(t('ast'))}">${edges}${nodes}</svg>`;
+      `<svg class="ast-svg" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${Math.max(390, rows.length * cardStride + 28)}" aria-label="${esc(t('ast'))}">${edges}${nodes}</svg>`;
   }
   function renderTypes() {
     const edges = [...model.edges.values()].filter(([a, b]) => a === selected || b === selected);
@@ -174,12 +181,12 @@ export function renderGraph(
         (x) => x !== selected,
       );
       const count = Math.max(1, incoming.length, outgoing.length),
-        height = Math.max(350, count * 84 + 80),
-        mid = height / 2 - 25;
-      const positions = new Map([[selected, [238, mid]]]);
-      incoming.forEach((id, i) => positions.set(id, [12, 40 + i * 84]));
+        height = Math.max(350, count * dependencyStride + 80),
+        mid = (height - nodeHeight) / 2;
+      const positions = new Map([[selected, [324, mid]]]);
+      incoming.forEach((id, i) => positions.set(id, [12, 40 + i * dependencyStride]));
       outgoing.forEach((id, i) => {
-        if (!positions.has(id)) positions.set(id, [465, 40 + i * 84]);
+        if (!positions.has(id)) positions.set(id, [636, 40 + i * dependencyStride]);
       });
       let paths = '',
         nodes = '';
@@ -189,18 +196,18 @@ export function renderGraph(
           pb = positions.get(b);
         if (!pa || !pb) continue;
         const right = pa[0] < pb[0];
-        const x1 = pa[0] + (right ? 195 : 0),
-          x2 = pb[0] + (right ? 0 : 195),
-          y1 = pa[1] + 29,
-          y2 = pb[1] + 29;
+        const x1 = pa[0] + (right ? dependencyWidth : 0),
+          x2 = pb[0] + (right ? 0 : dependencyWidth),
+          y1 = pa[1] + nodeHeight / 2,
+          y2 = pb[1] + nodeHeight / 2;
         paths += `<path d="M${x1} ${y1} C${(x1 + x2) / 2} ${y1} ${(x1 + x2) / 2} ${y2} ${x2} ${y2}" class="dependency-path" marker-end="url(#arrow)"/>`;
       }
       for (const [id, [x, y]] of positions) {
         const n = model.nodes.get(id);
-        if (n) nodes += svgNode(n, x, y, 195);
+        if (n) nodes += svgNode(n, x, y, dependencyWidth);
       }
       $('types').innerHTML =
-        `<div class="dep-caption">${esc(t('graph.edges'))}</div><svg class="dep-svg" xmlns="http://www.w3.org/2000/svg" width="675" height="${height}"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" class="dependency-arrow"/></marker></defs>${paths}${nodes}</svg>`;
+        `<div class="dep-caption">${esc(t('graph.edges'))}</div><svg class="dep-svg" xmlns="http://www.w3.org/2000/svg" width="908" height="${height}"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" class="dependency-arrow"/></marker></defs>${paths}${nodes}</svg>`;
       wireGraph($('types'));
     }
     const history = document.createElement('section');
