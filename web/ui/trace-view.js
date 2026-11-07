@@ -34,6 +34,7 @@ export class TraceView {
     this.snapshot = 0;
     this.view = 'source';
     this.scrollPositions = new Map();
+    this.pendingReveals = new Set();
     this.collapsed = new Set();
     this.events = new EventList((index) => this.selectEvent(index));
     this.ir = new IRView();
@@ -84,6 +85,7 @@ export class TraceView {
     renderTokens(trace, (node) => this.editor.highlight(node));
     this.events.load(model);
     this.scrollPositions.clear();
+    this.pendingReveals.clear();
     if (!this.layout.secondary) this.view = trace.mode === 'empty' ? 'source' : 'ast';
     this.applyLayout({ remember: false });
     const firstType = trace.events.findIndex(
@@ -114,6 +116,7 @@ export class TraceView {
     this.events.localizeActivities();
     if (this.trace) renderTokens(this.trace, (node) => this.editor.highlight(node));
     this.renderSelection({ reveal: false });
+    this.revealActiveTab();
   }
   renderPhase() {
     const event = this.model?.event;
@@ -167,6 +170,7 @@ export class TraceView {
     this.selectedStage = null;
     this.model.seek(index);
     const event = this.model.event;
+    this.workspace?.setDetailContext?.('event', event);
     this.selected = event?.node_id || this.selected;
     if (event?.kind === 'declaration') this.selectedType = event.type_id;
     if ($('follow').checked) {
@@ -194,7 +198,7 @@ export class TraceView {
         this.snapshot = snapshot;
         $('snapshot').value = snapshot;
         revealASTNode(this.trace.snapshots[snapshot], node, this.collapsed);
-        if (!this.layout.has('ast')) this.setView('ast');
+        if (!this.layout.has('ast')) this.setView('ast', { reveal: false });
         this.renderObservation({ reveal: true });
       }
     }
@@ -203,12 +207,14 @@ export class TraceView {
   selectStage(id) {
     this.stop();
     this.selectedStage = id;
+    this.workspace?.setDetailContext?.('event', id);
     this.renderPhase();
     this.renderSelection({ reveal: false });
     this.workspace?.showPane('details', { focus: true });
   }
   selectNode(id) {
     this.selected = id;
+    this.workspace?.setDetailContext?.('node', this.model.nodes.get(id) || id);
     const declaration = this.trace.events.findLast(
       (event) =>
         event.index <= this.model.index && event.kind === 'declaration' && event.node_id === id,
@@ -221,6 +227,10 @@ export class TraceView {
     const state = this.model.declarations.get(id);
     const site = state?.declarations.at(-1);
     if (site) this.selected = site.node_id;
+    this.workspace?.setDetailContext?.(
+      'node',
+      this.model.nodes.get(this.selected) || this.selected,
+    );
     this.setView('declarations');
     this.renderSelection();
   }
@@ -276,12 +286,16 @@ export class TraceView {
   }
   renderObservation({ reveal = false } = {}) {
     if (!this.model) return;
+    this.pendingReveals ??= new Set();
+    if (reveal) for (const view of ['ast', 'types']) this.pendingReveals.add(view);
+    const visible = !this.workspace?.mobile || $('app').dataset.mobilePane === 'work';
     this.ir.visible = this.layout.has('ir');
     for (const view of this.layout.views) {
       const root = $(`${view}-view`);
       const focused = document.activeElement?.closest?.('[data-node]');
       const focusedNode = focused && root.contains(focused) ? focused.dataset.node : null;
-      this.renderView(view, reveal);
+      this.renderView(view, visible && this.pendingReveals.has(view));
+      if (visible) this.pendingReveals.delete(view);
       if (focusedNode)
         root.querySelector(`[data-node="${focusedNode}"]`)?.focus({ preventScroll: true });
     }
@@ -382,19 +396,28 @@ export class TraceView {
       );
     this.renderComparisonControls();
     this.workspace?.refresh();
+    $('close-comparison').hidden = !comparing;
+    this.revealActiveTab();
     if (this.layout.has('ir') && !this.ir.visible)
       this.ir.follow(this.model?.event?.llvm_function, this.model?.event?.llvm_block);
+    const revealing = new Set(this.pendingReveals);
+    if (this.editor?.pendingReveal && !this.editor.dirty) revealing.add('source');
     this.renderObservation();
     for (const view of this.layout.views) {
       const scroll = this.scrollPositions.get(view);
-      if (scroll) {
+      if (scroll && !revealing.has(view)) {
         $(scrollTargets[view]).scrollLeft = scroll[0];
         $(scrollTargets[view]).scrollTop = scroll[1];
       }
     }
   }
+  revealActiveTab() {
+    if (!this.layout.secondary)
+      $(`tab-${this.view}`)?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }
   beginComparison(view) {
     if (!comparisonTargets(this.view).includes(view)) return;
+    this.workspace?.showPane('work');
     if (!this.layout.secondary) this.workspaceBeforeComparison = this.workspace?.capture();
     this.layout.compare(view);
     this.applyLayout();
@@ -405,7 +428,10 @@ export class TraceView {
     this.applyLayout();
     if (this.workspaceBeforeComparison) this.workspace?.restore(this.workspaceBeforeComparison);
     this.workspaceBeforeComparison = null;
-    if (focus) $(`tab-${this.view}`).focus({ preventScroll: true });
+    if (focus) {
+      this.workspace?.showPane('work');
+      $(`tab-${this.view}`).focus({ preventScroll: true });
+    }
   }
   setView(name, { reveal = true } = {}) {
     if (reveal) this.workspace?.showPane('work');
@@ -445,6 +471,7 @@ export class TraceView {
     }
   }
   bindControls() {
+    $('close-comparison').onclick = () => this.endComparison();
     $('compare-view').onchange = (event) => {
       if (event.target.value) this.beginComparison(event.target.value);
       else this.endComparison();

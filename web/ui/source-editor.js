@@ -39,6 +39,8 @@ export class SourceEditor {
     this.recordedSource = source;
     this.hasRecord = hasRecord;
     this.line = 0;
+    this.nodeId = null;
+    this.pendingReveal = false;
     if (!preserveEdits) this.value = source;
     this.refresh();
   }
@@ -61,6 +63,19 @@ export class SourceEditor {
   }
   scroll() {
     const { lineHeight, padding } = this.metrics();
+    const source = $('source');
+    if (
+      this.pendingReveal &&
+      this.line &&
+      !this.dirty &&
+      source.clientHeight > 0 &&
+      !$('source-view').hidden
+    ) {
+      const y = (this.line - 1) * lineHeight;
+      if (y < source.scrollTop || y > source.scrollTop + source.clientHeight - 2 * lineHeight)
+        source.scrollTop = Math.max(0, y - 2.5 * lineHeight);
+      this.pendingReveal = false;
+    }
     $('source-location').textContent =
       this.line && !this.dirty ? `L${this.line}:${this.column}` : '';
     $('source-colors').style.transform =
@@ -71,18 +86,11 @@ export class SourceEditor {
       `${padding + (this.line - 1) * lineHeight - $('source').scrollTop}px`;
   }
   highlight(node) {
-    const changed = this.line !== (node?.line || 0);
+    const changed = this.nodeId !== node?.id || this.line !== (node?.line || 0);
+    this.nodeId = node?.id;
     this.line = node?.line || 0;
     this.column = node?.column || 0;
-    if (changed && this.line && !this.dirty && !$('source-view').hidden) {
-      const { lineHeight } = this.metrics();
-      const y = (this.line - 1) * lineHeight;
-      if (
-        y < $('source').scrollTop ||
-        y > $('source').scrollTop + $('source').clientHeight - 2 * lineHeight
-      )
-        $('source').scrollTop = Math.max(0, y - 2.5 * lineHeight);
-    }
+    if (changed) this.pendingReveal = this.line > 0;
     this.scroll();
   }
 }

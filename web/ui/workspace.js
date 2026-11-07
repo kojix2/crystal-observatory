@@ -313,6 +313,7 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   return {
     refresh: apply,
     showPane: mobile.showPane,
+    setDetailContext: mobile.setDetailContext,
     get mobile() {
       return mobile.active;
     },

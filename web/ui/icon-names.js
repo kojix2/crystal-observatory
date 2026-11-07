@@ -28,6 +28,7 @@ export const lucideNames = {
   external: 'external-link',
   info: 'info',
   menu: 'ellipsis',
+  filter: 'list-filter',
   history: 'rotate-ccw-clock',
   reference: 'arrow-up-right',
 };

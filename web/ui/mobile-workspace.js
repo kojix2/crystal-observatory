@@ -7,6 +7,21 @@ export function setupMobileWorkspace(onModeChange) {
   const navigation = $('mobile-navigation');
   const options = $('header-options');
   const menuButton = $('more-actions');
+  const historyControls = $('history-controls');
+  const inputs = $('runtime-inputs');
+  // Restore the same elements (and their handlers) to their desktop positions.
+  const relocated = [
+    ['compile-only', options],
+    ['analyze', options],
+    ['compare-view', options],
+    ['record-tools', historyControls],
+    ['first', $('history-extra-playback')],
+    ['last', $('history-extra-playback')],
+    ['speed', $('history-extra-playback')],
+  ].map(([id, destination]) => {
+    const node = $(id);
+    return { node, destination, parent: node.parentElement, next: node.nextSibling };
+  });
   const panes = {
     work: $('graph-panel'),
     history: $('timeline'),
@@ -16,21 +31,40 @@ export function setupMobileWorkspace(onModeChange) {
   const buttons = [...navigation.querySelectorAll('[data-pane]')];
   let current = 'work';
   let wasMobile = false;
+  let mobileInputsOpen = false;
+  let detailContext = { section: 'event', key: null };
+  let displayedDetailContext = detailContext;
 
   function refresh() {
     const mobile = media.matches;
     const headerFocused =
-      options.contains(document.activeElement) || document.activeElement === menuButton;
+      options.contains(document.activeElement) ||
+      document.activeElement === menuButton ||
+      relocated.some(
+        ({ node, destination }) => destination === options && node.contains(document.activeElement),
+      );
     const workflowAvailable = !panes.workflow.hidden;
     if (current === 'workflow' && !workflowAvailable) current = 'work';
     app.classList.toggle('mobile', mobile);
     app.dataset.mobilePane = current;
     navigation.hidden = !mobile;
     menuButton.hidden = !mobile;
-    if (mobile && !options.hasAttribute('popover')) options.setAttribute('popover', 'auto');
-    if (!mobile && options.hasAttribute('popover')) {
-      options.hidePopover();
-      options.removeAttribute('popover');
+    if (mobile !== wasMobile) {
+      if (wasMobile) mobileInputsOpen = inputs.open;
+      inputs.open = mobile ? mobileInputsOpen : true;
+      if (mobile) {
+        for (const { node, destination } of relocated) destination.append(node);
+      } else {
+        for (const { node, parent, next } of [...relocated].reverse())
+          parent.insertBefore(node, next);
+      }
+    }
+    for (const popover of [options, historyControls]) {
+      if (mobile && !popover.hasAttribute('popover')) popover.setAttribute('popover', 'auto');
+      if (!mobile && popover.hasAttribute('popover')) {
+        popover.hidePopover();
+        popover.removeAttribute('popover');
+      }
     }
     for (const [name, panel] of Object.entries(panes)) {
       const inactive = mobile && name !== current;
@@ -57,21 +91,43 @@ export function setupMobileWorkspace(onModeChange) {
     wasMobile = mobile;
   }
 
-  function showPane(name, { focus = false } = {}) {
+  function setDetailContext(section, key) {
+    detailContext = { section, key };
+  }
+  function showPane(name, { focus = false, section = detailContext.section } = {}) {
     if (!media.matches || !panes[name] || (name === 'workflow' && panes.workflow.hidden))
       return false;
     current = name;
     refresh();
-    if (focus) {
-      const target = name === 'details' ? $('event-heading') : panes[name];
+    const newDetail =
+      name === 'details' &&
+      (displayedDetailContext.section !== section ||
+        displayedDetailContext.key !== detailContext.key);
+    if (focus || newDetail) {
+      // Reset only for a new selection, preserving reading position on a round trip.
+      if (name === 'details') panes.details.scrollTop = 0;
+      const target = name === 'details' ? $(`${section}-heading`) : panes[name];
       target.focus({ preventScroll: true });
+      if (name === 'details' && section === 'node')
+        $('node-panel').scrollIntoView({ block: 'start', inline: 'nearest' });
     }
+    if (name === 'details') displayedDetailContext = { section, key: detailContext.key };
     return true;
   }
   for (const button of buttons) button.onclick = () => showPane(button.dataset.pane);
   // Actions keep their existing handlers and IDs in both layouts.
   options.addEventListener('click', (event) => {
     if (media.matches && event.target.closest('button, a')) options.hidePopover();
+  });
+  options.addEventListener('change', (event) => {
+    if (media.matches && event.target.id === 'compare-view') options.hidePopover();
+  });
+  historyControls.addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (media.matches && button && button.id !== 'clear-filter') historyControls.hidePopover();
+  });
+  historyControls.addEventListener('change', () => {
+    if (media.matches) historyControls.hidePopover();
   });
   media.addEventListener('change', onModeChange);
 
@@ -92,6 +148,7 @@ export function setupMobileWorkspace(onModeChange) {
   return {
     refresh,
     showPane,
+    setDetailContext,
     get active() {
       return media.matches;
     },

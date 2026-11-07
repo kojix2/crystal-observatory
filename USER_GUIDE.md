@@ -27,13 +27,26 @@ Editing source does not update an existing AST or IR. Escape exits maximization;
 
 At widths up to 960 px, use the bottom navigation: **Work**, **History**,
 **Workflow**, and **Details**. Work contains the source editor and all observation
-tabs. Swipe the tab row to reach more views. Compile, run, parse, and stop remain
-in the top toolbar; its options button opens language, settings, help, layout
-reset, and GitHub. Editing remains available while compilation runs.
+tabs. Swipe the tab row to reach more views. Compile & run and Stop remain
+in a single top toolbar; its options button opens Compile to IR, Parse only,
+Compare, language, settings, help, layout reset, and GitHub. Editing remains available while compilation runs.
 
 Selecting a History event or Workflow stage opens Details, with the operation
 above the node information. Return to History to continue from the same selection,
 filters, and scroll position. Playback and stepping stay in the current screen.
+Selecting an AST node updates its details and source location without leaving
+AST. The existing Details navigation opens that node's information; the Source
+tab reveals its line when the source still matches the recording. Returning
+without a new selection keeps the reading position. History events and workflow
+stages open their operation details, while playback and stepping stay in place.
+The active observation tab stays visible as views change.
+
+Previous, Play, Next and the seek bar stay visible in History. Its filter button
+opens search, filters, jumps, speed, first/last event, and recording Open/Save
+controls. Closing this popup gives the space back to the event list. A highlighted
+filter button indicates an active filter. Output initially folds stdin and
+arguments under **Input & arguments**; expanding it preserves the entered values.
+
 Workflow is available only for full compiler recordings. Comparisons stack the
 two views vertically and scroll within Work. Code and graphs can scroll sideways
 inside their own panels.

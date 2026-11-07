@@ -12,6 +12,7 @@ app.trace.workspace = setupWorkspace(
   () => {
     app.editor.refresh();
     app.trace.renderObservation();
+    app.trace.revealActiveTab();
   },
   {
     onReset: () => app.trace.endComparison(),

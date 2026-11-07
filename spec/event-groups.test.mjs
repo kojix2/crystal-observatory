@@ -146,7 +146,8 @@ function withList(trace, run) {
     elements = new Map(),
     seeks = [];
   const element = (id) => {
-    if (!elements.has(id)) elements.set(id, { value: '', querySelector: () => null });
+    if (!elements.has(id))
+      elements.set(id, { value: '', querySelector: () => null, classList: { toggle() {} } });
     return elements.get(id);
   };
   globalThis.document = { getElementById: element };

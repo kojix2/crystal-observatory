@@ -26,6 +26,23 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
       clientHeight: 600,
       scrollTop: 0,
       scrollLeft: 0,
+      children: [],
+      parentElement: null,
+      get nextSibling() {
+        return this.parentElement?.children[this.parentElement.children.indexOf(this) + 1] ?? null;
+      },
+      append(child) {
+        this.insertBefore(child, null);
+      },
+      insertBefore(child, next) {
+        if (child.parentElement) {
+          const siblings = child.parentElement.children;
+          siblings.splice(siblings.indexOf(child), 1);
+        }
+        const index = next ? this.children.indexOf(next) : this.children.length;
+        this.children.splice(index, 0, child);
+        child.parentElement = this;
+      },
       style: {
         setProperty(key, value) {
           this[key] = value;
@@ -52,7 +69,12 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
         document.activeElement = this;
       },
       contains(target) {
-        return this === target || target?.parent === this;
+        for (let node = target; node; node = node.parentElement || node.parent)
+          if (node === this) return true;
+        return false;
+      },
+      scrollIntoView() {
+        this.scrolled = true;
       },
       hidePopover() {
         this.popoverClosed = true;
@@ -69,6 +91,15 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
     return button;
   });
   element('mobile-navigation').querySelectorAll = () => buttons;
+  for (const [parent, children] of [
+    ['commands', ['compile-run', 'compile-only', 'analyze', 'cancel-job']],
+    ['header-options', ['language']],
+    ['graph-head', ['view-tabs', 'compare-view', 'maximize-graph']],
+    ['timeline-head', ['record-tools']],
+    ['playback', ['first', 'prev', 'play', 'next', 'last', 'speed', 'position']],
+  ])
+    for (const id of children) element(parent).append(element(id));
+  element('runtime-inputs').open = true;
   element('workflow-column').hidden = true;
   const mediaListeners = [];
   const media = { matches: mobile, addEventListener: (_, fn) => mediaListeners.push(fn) };
@@ -139,8 +170,10 @@ test('mobile navigation exposes one accessible pane and retains history scroll a
     buttons[1].onclick();
     assert.equal(element('timeline').inert, false);
     element('timeline').focus();
+    element('inspector-panel').scrollTop = 650;
     controller.showPane('details', { focus: true });
     assert.equal(document.activeElement.id, 'event-heading');
+    assert.equal(element('inspector-panel').scrollTop, 0);
     assert.equal(element('timeline').inert, true);
     buttons[1].onclick();
     assert.equal(element('trace-content').scrollTop, 237);
@@ -152,6 +185,37 @@ test('mobile navigation exposes one accessible pane and retains history scroll a
     element('workflow-column').hidden = true;
     controller.refresh();
     assert.equal(element('app').dataset.mobilePane, 'work');
+  });
+});
+
+test('secondary controls move into popovers and restore desktop order without resetting values', () => {
+  workspace({ mobile: false }, ({ element, controller, resize }) => {
+    const order = element('commands').children.map((node) => node.id);
+    const playback = element('playback').children.map((node) => node.id);
+    element('kind').value = 'type';
+    resize(true);
+    assert.equal(element('compile-only').parentElement.id, 'header-options');
+    assert.equal(element('speed').parentElement.id, 'history-extra-playback');
+    assert.equal(element('runtime-inputs').open, false);
+    element('runtime-inputs').open = true;
+    element('inspector-panel').scrollTop = 330;
+    controller.showPane('details');
+    assert.equal(element('inspector-panel').scrollTop, 330);
+    controller.showPane('details', { focus: true, section: 'node' });
+    assert.equal(document.activeElement.id, 'node-heading');
+    assert.equal(element('node-panel').scrolled, true);
+    resize(false);
+    assert.deepEqual(
+      element('commands').children.map((node) => node.id),
+      order,
+    );
+    assert.deepEqual(
+      element('playback').children.map((node) => node.id),
+      playback,
+    );
+    assert.equal(element('kind').value, 'type');
+    resize(true);
+    assert.equal(element('runtime-inputs').open, true);
   });
 });
 
@@ -256,5 +320,26 @@ test('header focus stays reachable when switching between the menu and desktop t
     assert.equal(document.activeElement.id, 'more-actions');
     resize(false);
     assert.equal(document.activeElement.id, 'language');
+  });
+});
+
+test('existing Details navigation follows a new node and preserves reading position otherwise', () => {
+  workspace({}, ({ controller, element, buttons }) => {
+    const node = { id: 7 };
+    controller.setDetailContext('node', node);
+    buttons[3].onclick();
+    assert.equal(document.activeElement.id, 'node-heading');
+    assert.equal(element('node-panel').scrolled, true);
+    element('inspector-panel').scrollTop = 330;
+    buttons[0].onclick();
+    controller.setDetailContext('node', node);
+    buttons[3].onclick();
+    assert.equal(element('inspector-panel').scrollTop, 330);
+    controller.setDetailContext('node', { id: 8 });
+    buttons[3].onclick();
+    assert.equal(element('inspector-panel').scrollTop, 0);
+    controller.setDetailContext('event', { index: 4 });
+    buttons[3].onclick();
+    assert.equal(document.activeElement.id, 'event-heading');
   });
 });

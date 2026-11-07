@@ -77,6 +77,7 @@ export class EventList {
     const query = $('search').value.trim().toLowerCase(),
       kind = $('kind').value,
       activity = $('activity-kind').value;
+    $('history-tools')?.classList.toggle('filtered', Boolean(query || kind || activity || node));
     this.filtered = this.model.trace.events.filter(
       (event) =>
         (!kind || event.kind === kind) &&
