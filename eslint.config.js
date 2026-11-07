@@ -7,7 +7,8 @@ export default [{
     sourceType: 'module',
     globals: Object.fromEntries([
       'document', 'window', 'localStorage', 'self', 'location', 'crypto', 'performance',
-      'Worker', 'Blob', 'URL', 'Response', 'Option', 'Event', 'AbortController', 'DecompressionStream',
+      'Worker', 'Blob', 'URL', 'URLSearchParams', 'Response', 'Option', 'Event', 'AbortController',
+      'CompressionStream', 'DecompressionStream', 'atob', 'btoa',
       'TextEncoder', 'TextDecoder', 'WebAssembly', 'ResizeObserver', 'fetch',
       'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
       'requestAnimationFrame', 'cancelAnimationFrame',

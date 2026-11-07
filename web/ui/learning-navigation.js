@@ -2,12 +2,12 @@ import { astFamily, astNodeKinds } from '../core/ast-colors.js';
 import { t, onLocaleChange } from '../i18n/index.js';
 import { $, esc } from './dom.js';
 import { sourceFiles, visitorRole } from './event-labels.js';
+import { renderAPIReference } from './api-reference.js';
 
 // Catalogs share the compiler's existing node and Visitor metadata.
 // Switching pages never replaces the editor or the current recording.
 export function setupLearningNavigation({ onLeave, onReturn }) {
-  const navigation = $('learning-navigation');
-  const buttons = [...navigation.querySelectorAll('[data-learning-view]')];
+  const buttons = [...document.querySelectorAll('[data-learning-view]')];
   const panel = $('learning-panel');
   const search = $('learning-search');
   const content = $('learning-content');
@@ -20,7 +20,11 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
     $('learning-title').textContent = t(`learning.${current}`);
     $('learning-intro').hidden = current === 'workflow';
     $('learning-intro').textContent = current === 'workflow' ? '' : t(`learning.${current}.intro`);
-    $('learning-search-tools').hidden = current === 'workflow';
+    $('learning-search-tools').hidden = current === 'workflow' || current === 'api';
+    if (current === 'api') {
+      content.innerHTML = renderAPIReference();
+      return;
+    }
     if (current === 'workflow') {
       content.innerHTML = `<div class="learning-slides">
         <iframe src="https://www.slideshare.net/slideshow/embed_code/key/efm7Tuz5vpYSU2" width="1600" height="900" title="Crystal internals (part 1)" scrolling="no" allowfullscreen></iframe>
@@ -59,6 +63,11 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
     queries.set(current, search.value);
     if (current === 'observatory') onLeave();
     current = name;
+    const url = new URL(window.location.href);
+    if (name === 'api') url.searchParams.set('page', 'api');
+    else if (url.searchParams.get('page') === 'api') url.searchParams.delete('page');
+    window.history.replaceState(window.history.state, '', url);
+    if ($('header-options').matches(':popover-open')) $('header-options').hidePopover();
     const observing = current === 'observatory';
     $('app').hidden = !observing;
     panel.hidden = observing;
@@ -85,4 +94,5 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
     panel.scrollTop = 0;
   };
   onLocaleChange(render);
+  return { show };
 }

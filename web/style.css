@@ -116,6 +116,19 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .learning-slides { width:min(100%,960px,calc((100dvh - 220px) * 16 / 9)); margin-inline:auto; }
 .learning-slides iframe { display:block; width:100%; height:auto; aspect-ratio:16/9; border:1px solid #ccc; margin-bottom:5px; }
 .learning-slides p { font-size:var(--text-small); overflow-wrap:anywhere; }
+.api-reference { max-width:85ch; }
+.api-reference section { margin-bottom:28px; }
+.api-reference h3 { font-size:var(--text-heading); margin-bottom:8px; }
+.api-reference p { line-height:1.8; }
+.api-reference pre { margin:12px 0; padding:12px; border:1px solid var(--line); border-radius:4px; background:var(--soft); white-space:pre-wrap; overflow-wrap:anywhere; font:var(--text-small)/1.7 var(--mono); }
+.api-reference a { display:inline-block; margin-bottom:8px; }
+.share-actions { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+#source-share label { display:block; margin:12px 0 6px; }
+#source-share input,#share-link,#source-file-choice { display:block; width:100%; min-width:0; padding:8px; border:1px solid var(--line); border-radius:3px; color:var(--ink); background:var(--soft); font:var(--text-small)/1.6 var(--mono); }
+#share-link { resize:vertical; }
+#share-status { min-height:1.8em; margin-top:6px; overflow-wrap:anywhere; }
+#source-link-form { margin-top:18px; padding-top:8px; border-top:1px solid var(--line); }
+#source-link-form button { margin-top:10px; }
 .stage-context { border-left:3px solid var(--type); border-radius:0 3px 3px 0; background:var(--soft); padding:8px 10px; margin-bottom:12px; overflow-wrap:anywhere; }
 .stage-context-heading { font-size:var(--text-small); color:var(--muted); margin-bottom:5px; }
 .stage-context>strong { display:block; font-size:var(--text-body); }
@@ -153,10 +166,11 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .panel-head h2 { letter-spacing:.2px; white-space:nowrap; }
 #source-location { font:var(--text-small) var(--mono); color:#b7a0d2; margin-left:4px; }
 .source-panel { flex:1; min-height:0; overflow:hidden; background:var(--editor-bg); color:var(--editor-ink); }
-.source-tools { display:flex; align-items:center; gap:6px; padding:6px 8px; background:var(--editor-bg); }
+.source-tools { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:6px 8px; background:var(--editor-bg); }
 .source-tools label { font-size:var(--text-small); color:var(--editor-ink); white-space:nowrap; }
 #example { flex:1; width:0; min-width:90px; font-size:var(--text-small); background:#2c2c31; color:var(--editor-ink); }
 #recorded { background:#37343e; color:#e7ddef; font-size:var(--text-small); }
+#share-source { background:#37343e; color:#e7ddef; font-size:var(--text-small); }
 .source-wrap { position:relative; flex:1; min-height:0; overflow:hidden; background:var(--editor-bg); }
 .source-wrap:focus-within { box-shadow:inset 0 0 0 1px #726480; }
 /* Native textarea owns editing, selection, IME, scrolling and accessibility.
@@ -631,6 +645,7 @@ dialog .close:hover { color:var(--ink); }
   #header-options[popover]:popover-open { display:flex; flex-wrap:wrap; gap:4px; }
   #header-options[popover]:not(:popover-open) { display:none; }
   #header-options .icon-button { flex:0 0 44px; }
+  #header-options .mobile-only { display:inline-flex; align-items:center; justify-content:center; }
   #header-options #compile-only,#header-options #analyze,#header-options #compare-view { flex:1 0 100%; min-height:44px; width:100%; max-width:100%; text-align:left; }
   #header-options #compile-only,#header-options #analyze { color:var(--header-ink); background:#303039; white-space:normal; }
   #header-options .mobile-command { display:none; }

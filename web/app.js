@@ -26,7 +26,7 @@ app.trace.workspace = setupWorkspace(
     },
   },
 );
-setupLearningNavigation({
+const navigation = setupLearningNavigation({
   onLeave: () => app.trace.stop(),
   onReturn: () => {
     app.trace.workspace.refresh();
@@ -36,3 +36,5 @@ setupLearningNavigation({
   },
 });
 app.loadManifest();
+app.sharing.openURL(window.location.href);
+if (new URL(window.location.href).searchParams.get('page') === 'api') navigation.show('api');

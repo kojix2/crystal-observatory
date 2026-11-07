@@ -26,6 +26,8 @@
       <button id="guideButton" class="quiet icon-button" data-i18n-title="help" data-i18n-aria="help"><svg data-icon="help"></svg></button>
       <a class="quiet icon-button" href="https://github.com/kojix2/crystal-observatory" target="_blank" rel="noreferrer" data-i18n-title="github" data-i18n-aria="github" title="GitHub repository" aria-label="GitHub repository"><svg data-icon="github"></svg></a>
       <button id="settingsButton" class="quiet icon-button" data-i18n-title="settings.title" data-i18n-aria="settings.title" aria-haspopup="dialog" aria-controls="settings"><svg data-icon="settings"></svg></button>
+      <button type="button" class="quiet icon-button mobile-only" data-learning-view="api" aria-controls="learning-panel" data-i18n-title="learning.api" data-i18n-aria="learning.api"><svg data-icon="api"></svg></button>
+      <button type="button" class="quiet icon-button mobile-only" data-learning-view="observatory" aria-controls="app" data-i18n-title="learning.observatory" data-i18n-aria="learning.observatory"><svg data-icon="observatory"></svg></button>
     </div>
   </div>
 </header>
@@ -35,6 +37,7 @@
   <button type="button" data-learning-view="workflow" aria-controls="learning-panel" data-i18n-aria="learning.workflow" data-i18n-title="learning.workflow"><svg data-icon="workflow" data-size="20"></svg></button>
   <button type="button" data-learning-view="nodes" aria-controls="learning-panel" data-i18n-aria="learning.nodes" data-i18n-title="learning.nodes"><svg data-icon="nodes" data-size="20"></svg></button>
   <button type="button" data-learning-view="visitors" aria-controls="learning-panel" data-i18n-aria="learning.visitors" data-i18n-title="learning.visitors"><svg data-icon="visitors" data-size="20"></svg></button>
+  <button type="button" data-learning-view="api" aria-controls="learning-panel" data-i18n-aria="learning.api" data-i18n-title="learning.api"><svg data-icon="api" data-size="20"></svg></button>
 </nav>
 <main id="app" tabindex="-1">
   <div class="workbench-scroll">
@@ -70,7 +73,7 @@
       </div><span id="comparison-title" hidden></span><select id="compare-view" data-i18n-aria="comparison.title" data-i18n-title="comparison.title"><option value="" data-i18n="comparison.open">Compare…</option></select><button id="close-comparison" class="quiet icon-button mobile-only" data-i18n-aria="comparison.close" data-i18n-title="comparison.close" hidden><svg data-icon="close"></svg></button><button id="maximize-graph" class="quiet icon-button" data-i18n-aria="maximize" data-i18n-title="maximize" aria-pressed="false"><svg data-icon="maximize"></svg></button></div>
       <div id="observation-scroll"><div id="observation-views">
       <div class="source-panel observation-view" data-observation="source" id="source-view" role="tabpanel" aria-labelledby="tab-source"><div class="observation-title" data-i18n="source">Source</div>
-      <div class="source-tools"><label for="example" data-i18n="sample">Initial code</label><select id="example" data-i18n-aria="sample"></select><button id="recorded" data-i18n="recorded" data-i18n-title="recorded.title" disabled>Example trace</button></div>
+      <div class="source-tools"><label for="example" data-i18n="sample">Initial code</label><select id="example" data-i18n-aria="sample"></select><button id="recorded" data-i18n="recorded" data-i18n-title="recorded.title" disabled>Example trace</button><button id="share-source" class="quiet" data-i18n="share.action" data-i18n-title="share.title" aria-haspopup="dialog" aria-controls="source-share">Share</button></div>
       <div class="source-wrap"><div id="highlight"></div><pre id="source-colors" aria-hidden="true"></pre><div class="line-gutter" aria-hidden="true"><pre id="line-numbers"></pre></div><textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" data-i18n-aria="source.input" wrap="off"></textarea></div>
       <div class="source-foot"><span id="dirty"></span><span id="source-location"></span><button id="restore" class="link-button" data-i18n="restore" data-i18n-title="restore.title">Restore</button></div>
       <div class="panel-foot" id="source-caption"></div>
@@ -209,6 +212,19 @@
   <p id="settings-description" data-i18n="settings.description">Changes apply immediately and are saved in this browser.</p>
   <section aria-labelledby="settings-colors-title"><h3 id="settings-colors-title" data-i18n="settings.colors">Colors</h3><label class="settings-toggle"><input type="checkbox" id="ast-node-colors" checked><span data-i18n="settings.astColors">Color AST nodes by kind</span></label><div id="color-settings"></div></section>
   <div class="settings-actions"><button id="reset-colors" data-i18n="settings.reset">Restore default colors</button><span id="settings-status" role="status"></span></div>
+</dialog>
+<dialog id="source-share" aria-labelledby="source-share-title">
+  <button id="close-source-share" class="close icon-button" data-i18n-aria="close"><svg data-icon="close"></svg></button>
+  <h2 id="source-share-title" data-i18n="share.title">Share</h2>
+  <p data-i18n="share.intro">Share the current source, or open a source link.</p>
+  <div class="share-actions"><button id="copy-source-link" data-i18n="share.copySource">Copy code link</button><button id="copy-origin-link" data-i18n="share.copyOrigin" disabled>Copy fixed original link</button></div>
+  <label for="share-link" data-i18n="share.link">Share link</label><textarea id="share-link" rows="3" readonly spellcheck="false"></textarea>
+  <p id="share-status" role="status" aria-live="polite"></p>
+  <form id="source-link-form"><label for="source-link-input" data-i18n="share.openLabel">Open an Observatory source link</label><input id="source-link-input" type="url" required spellcheck="false" placeholder="https://kojix2.github.io/crystal-observatory/ja/#code=puts%2042"><button type="submit" data-i18n="share.open">Open source</button></form>
+</dialog>
+<dialog id="source-files" aria-labelledby="source-files-title">
+  <h2 id="source-files-title" data-i18n="share.chooseFile">Choose a Crystal file</h2>
+  <form id="source-file-form"><select id="source-file-choice" data-i18n-aria="share.chooseFile"></select><div class="share-actions"><button type="submit" data-i18n="share.open">Open source</button><button id="cancel-source-files" type="button" data-i18n="share.cancel">Cancel</button></div></form>
 </dialog>
 <script src="./vendor/prismjs/prism-core.min.js" data-manual></script>
 <script src="./vendor/prismjs/prism-clike.min.js"></script>

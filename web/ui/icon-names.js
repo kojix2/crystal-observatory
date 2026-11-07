@@ -30,4 +30,5 @@ export const lucideNames = {
   workflow: 'workflow',
   nodes: 'boxes',
   visitors: 'scan-eye',
+  api: 'file-code',
 };

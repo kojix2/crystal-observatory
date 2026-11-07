@@ -7,6 +7,7 @@ import { TraceView } from './trace-view.js';
 import { WorkSession } from '../runtime/session.js';
 import { CancelledError, TimeoutError } from '../runtime/worker-client.js';
 import { decodeTrace, fetchTrace, emptyTrace } from '../core/trace-io.js';
+import { SourceSharing } from './source-sharing.js';
 
 const DEFAULT_SOURCE =
   'def square(x)\n  x * x\nend\n\nputs "Hello, Crystal!"\n(1..5).each do |n|\n  puts "#{n}² = #{square(n)}"\nend\n';
@@ -20,6 +21,8 @@ export class Application {
     this.artifact = null;
     this.manifest = [];
     this.editor = new SourceEditor(() => {
+      this.sharing?.cancel();
+      if (this.sharing) this.sharing.origin = null;
       if (this.editor.dirty) $('example').value = '';
       this.updateControls();
       this.trace?.renderSourceCaption();
@@ -30,7 +33,9 @@ export class Application {
     $('compile-only').onclick = () => this.compile(false);
     $('analyze').onclick = () => this.parse();
     $('cancel-job').onclick = () => {
-      if (this.session.cancel()) {
+      const cancelled = this.session.cancel();
+      this.sharing?.cancel();
+      if (cancelled) {
         notify(() => t('notice.cancelled'));
         state('state.cancelled');
       }
@@ -57,10 +62,12 @@ export class Application {
       this.trace.localize();
     });
     window.addEventListener('pagehide', () => {
+      this.sharing?.cancel();
       this.session.dispose();
       this.trace.stop();
     });
     this.showInput(DEFAULT_SOURCE);
+    this.sharing = new SourceSharing(this);
   }
   updateControls() {
     const busy = this.session?.busy || false;
@@ -69,8 +76,10 @@ export class Application {
     $('rerun').disabled = busy || !this.artifact || this.artifact.source !== this.editor.value;
     $('download-wasm').disabled = !this.artifact;
     $('recorded').disabled = !$('example').value;
+    this.sharing?.update();
   }
   prepare(key = 'state.idle') {
+    this.sharing?.cancel();
     this.session.cancel();
     this.trace.stop();
     this.artifact = null;
@@ -79,6 +88,7 @@ export class Application {
     this.updateControls();
   }
   showInput(source) {
+    if (this.sharing) this.sharing.origin = null;
     this.prepare();
     this.trace.load(emptyTrace(source));
   }

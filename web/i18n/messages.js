@@ -11,8 +11,10 @@ import { nodeMessages } from './node-messages.js';
 import { eventMessages } from './event-messages.js';
 import { learningMessages } from './learning-messages.js';
 import { stateMessages } from './state-messages.js';
+import { sharingMessages } from './sharing-messages.js';
 
 export const messages = {
+  ...sharingMessages,
   ...stateMessages,
   ...learningMessages,
   ...eventMessages,
