@@ -60,14 +60,17 @@ test('operation tabs keep context during playback without intercepting History n
     assert.equal(tabs.current, 'context');
     assert.equal(focused, 'event-tab-context');
     get('event-context-panel').scrollTop = 140;
+    get('code-diff').scrollTop = 240;
     get('raw-event').open = true;
     tabs.update(model); // Localization and independent node selection keep reading state.
     assert.equal(get('event-context-panel').scrollTop, 140);
+    assert.equal(get('code-diff').scrollTop, 240);
     assert.equal(get('raw-event').open, true);
     model.index++;
     tabs.update(model);
     assert.equal(tabs.current, 'context');
     assert.equal(get('event-context-panel').scrollTop, 0);
+    assert.equal(get('code-diff').scrollTop, 0);
     assert.equal(get('raw-event').open, false);
     tabs.update({ trace: {}, index: model.index });
     assert.equal(tabs.current, 'operation');

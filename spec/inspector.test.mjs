@@ -88,6 +88,7 @@ test('operation results preserve recorded values, activity limits and complete d
     assert.equal(get('explanation').hidden, true);
     assert.equal(get('event-before').hidden, true);
     assert.equal(get('change').hidden, false);
+    assert.equal(get('event-diff').hidden, true);
     assert.equal(get('event-result-label').textContent, t('event.observedResult'));
     assert.equal(get('activity-ir-note').hidden, false);
     assert.equal(get('activity-ir-link').hidden, false);
@@ -99,6 +100,7 @@ test('operation results preserve recorded values, activity limits and complete d
     model.seek(1);
     renderInspector(model, 0, () => {});
     assert.equal(get('change').hidden, true); // No invented "before" or "after" value.
+    assert.equal(get('code-diff').innerHTML, '');
     assert.equal(get('activity-ir-note').hidden, true);
     model.seek(2);
     renderInspector(model, 0, () => {});
@@ -111,11 +113,16 @@ test('operation results preserve recorded values, activity limits and complete d
     assert.equal(get('activity-observed').hidden, true);
     model.seek(3);
     renderInspector(model, 0, () => {});
-    assert.equal(get('before').innerHTML, 'square(3)');
-    assert.equal(get('after').innerHTML, '3 * 3');
+    assert.equal(get('change').hidden, true);
+    assert.equal(get('event-diff').hidden, false);
+    assert.match(get('code-diff').innerHTML, /diff-removed.*square\(3\)/);
+    assert.match(get('code-diff').innerHTML, /diff-added.*3 \* 3/);
+    assert.equal(get('event-diff-unchanged').hidden, true);
     model.seek(4);
     renderInspector(model, 0, () => {});
     assert.equal(get('change').hidden, true);
+    assert.equal(get('event-diff').hidden, true);
+    assert.equal(get('code-diff').innerHTML, '');
     assert.equal(get('explanation').textContent, diagnostic.split('\n\n')[0]);
     assert.equal(get('explanation').dataset.diagnostic, 'true');
     assert.equal(get('event-detail').textContent, diagnostic);
@@ -129,6 +136,73 @@ test('operation results preserve recorded values, activity limits and complete d
     renderInspector(model, 0, () => {});
     assert.equal(get('raw-event').hidden, true);
     assert.equal(get('explanation').dataset.diagnostic, 'false');
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
+  }
+});
+
+test('source activities use diffs while one-sided results and type transitions keep their meaning', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const model = new TraceModel({
+    schema_version: 1,
+    compiler_version: 'WASI',
+    source: '',
+    snapshots: [],
+    nodes: [{ id: 1, kind: 'If', text: 'if true; 1; end' }],
+    events: [
+      { kind: 'activity', activity: 'rewrite', before: 'foo(1)', after: 'bar(1)' },
+      { kind: 'activity', activity: 'replace_untyped', before: 'foo(1)', after: 'nil' },
+      { kind: 'activity', activity: 'simplify_condition', before: '', after: '1' },
+      { kind: 'rewrite', before: 'foo(1)', after: 'foo(1)' },
+      { kind: 'rewrite', before: 'foo(1)', after: '∅' },
+      { kind: 'activity', activity: 'merge_guess', before: 'Int32', after: 'Int32 | String' },
+    ].map((event, index) => ({
+      index,
+      node_id: 1,
+      visitor: 'Crystal::CleanupTransformer',
+      ...event,
+    })),
+  });
+  const render = (index) => renderInspector(model.seek(index), 1, () => {});
+  try {
+    for (const index of [0, 1]) {
+      render(index);
+      assert.equal(get('event-diff').hidden, false);
+      assert.equal(get('change').hidden, true);
+      assert.match(get('code-diff').innerHTML, /diff-removed/);
+      assert.match(get('code-diff').innerHTML, /diff-added/);
+    }
+    render(2);
+    assert.equal(get('event-diff').hidden, true);
+    assert.equal(get('code-diff').innerHTML, '');
+    assert.equal(get('event-before').hidden, true);
+    assert.equal(get('event-result-label').textContent, t('event.observedResult'));
+    assert.equal(get('after').innerHTML, '1');
+    render(3);
+    assert.equal(get('event-diff-unchanged').hidden, false);
+    assert(!get('code-diff').innerHTML.includes('diff-added'));
+    assert(!get('code-diff').innerHTML.includes('diff-removed'));
+    setLocale('ja');
+    render(3);
+    assert.equal(get('event-diff-unchanged').textContent, t('event.sourceUnchanged'));
+    render(4);
+    assert.equal(get('event-diff-unchanged').hidden, true);
+    assert.match(get('code-diff').innerHTML, /diff-removed/);
+    assert(!get('code-diff').innerHTML.includes('diff-added'));
+    assert(!get('code-diff').innerHTML.includes('∅'));
+    render(5);
+    assert.equal(get('event-diff').hidden, true);
+    assert.equal(get('change').hidden, false);
+    assert.equal(get('change').dataset.layout, 'pair');
+    assert.equal(get('before').textContent, 'Int32');
+    assert.equal(get('after').textContent, 'Int32 | String');
   } finally {
     globalThis.document = original;
     setLocale('en');

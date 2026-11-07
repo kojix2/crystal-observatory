@@ -45,6 +45,7 @@ export function setupEventTabs() {
       trace = model.trace;
       index = model.index;
       for (const name of names) $(`event-${name}-panel`).scrollTop = 0;
+      $('code-diff').scrollTop = 0;
       $('event-panel').querySelector('.event-content').scrollTop = 0;
       for (const id of ['raw-event', 'activity-reason-details']) $(id).open = false;
     },

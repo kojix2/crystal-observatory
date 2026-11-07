@@ -354,6 +354,16 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 #activity-reason { display:block; margin-top:5px; font:var(--text-small)/1.6 var(--mono); }
 #explanation[data-diagnostic="true"] { white-space:pre-wrap; color:var(--ink); border-left:2px solid var(--type); background:var(--soft); padding:7px 8px; }
 .event-change[data-layout="pair"] { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+.diff-legend { display:flex; gap:8px; margin-bottom:5px; font-size:var(--text-small); }
+.diff-legend>span { padding:1px 6px; border-radius:3px; }
+.event-tab-panel.inspect-scroll .code-diff { padding:5px 0; max-height:320px; background:var(--soft); }
+.diff-line { display:grid; grid-template-columns:2ch minmax(0,1fr); padding:0 8px 0 4px; min-height:1.6em; }
+.diff-marker { user-select:none; color:var(--muted); text-align:center; }
+.diff-code { min-width:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.diff-removed { background:#fce9e7; }
+.diff-added { background:#e6f3e9; }
+.diff-removed>.diff-marker { color:#a13329; }
+.diff-added>.diff-marker { color:#246839; }
 @container (max-width:280px) { .event-change[data-layout="pair"] { grid-template-columns:minmax(0,1fr); } }
 /* Fixed node identity and navigation; only the chosen tab normally scrolls.
    A very short pane or long type can scroll the outer content as a fallback. */

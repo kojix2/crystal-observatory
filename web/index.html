@@ -158,6 +158,12 @@
           </div>
           <section id="event-operation-panel" class="inspect-scroll event-tab-panel" role="tabpanel" tabindex="0" aria-labelledby="event-tab-operation">
             <p id="explanation"></p>
+            <div id="event-diff" hidden>
+              <h4 data-i18n="event.codeDiff">Code changes</h4>
+              <div class="diff-legend"><span class="diff-removed"><span aria-hidden="true">− </span><span data-i18n="before">BEFORE</span></span><span class="diff-added"><span aria-hidden="true">+ </span><span data-i18n="after">AFTER</span></span></div>
+              <p id="event-diff-unchanged" hidden data-i18n="event.sourceUnchanged">Source text unchanged; AST nodes may differ.</p>
+              <pre id="code-diff" class="code-diff crystal-code" role="region" tabindex="0" data-i18n-aria="event.codeDiff" aria-label="Code changes"></pre>
+            </div>
             <div id="change" class="event-change"><div id="event-before"><h4 data-i18n="before">BEFORE</h4><pre id="before" class="crystal-code"></pre></div><div><h4 id="event-result-label" data-i18n="after">AFTER</h4><pre id="after" class="crystal-code"></pre></div></div>
             <div id="activity-details" hidden><p id="activity-context"></p><p id="activity-ir-note"></p><button id="activity-related" class="link-button"></button><button id="activity-ir-link" class="link-button"></button><details id="activity-reason-details"><summary><svg data-icon="disclosure" data-size="12"></svg><span data-i18n="activity.reason">Reason</span></summary><code id="activity-reason"></code></details></div>
             <div id="link-details" hidden></div>

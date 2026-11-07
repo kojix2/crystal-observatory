@@ -3,6 +3,7 @@ import { $ } from './dom.js';
 import { icon, summaryLabel } from './icons.js';
 import { renderCrystal } from '../core/crystal-highlight.js';
 import { renderLLVM } from '../core/llvm-highlight.js';
+import { sourceChange, crystalDiffHTML } from '../core/code-diff.js';
 import {
   eventLabel,
   sourceFiles,
@@ -161,7 +162,13 @@ export function renderInspector(
   $('activity-ir-link').hidden = !activity || !event.llvm_function;
   $('activity-ir-link').textContent = t('activity.openIR');
   $('activity-ir-link').onclick = () => onIR(event);
+  const change = sourceChange(event);
+  $('event-diff').hidden = !change;
+  $('event-diff-unchanged').hidden = !change || change.before !== change.after;
+  $('event-diff-unchanged').textContent = t('event.sourceUnchanged');
+  $('code-diff').innerHTML = change ? crystalDiffHTML(change.before, change.after) : '';
   $('change').hidden =
+    Boolean(change) ||
     !event ||
     !['activity', 'type', 'rewrite', 'expand', 'dispatch', 'ir'].includes(event.kind) ||
     (activity && !event.before && !event.after);
@@ -177,7 +184,15 @@ export function renderInspector(
     ['before', event?.before || t('unset')],
     ['after', event?.after || '—'],
   ]) {
-    if (['rewrite', 'expand'].includes(event?.kind)) renderCrystal($(id), value);
+    if (change) continue;
+    if (
+      ['rewrite', 'expand'].includes(event?.kind) ||
+      (activity &&
+        ['rewrite', 'replace_untyped', 'simplify_condition', 'emit_macro_source'].includes(
+          event.activity,
+        ))
+    )
+      renderCrystal($(id), value);
     else if (event?.kind === 'ir' || (activity && event.activity === 'emit_instructions'))
       renderLLVM($(id), value);
     else $(id).textContent = value;

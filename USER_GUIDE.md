@@ -153,9 +153,13 @@ to resize them, or collapse History with its header button. Widths and the
 collapsed state are saved in the browser. Select a stage heading in History to
 jump to its recorded start; its arrow opens or closes the stage without moving
 playback. The operation inspector puts the observed Visitor, target and result first.
-Short before/after values appear side by side; activities without a recorded before
-value show just their observed result. IR instructions appear once, with their
-measurement limits and a link to the IR view. Diagnostics keep their line breaks,
+Code rewrites and macro expansions show a syntax-highlighted unified diff: red
+minus rows are removed source, green plus rows are added source. Activities use
+this display only for code transformations with recorded before/after source.
+Unchanged source is identified explicitly because AST nodes can still differ.
+Short before/after values such as types appear side by side; activities without a
+recorded before value show just their observed result. IR instructions appear once,
+with their measurement limits and a link to the IR view. Diagnostics keep their line breaks,
 with a short summary and an expandable full message.
 Use **Stage & role**, **Stack** and **Implementation** for background details,
 or click the stage above the Visitor to open its context. Arrow keys, Home and End
