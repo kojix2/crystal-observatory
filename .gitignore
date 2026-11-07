@@ -8,6 +8,14 @@
 /web/vendor/lucide/
 /web/vendor/browser_wasi_shim/
 /web/vendor/browser_wasi_shim.staging/
+# Language entry points generated from web/index.html by npm run web:deps.
+/web/en/
+/web/ja/
+/web/es/
+/web/zh-CN/
+/web/fr/
+/web/de/
+/web/ru/
 
 # Download caches, toolchains, intermediate LLVM files and host build tools.
 /.cache/

@@ -3,7 +3,24 @@
 import { readFile, readdir, copyFile, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { locales } from '../web/i18n/index.js';
 const root = fileURLToPath(new URL('../', import.meta.url));
+
+// Real directories let GitHub Pages serve language URLs without SPA rewrites.
+// Keep the app and its assets shared; only the HTML entry points are copied.
+const html = await readFile(path.join(root, 'web/index.html'), 'utf8');
+for (const locale of locales) {
+  const directory = path.join(root, 'web', locale);
+  await mkdir(directory, { recursive: true });
+  await writeFile(
+    path.join(directory, 'index.html'),
+    html
+      .replace('<html lang="en">', `<html lang="${locale}">`)
+      .replace(/((?:src|href)=")\.\/(?!")/g, '$1../'),
+  );
+}
+console.log(`Prepared language entry points (${locales.join(', ')})`);
+
 const source = path.join(root, 'node_modules/@bjorn3/browser_wasi_shim');
 const target = path.join(root, 'web/vendor/browser_wasi_shim');
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));

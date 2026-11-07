@@ -1,4 +1,17 @@
-import { getLocale, setLocale, onLocaleChange, t } from '../i18n/index.js';
+import { getLocale, setLocale, onLocaleChange, t, locales } from '../i18n/index.js';
+
+const WEB_ROOT = new URL('../', import.meta.url);
+export function localeFromURL(url, root = WEB_ROOT) {
+  const pathname = new URL(url).pathname;
+  if (!pathname.startsWith(root.pathname)) return null;
+  const value = pathname.slice(root.pathname.length).replace(/\/(?:index\.html)?$/, '');
+  return locales.includes(value) ? value : null;
+}
+export function localizedURL(url, value, root = WEB_ROOT) {
+  const result = new URL(url);
+  result.pathname = new URL(`${value}/`, root).pathname;
+  return result;
+}
 
 // Bind presentation text, never application data. Switching language does not
 // reload a trace, restart a worker, change source, or seek to another event.
@@ -25,11 +38,15 @@ export function translateDOM(root = document) {
 }
 export function setupLanguage() {
   const key = 'crystal-observatory.language';
-  // Default is English. A user choice takes precedence over browser preferences.
-  try {
-    setLocale(localStorage.getItem(key));
-  } catch {
-    /* Private browsing. */
+  // Shared URLs take precedence over the optional saved preference.
+  const requested = localeFromURL(window.location.href);
+  if (requested) setLocale(requested);
+  else {
+    try {
+      setLocale(localStorage.getItem(key));
+    } catch {
+      /* Private browsing. */
+    }
   }
   const render = () => {
     document.documentElement.lang = getLocale();
@@ -41,6 +58,11 @@ export function setupLanguage() {
   onLocaleChange(render);
   document.getElementById('language').onchange = (event) => {
     setLocale(event.target.value);
+    window.history.replaceState(
+      window.history.state,
+      '',
+      localizedURL(window.location.href, getLocale()),
+    );
     try {
       localStorage.setItem(key, getLocale());
     } catch {
