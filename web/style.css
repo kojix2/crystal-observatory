@@ -127,6 +127,9 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 #source-share input,#share-link,#source-file-choice { display:block; width:100%; min-width:0; padding:8px; border:1px solid var(--line); border-radius:3px; color:var(--ink); background:var(--soft); font:var(--text-small)/1.6 var(--mono); }
 #share-link { resize:vertical; }
 #share-status { min-height:1.8em; margin-top:6px; overflow-wrap:anywhere; }
+.share-gist { margin-top:14px; padding:12px; border-radius:4px; background:var(--soft); }
+.share-gist h3 { margin:0 0 6px; }
+.share-gist code { display:block; margin:6px 0; overflow-wrap:anywhere; font:var(--text-small)/1.6 var(--mono); }
 #source-link-form { margin-top:18px; padding-top:8px; border-top:1px solid var(--line); }
 #source-link-form button { margin-top:10px; }
 .stage-context { border-left:3px solid var(--type); border-radius:0 3px 3px 0; background:var(--soft); padding:8px 10px; margin-bottom:12px; overflow-wrap:anywhere; }

@@ -1,6 +1,51 @@
 const entry = (ja, en, es, zh, fr, de, ru) => ({ ja, en, es, 'zh-CN': zh, fr, de, ru });
 
 export const sharingMessages = {
+  'share.generating': entry(
+    '共有リンクを生成中…',
+    'Generating share link…',
+    'Generando enlace…',
+    '正在生成分享链接…',
+    'Création du lien…',
+    'Freigabelink wird erstellt…',
+    'Создание ссылки…',
+  ),
+  'share.gistTitle': entry(
+    '長いコードはGistに保存',
+    'Save longer code in a Gist',
+    'Guarda código largo en un Gist',
+    '将较长代码保存到 Gist',
+    'Enregistrer le code long dans un Gist',
+    'Längeren Code als Gist speichern',
+    'Сохраните длинный код в Gist',
+  ),
+  'share.gistGuide': entry(
+    'GitHubにログインし、コードをmain.crという名前でGistに保存すると、短いリンクで共有できます。保存後、GistのIDを下の形式で指定してください。',
+    'Sign in to GitHub and save your code as main.cr in a Gist to share a shorter link. Then use the Gist ID in the format below.',
+    'Inicia sesión en GitHub y guarda el código como main.cr en un Gist para compartir un enlace más corto. Usa su ID en el formato siguiente.',
+    '登录 GitHub，将代码以 main.cr 保存到 Gist，即可使用较短的链接分享。保存后，在下方格式中填写 Gist ID。',
+    'Connectez-vous à GitHub et enregistrez le code sous main.cr dans un Gist pour partager un lien plus court. Utilisez ensuite son ID au format ci-dessous.',
+    'Melde dich bei GitHub an und speichere den Code als main.cr in einem Gist für einen kürzeren Link. Setze anschließend die Gist-ID in das folgende Format ein.',
+    'Войдите в GitHub и сохраните код как main.cr в Gist, чтобы делиться короткой ссылкой. Затем укажите ID Gist в формате ниже.',
+  ),
+  'share.gistCreate': entry(
+    'Gistを作成する',
+    'Create a Gist',
+    'Crear un Gist',
+    '创建 Gist',
+    'Créer un Gist',
+    'Gist erstellen',
+    'Создать Gist',
+  ),
+  'share.gistID': entry(
+    'GistのIDはURL末尾の文字列です：gist.github.com/ユーザー名/GIST_ID。下のリンクのGIST_IDを置き換えて共有してください。',
+    'The Gist ID is the last part of its URL: gist.github.com/username/GIST_ID. Replace GIST_ID in the link below to share.',
+    'El ID es la última parte de la URL: gist.github.com/usuario/GIST_ID. Sustituye GIST_ID en el enlace siguiente para compartirlo.',
+    'Gist ID 是 URL 的最后一段：gist.github.com/用户名/GIST_ID。替换下方链接中的 GIST_ID 后即可分享。',
+    'L’ID est la dernière partie de l’URL : gist.github.com/utilisateur/GIST_ID. Remplacez GIST_ID dans le lien ci-dessous pour le partager.',
+    'Die Gist-ID ist der letzte Teil der URL: gist.github.com/Benutzername/GIST_ID. Ersetze GIST_ID im folgenden Link zum Teilen.',
+    'ID Gist — последняя часть URL: gist.github.com/имя/GIST_ID. Замените GIST_ID в ссылке ниже и поделитесь ею.',
+  ),
   'share.action': entry('共有', 'Share', 'Compartir', '分享', 'Partager', 'Teilen', 'Поделиться'),
   'learning.api': entry(
     'API・共有リンク',

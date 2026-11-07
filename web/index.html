@@ -217,9 +217,10 @@
   <button id="close-source-share" class="close icon-button" data-i18n-aria="close"><svg data-icon="close"></svg></button>
   <h2 id="source-share-title" data-i18n="share.title">Share</h2>
   <p data-i18n="share.intro">Share the current source, or open a source link.</p>
-  <div class="share-actions"><button id="copy-source-link" data-i18n="share.copySource">Copy code link</button><button id="copy-origin-link" data-i18n="share.copyOrigin" disabled>Copy fixed original link</button></div>
   <label for="share-link" data-i18n="share.link">Share link</label><textarea id="share-link" rows="3" readonly spellcheck="false"></textarea>
+  <div class="share-actions"><button id="copy-source-link" data-i18n="share.copySource" disabled>Copy code link</button><button id="copy-origin-link" data-i18n="share.copyOrigin" disabled>Copy fixed original link</button></div>
   <p id="share-status" role="status" aria-live="polite"></p>
+  <section class="share-gist" aria-labelledby="share-gist-title"><h3 id="share-gist-title" data-i18n="share.gistTitle">Save longer code in a Gist</h3><p data-i18n="share.gistGuide">Sign in to GitHub, save your code as main.cr in a Gist, then use its ID in the link below.</p><p><a href="https://gist.github.com/" target="_blank" rel="noreferrer" data-i18n="share.gistCreate">Create a Gist</a></p><p data-i18n="share.gistID">The Gist ID is the last part of its URL: gist.github.com/username/GIST_ID. Replace GIST_ID in the link below to share.</p><code id="share-gist-example"></code></section>
   <form id="source-link-form"><label for="source-link-input" data-i18n="share.openLabel">Open an Observatory source link</label><input id="source-link-input" type="url" required spellcheck="false" placeholder="https://kojix2.github.io/crystal-observatory/ja/#code=puts%2042"><button type="submit" data-i18n="share.open">Open source</button></form>
 </dialog>
 <dialog id="source-files" aria-labelledby="source-files-title">

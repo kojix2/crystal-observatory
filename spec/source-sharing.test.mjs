@@ -4,6 +4,7 @@ import { SourceSharing } from '../web/ui/source-sharing.js';
 import { WorkSession } from '../web/runtime/session.js';
 import { renderAPIReference } from '../web/ui/api-reference.js';
 import { locales, setLocale } from '../web/i18n/index.js';
+import { parseSourceLink, decodeSourceLink } from '../web/core/source-link.js';
 
 async function fixture(run) {
   const old = { document: globalThis.document, window: globalThis.window, fetch: globalThis.fetch };
@@ -93,6 +94,52 @@ test('fixed original links are available only while the external source is uncha
     app.editor.value = 'edited';
     sharing.update();
     assert.equal(get('copy-origin-link').disabled, true);
+  });
+});
+
+test('opening sharing displays the code link without accessing the clipboard', async () => {
+  await fixture(async ({ sharing, app, get }) => {
+    let copied;
+    window.navigator = {
+      clipboard: {
+        writeText: async (value) => {
+          copied = value;
+        },
+      },
+    };
+    await sharing.showShare();
+    assert.equal(get('source-share').open, true);
+    assert.equal(
+      await decodeSourceLink(parseSourceLink(get('share-link').value)),
+      app.editor.value,
+    );
+    assert.equal(get('copy-source-link').disabled, false);
+    assert.equal(copied, undefined);
+    assert.match(get('share-gist-example').textContent, /\?gist=GIST_ID&file=main\.cr$/);
+    const link = get('share-link').value;
+    await sharing.copy(false);
+    assert.equal(copied, link);
+  });
+});
+
+test('a newer preview replaces an earlier compressed generation', async () => {
+  await fixture(async ({ sharing, app, get }) => {
+    app.editor.value = 'puts "old"\n'.repeat(2000);
+    const old = sharing.showShare();
+    app.editor.value = 'puts "new"';
+    await Promise.all([old, sharing.showShare()]);
+    assert.equal(await decodeSourceLink(parseSourceLink(get('share-link').value)), 'puts "new"');
+  });
+});
+
+test('an unshareable source leaves copying disabled while retaining the Gist example', async () => {
+  await fixture(async ({ sharing, app, get }) => {
+    app.editor.value = 'x'.repeat(256 * 1024 + 1);
+    await sharing.showShare();
+    assert.equal(get('share-link').value, '');
+    assert.equal(get('copy-source-link').disabled, true);
+    assert(get('share-status').textContent);
+    assert.match(get('share-gist-example').textContent, /gist=GIST_ID/);
   });
 });
 

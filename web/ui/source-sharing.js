@@ -12,12 +12,7 @@ export class SourceSharing {
     this.app = app;
     this.pending = null;
     this.origin = null;
-    $('share-source').onclick = () => {
-      this.update();
-      $('share-link').value = '';
-      $('share-status').textContent = '';
-      $('source-share').showModal();
-    };
+    $('share-source').onclick = () => this.showShare();
     $('close-source-share').onclick = () => $('source-share').close();
     $('copy-source-link').onclick = () => this.copy(false);
     $('copy-origin-link').onclick = () => this.copy(true);
@@ -45,15 +40,47 @@ export class SourceSharing {
     };
     $('cancel-source-files').onclick = () => this.cancel();
     $('source-files').addEventListener('cancel', () => this.cancel());
-    onLocaleChange(() => {
-      this.update();
-      $('share-status').textContent = '';
-    });
+    onLocaleChange(() => this.update());
     window.addEventListener('hashchange', () => this.openURL(window.location.href));
   }
 
   update() {
     $('copy-origin-link').disabled = !this.origin || this.origin.source !== this.app.editor.value;
+    if (
+      $('source-share').open &&
+      (this.previewSource !== this.app.editor.value || this.previewLocale !== getLocale())
+    )
+      this.showShare();
+  }
+
+  async showShare() {
+    const request = (this.previewRequest ?? 0) + 1;
+    this.previewRequest = request;
+    this.previewSource = this.app.editor.value;
+    this.previewLocale = getLocale();
+    this.preview = null;
+    const source = this.previewSource;
+    const base = localizedURL(window.location.href, this.previewLocale);
+    const gistExample = localizedURL(new URL('../', import.meta.url), this.previewLocale);
+    gistExample.search = new URLSearchParams({ gist: 'GIST_ID', file: 'main.cr' });
+    $('share-gist-example').textContent = gistExample.href;
+    $('share-link').value = '';
+    $('copy-source-link').disabled = true;
+    $('share-status').textContent = t('share.generating');
+    if (!$('source-share').open) $('source-share').showModal();
+    this.update();
+    try {
+      const url = await embeddedSourceURL(base, source);
+      if (request !== this.previewRequest || !$('source-share').open) return;
+      if (source !== this.app.editor.value) throw new UIError('share.changed');
+      this.preview = url;
+      $('share-link').value = url.href;
+      $('copy-source-link').disabled = false;
+      $('share-status').textContent = '';
+    } catch (error) {
+      if (request === this.previewRequest && $('source-share').open)
+        $('share-status').textContent = errorText(error);
+    }
   }
 
   cancel() {
@@ -105,8 +132,9 @@ export class SourceSharing {
     try {
       if (fixed && (!origin || origin.source !== source)) throw new UIError('share.changed');
       const base = localizedURL(window.location.href, getLocale());
-      const url = fixed ? externalSourceURL(base, origin) : await embeddedSourceURL(base, source);
-      if (source !== this.app.editor.value) throw new UIError('share.changed');
+      const url = fixed ? externalSourceURL(base, origin) : this.preview;
+      if (!url || (!fixed && (this.previewSource !== source || this.previewLocale !== getLocale())))
+        throw new UIError('share.changed');
       $('share-link').value = url.href;
       try {
         await window.navigator.clipboard.writeText(url.href);
