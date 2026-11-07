@@ -242,6 +242,32 @@ h1 span { font-size:11px; font-weight:400; letter-spacing:.7px; color:var(--head
 .inspect-scroll { padding: 10px 13px; overflow: auto; flex: 1; min-height: 0; }
 .event-kind { font:11px var(--mono); color: var(--type); margin-bottom: 7px; }
 .inspect-scroll p { font-size: 12px; line-height: 1.8; color: var(--muted); margin: 9px 0; }
+/* Event identity and tabs stay visible; the selected detail gets the remaining space. */
+.event-content { display:flex; flex:1; flex-direction:column; min-height:0; overflow:auto; container-type:inline-size; }
+.event-identity { flex-shrink:0; padding:7px 12px 5px; }
+.event-phase { display:block; max-width:100%; padding:0; margin-bottom:4px; font-size:10px; text-align:left; white-space:normal; color:var(--muted); }
+.event-title-row { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px; }
+.event-title-row #visitor-title { min-width:0; margin:0; font-size:13px; overflow-wrap:anywhere; }
+.event-title-row .event-kind { margin:0; padding:2px 5px; border-radius:3px; background:var(--soft); font:10px/1.5 var(--sans); overflow-wrap:anywhere; }
+.event-meta { display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 10px; color:var(--muted); font-size:10px; margin-top:4px; }
+.event-meta .link-button { font-size:10px; padding:0; white-space:normal; text-align:left; }
+.event-tabs { display:flex; gap:8px; padding:0 12px; border-bottom:1px solid var(--line); flex-shrink:0; overflow-x:auto; }
+.event-tabs button { flex-shrink:0; background:transparent; font-size:11px; padding:4px 3px; border-radius:0; border-bottom:2px solid transparent; }
+.event-tabs [aria-selected="true"] { color:var(--type); border-bottom-color:var(--type); font-weight:600; }
+.event-tab-panel { padding:6px 12px 10px; min-height:72px; overflow-wrap:anywhere; }
+.event-tab-panel h4 { margin:6px 0 4px; font-size:10px; }
+.event-tab-panel p { margin:6px 0; font-size:11px; line-height:1.6; }
+.event-tab-panel.inspect-scroll pre { margin:0; padding:7px 8px; font:12px/1.6 var(--mono); max-height:180px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.event-tab-panel details { margin-top:8px; font-size:11px; }
+.event-tab-panel summary { cursor:pointer; color:var(--muted); }
+.event-tab-panel details pre { margin-top:5px; }
+.event-tab-panel .link-button { font-size:11px; white-space:normal; text-align:left; }
+#activity-ir-link { display:block; margin-top:5px; }
+#activity-context,#activity-ir-note { font-size:10px; }
+#activity-reason { display:block; margin-top:5px; font:11px/1.6 var(--mono); }
+#explanation[data-diagnostic="true"] { white-space:pre-wrap; color:var(--ink); border-left:2px solid var(--type); background:var(--soft); padding:7px 8px; }
+.event-change[data-layout="pair"] { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+@container (max-width:280px) { .event-change[data-layout="pair"] { grid-template-columns:minmax(0,1fr); } }
 /* Fixed node identity and navigation; only the chosen tab normally scrolls.
    A very short pane or long type can scroll the outer content as a fallback. */
 .node-content { display:flex; flex:1; flex-direction:column; min-height:0; overflow:auto; }
@@ -520,6 +546,10 @@ dialog .close:hover { color:var(--ink); }
   .mobile #inspector-panel>#node-panel { min-height:100%; }
   .mobile #inspector-panel .inspect-scroll { overflow:visible; }
   .mobile .node-content { flex:0 0 auto; overflow:visible; }
+  .mobile .event-content { flex:0 0 auto; overflow:visible; }
+  .mobile .event-tabs { position:sticky; top:0; z-index:1; background:var(--paper); }
+  .mobile .event-tabs button { font-size:12px; padding:7px 3px; }
+  .mobile .event-tab-panel { min-height:140px; }
   .mobile .node-identity { padding-top:10px; }
   .mobile .node-type-badge,.mobile .node-facts { font-size:12px; }
   .mobile .node-type-badge small { font-size:11px; }

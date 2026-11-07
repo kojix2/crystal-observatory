@@ -28,6 +28,113 @@ class Element {
   insertAdjacentHTML() {}
 }
 
+test('operation results preserve recorded values, activity limits and complete diagnostics across events', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const ir = '  %1 = add i32 %x, 1 ; <script>&\n  ret i32 %1';
+  const diagnostic =
+    'input.cr:2:3\nError: incompatible types <script>\n\nOverloads are:\n - foo(Int32)\n - foo(String)';
+  const model = new TraceModel({
+    schema_version: 1,
+    compiler_version: 'WASI',
+    source: '',
+    snapshots: [],
+    nodes: [{ id: 1, kind: 'Call', text: 'foo(1)' }],
+    events: [
+      {
+        index: 0,
+        kind: 'activity',
+        node_id: 1,
+        visitor: 'Crystal::CodeGenVisitor',
+        activity: 'emit_instructions',
+        before: '',
+        after: ir,
+        reason: 'final_insertion_block_delta',
+        llvm_function: 'foo',
+        phase: 'Codegen (crystal → LLVM IR)',
+      },
+      {
+        index: 1,
+        kind: 'activity',
+        node_id: 1,
+        visitor: 'Crystal::HasSelfVisitor',
+        activity: 'check_self',
+        before: '',
+        after: '',
+        reason: 'self_not_detected',
+      },
+      { index: 2, kind: 'type', node_id: 1, before: '', after: 'Int32 | String' },
+      { index: 3, kind: 'expand', node_id: 1, before: 'square(3)', after: '3 * 3' },
+      { index: 4, kind: 'error', detail: diagnostic },
+    ],
+  });
+  try {
+    setLocale('ja');
+    model.seek(0);
+    let opened;
+    renderInspector(
+      model,
+      0,
+      () => {},
+      () => {},
+      () => {},
+      (event) => (opened = event),
+    );
+    assert.equal(get('explanation').hidden, true);
+    assert.equal(get('event-before').hidden, true);
+    assert.equal(get('change').hidden, false);
+    assert.equal(get('event-result-label').textContent, t('event.observedResult'));
+    assert.equal(get('activity-ir-note').hidden, false);
+    assert.equal(get('activity-ir-link').hidden, false);
+    get('activity-ir-link').onclick();
+    assert.equal(opened.index, 0);
+    assert.match(get('after').innerHTML, /&lt;script&gt;&amp;/);
+    assert.equal(get('activity-reason').textContent, 'final_insertion_block_delta');
+    assert.equal(get('change').dataset.layout, 'stack');
+    model.seek(1);
+    renderInspector(model, 0, () => {});
+    assert.equal(get('change').hidden, true); // No invented "before" or "after" value.
+    assert.equal(get('activity-ir-note').hidden, true);
+    model.seek(2);
+    renderInspector(model, 0, () => {});
+    assert.equal(get('change').hidden, false);
+    assert.equal(get('event-before').hidden, false);
+    assert.equal(get('event-result-label').textContent, t('after'));
+    assert.equal(get('before').textContent, t('unset'));
+    assert.equal(get('after').textContent, 'Int32 | String');
+    assert.equal(get('change').dataset.layout, 'pair');
+    assert.equal(get('activity-observed').hidden, true);
+    model.seek(3);
+    renderInspector(model, 0, () => {});
+    assert.equal(get('before').innerHTML, 'square(3)');
+    assert.equal(get('after').innerHTML, '3 * 3');
+    model.seek(4);
+    renderInspector(model, 0, () => {});
+    assert.equal(get('change').hidden, true);
+    assert.equal(get('explanation').textContent, diagnostic.split('\n\n')[0]);
+    assert.equal(get('explanation').dataset.diagnostic, 'true');
+    assert.equal(get('event-detail').textContent, diagnostic);
+    assert.equal(get('raw-event').hidden, false);
+    assert.equal(get('event-detail-label').textContent, t('event.diagnostic'));
+    setLocale('en');
+    renderInspector(model, 1, () => {});
+    assert.equal(get('event-detail').textContent, diagnostic);
+    assert.equal(get('event-detail-label').textContent, 'Full diagnostic');
+    model.seek(2);
+    renderInspector(model, 0, () => {});
+    assert.equal(get('raw-event').hidden, true);
+    assert.equal(get('explanation').dataset.diagnostic, 'false');
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
+  }
+});
+
 test('overview excludes future findings while whole-recording activities label them and keep related nodes', () => {
   const elements = new Map();
   const get = (id) => {

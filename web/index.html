@@ -137,19 +137,36 @@
       <div class="splitter horizontal" id="detail-splitter" role="separator" tabindex="0" data-i18n-aria="split.details" aria-orientation="horizontal" aria-controls="node-panel event-panel"></div>
       <section class="panel detail-panel" id="event-panel" aria-labelledby="event-heading">
         <div class="panel-head"><h2 id="event-heading" tabindex="-1" data-i18n="event.details">Visitor &amp; operation</h2><span id="event-id" class="tiny">—</span></div>
-        <div class="inspect-scroll">
-          <section id="stage-context" class="stage-context" hidden></section>
-          <div id="event-kind" class="event-kind"></div><h3 id="visitor-title">—</h3>
-          <h4 data-i18n="event.operation">THIS OPERATION</h4><p id="explanation"></p>
-          <div id="link-details" hidden></div>
-          <div id="activity-details" hidden><p id="activity-observed" class="tiny"></p><p id="activity-reason"></p><p id="activity-context"></p><p id="activity-ir-note"></p><button id="activity-related" class="link-button"></button><button id="activity-ir-link" class="link-button"></button></div>
-          <button id="event-declaration" class="link-button" data-i18n="decl.title" hidden>Declarations</button>
-          <button id="event-node" class="link-button"></button><p id="event-phase" class="tiny"></p>
-          <div id="change"><h4 data-i18n="before">BEFORE</h4><pre id="before" class="crystal-code"></pre><h4 data-i18n="after">AFTER</h4><pre id="after" class="crystal-code"></pre></div>
-          <details id="raw-event"><summary><svg data-icon="disclosure" data-size="12"></svg><span data-i18n="event.raw">Recorded detail</span></summary><pre id="event-detail"></pre></details>
-          <h4 data-i18n="visitor.role">ROLE</h4><p id="visitor-role"></p>
-          <h4><span data-i18n="stack">VISIT STACK</span> <span data-i18n="user.only">User source only</span></h4><div id="stack"></div>
-          <h4 data-i18n="compiler.source">COMPILER SOURCE</h4><div id="compiler-link"></div>
+        <div class="event-content">
+          <div class="event-identity">
+            <button id="event-phase" class="link-button event-phase" aria-controls="event-context-panel"></button>
+            <div class="event-title-row"><h3 id="visitor-title">—</h3><span id="event-kind" class="event-kind"></span></div>
+            <div class="event-meta"><button id="event-node" class="link-button"></button><span id="activity-observed"></span></div>
+          </div>
+          <div class="event-tabs" role="tablist" data-i18n-aria="event.tabs">
+            <button type="button" id="event-tab-operation" role="tab" aria-selected="true" aria-controls="event-operation-panel" data-i18n="event.tab.operation">Operation</button>
+            <button type="button" id="event-tab-context" role="tab" aria-selected="false" aria-controls="event-context-panel" tabindex="-1" data-i18n="event.tab.context">Stage &amp; role</button>
+            <button type="button" id="event-tab-stack" role="tab" aria-selected="false" aria-controls="event-stack-panel" tabindex="-1"><span data-i18n="event.tab.stack">Stack</span><span id="event-stack-count" class="node-count">0</span></button>
+            <button type="button" id="event-tab-source" role="tab" aria-selected="false" aria-controls="event-source-panel" tabindex="-1" data-i18n="event.tab.source">Implementation</button>
+          </div>
+          <section id="event-operation-panel" class="inspect-scroll event-tab-panel" role="tabpanel" tabindex="0" aria-labelledby="event-tab-operation">
+            <p id="explanation"></p>
+            <div id="change" class="event-change"><div id="event-before"><h4 data-i18n="before">BEFORE</h4><pre id="before" class="crystal-code"></pre></div><div><h4 id="event-result-label" data-i18n="after">AFTER</h4><pre id="after" class="crystal-code"></pre></div></div>
+            <div id="activity-details" hidden><p id="activity-context"></p><p id="activity-ir-note"></p><button id="activity-related" class="link-button"></button><button id="activity-ir-link" class="link-button"></button><details id="activity-reason-details"><summary><svg data-icon="disclosure" data-size="12"></svg><span data-i18n="activity.reason">Reason</span></summary><code id="activity-reason"></code></details></div>
+            <div id="link-details" hidden></div>
+            <button id="event-declaration" class="link-button" data-i18n="decl.title" hidden>Declarations</button>
+            <details id="raw-event"><summary><svg data-icon="disclosure" data-size="12"></svg><span id="event-detail-label" data-i18n="event.raw">Recorded detail</span></summary><pre id="event-detail"></pre></details>
+          </section>
+          <section id="event-context-panel" class="inspect-scroll event-tab-panel" role="tabpanel" tabindex="0" aria-labelledby="event-tab-context" hidden>
+            <section id="stage-context" class="stage-context" hidden></section>
+            <h4 data-i18n="visitor.role">ROLE</h4><p id="visitor-role"></p>
+          </section>
+          <section id="event-stack-panel" class="inspect-scroll event-tab-panel" role="tabpanel" tabindex="0" aria-labelledby="event-tab-stack" hidden>
+            <p class="tiny" data-i18n="user.only">User source only</p><div id="stack"></div>
+          </section>
+          <section id="event-source-panel" class="inspect-scroll event-tab-panel" role="tabpanel" tabindex="0" aria-labelledby="event-tab-source" hidden>
+            <h4 data-i18n="compiler.source">COMPILER SOURCE</h4><div id="compiler-link"></div>
+          </section>
         </div>
       </section>
     </aside>

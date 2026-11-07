@@ -107,9 +107,15 @@ The desktop workspace uses three columns: **History**, the selected observation
 to resize them, or collapse History with its header button. Widths and the
 collapsed state are saved in the browser. Select a stage heading in History to
 jump to its recorded start; its arrow opens or closes the stage without moving
-playback. The operation inspector shows the selected event's stage, incoming
-state, outgoing state and implementation, followed by the observed Visitor and
-operation.
+playback. The operation inspector puts the observed Visitor, target and result first.
+Short before/after values appear side by side; activities without a recorded before
+value show just their observed result. IR instructions appear once, with their
+measurement limits and a link to the IR view. Diagnostics keep their line breaks,
+with a short summary and an expandable full message.
+Use **Stage & role**, **Stack** and **Implementation** for background details,
+or click the stage above the Visitor to open its context. Arrow keys, Home and End
+switch the focused detail tab without stepping History. The chosen tab follows
+playback; opening another recording returns to **Operation**.
 These handoffs describe compiler responsibilities, not additional measured events.
 Select the **Link (LLD)** event in History to inspect the input object, specified
 libraries, output size, elapsed time, exit code, diagnostics and actual link

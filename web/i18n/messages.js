@@ -8,8 +8,10 @@ import { pipelineMessages } from './pipeline-messages.js';
 
 import { mobileMessages } from './mobile-messages.js';
 import { nodeMessages } from './node-messages.js';
+import { eventMessages } from './event-messages.js';
 
 export const messages = {
+  ...eventMessages,
   ...nodeMessages,
   ...mobileMessages,
   ...declarationMessages,

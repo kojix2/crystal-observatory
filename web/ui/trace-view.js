@@ -7,6 +7,7 @@ import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
 import { renderInspector } from './inspector.js';
 import { setupNodeTabs } from './node-tabs.js';
+import { setupEventTabs } from './event-tabs.js';
 import { renderTokens } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
@@ -46,6 +47,7 @@ export class TraceView {
     this.events = new EventList((index) => this.selectEvent(index));
     this.ir = new IRView();
     this.nodeTabs = setupNodeTabs();
+    this.eventTabs = setupEventTabs();
     this.bindControls();
   }
   get trace() {
@@ -251,6 +253,7 @@ export class TraceView {
   renderSelection({ reveal = true } = {}) {
     if (!this.model) return;
     this.nodeTabs?.update(this.model, this.selected);
+    this.eventTabs?.update(this.model);
     this.renderObservation({ reveal });
     renderInspector(
       this.model,

@@ -165,10 +165,8 @@ test('node activities navigate history independently and distinguish missing cov
     assert(texts.includes(`RestrictionsAugmenter · ${t('activity.unmeasured')}`));
     model.seek(0);
     renderInspector(model, 2, (id) => (selected = id));
-    assert.equal(
-      get('activity-reason').textContent,
-      `${t('activity.reason')}: unused_or_no_return_block`,
-    );
+    assert.equal(get('activity-reason').textContent, 'unused_or_no_return_block');
+    assert.equal(get('activity-reason-details').hidden, false);
     get('activity-related').onclick();
     assert.equal(selected, 2);
     model.trace.truncated = true;

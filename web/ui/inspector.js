@@ -100,8 +100,22 @@ export function renderInspector(
     : stage?.driver || '—';
   $('visitor-title').dataset.visitor = visitorKey(event?.visitor);
   $('visitor-role').textContent = visitorRole(event, model);
-  $('event-kind').textContent = eventLabel(event?.kind);
-  $('explanation').textContent = explanation(event, model);
+  const activity = event?.kind === 'activity';
+  const diagnostic = event?.kind === 'error';
+  $('event-kind').textContent = activity ? activityLabel(event.activity) : eventLabel(event?.kind);
+  // The activity's name is in the heading and its value belongs in the result.
+  // Keep the complete diagnostic below, with a short first paragraph above it.
+  $('explanation').hidden = activity;
+  $('explanation').textContent = diagnostic
+    ? (event.detail || '')
+        .split(/\n\s*\n/)[0]
+        .split('\n')
+        .slice(0, 5)
+        .join('\n')
+    : activity
+      ? ''
+      : explanation(event, model);
+  $('explanation').dataset.diagnostic = String(diagnostic);
   renderLinkDetails(event);
   $('event-declaration').hidden = event?.kind !== 'declaration';
   $('event-declaration').textContent = t('decl.title');
@@ -114,14 +128,20 @@ export function renderInspector(
   $('event-node').onclick = () => {
     if (target) onSelect(target.id);
   };
-  $('event-phase').textContent = event ? t('event.phase', { phase: event.phase }) : '';
-  $('raw-event').hidden = !event?.detail;
+  const phase = stage ? t(`pipeline.stage.${stage.id}`) : event?.phase;
+  $('event-phase').hidden = !phase;
+  $('event-phase').textContent = phase ? t('event.phase', { phase }) : '';
+  $('event-phase').title = event?.phase || '';
+  $('raw-event').hidden =
+    !event?.detail || (diagnostic && event.detail === $('explanation').textContent);
+  $('event-detail-label').dataset.i18n = diagnostic ? 'event.diagnostic' : 'event.raw';
+  $('event-detail-label').textContent = t($('event-detail-label').dataset.i18n);
   $('event-detail').textContent = event?.detail || '';
-  const activity = event?.kind === 'activity';
   $('activity-details').hidden = !activity;
+  $('activity-observed').hidden = !activity;
   $('activity-observed').textContent = t('activity.observed');
-  $('activity-reason').textContent =
-    activity && event.reason ? `${t('activity.reason')}: ${event.reason}` : '';
+  $('activity-reason-details').hidden = !activity || !event.reason;
+  $('activity-reason').textContent = activity ? event.reason || '' : '';
   $('activity-context').textContent =
     activity && visitorKey(event.visitor) === 'HasSelfVisitor'
       ? event.parent_visitor
@@ -130,6 +150,7 @@ export function renderInspector(
       : activity && visitorKey(event.visitor) === 'ToSVisitor'
         ? `${t('activity.formatting')}${event.parent_visitor ? ` · ${shortVisitor(event.parent_visitor)}` : ''}`
         : '';
+  $('activity-context').hidden = !$('activity-context').textContent;
   $('activity-ir-note').hidden = !activity || event.activity !== 'emit_instructions';
   $('activity-ir-note').textContent = t('activity.ir');
   $('activity-related').hidden = !activity || !event.related_id;
@@ -141,21 +162,34 @@ export function renderInspector(
   $('activity-ir-link').textContent = t('activity.openIR');
   $('activity-ir-link').onclick = () => onIR(event);
   $('change').hidden =
-    !event || !['activity', 'type', 'rewrite', 'expand', 'dispatch', 'ir'].includes(event.kind);
+    !event ||
+    !['activity', 'type', 'rewrite', 'expand', 'dispatch', 'ir'].includes(event.kind) ||
+    (activity && !event.before && !event.after);
+  $('event-before').hidden = activity && !event.before;
+  const resultLabel = activity && !event.before ? 'event.observedResult' : 'after';
+  $('event-result-label').dataset.i18n = resultLabel;
+  $('event-result-label').textContent = t(resultLabel);
+  const short = [event?.before || t('unset'), event?.after || '—'].every(
+    (value) => value.length <= 55 && !value.includes('\n'),
+  );
+  $('change').dataset.layout = short && !$('event-before').hidden ? 'pair' : 'stack';
   for (const [id, value] of [
     ['before', event?.before || t('unset')],
     ['after', event?.after || '—'],
   ]) {
     if (['rewrite', 'expand'].includes(event?.kind)) renderCrystal($(id), value);
+    else if (event?.kind === 'ir' || (activity && event.activity === 'emit_instructions'))
+      renderLLVM($(id), value);
     else $(id).textContent = value;
   }
-  const stack = model.stack.slice(-15);
+  const stack = model.stack;
+  $('event-stack-count').textContent = String(stack.length);
   $('stack').replaceChildren(
     ...stack.map((frame, i) => {
       const button = document.createElement('button');
       button.className = 'stack-frame';
       button.dataset.visitor = visitorKey(frame.visitor);
-      button.style.marginLeft = `${i * 4}px`;
+      button.style.marginLeft = `${Math.min(i, 15) * 4}px`;
       button.textContent = `${shortVisitor(frame.visitor)} → #${frame.node_id}`;
       button.onclick = () => onSelect(frame.node_id);
       return button;
