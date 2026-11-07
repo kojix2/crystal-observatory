@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { TraceModel } from '../web/core/trace-model.js';
 import { renderInspector } from '../web/ui/inspector.js';
 import { setLocale, t } from '../web/i18n/index.js';
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 
 // Only the DOM operations used by the inspector; no browser globals at import time.
 class Element {
@@ -25,6 +27,116 @@ class Element {
   }
   insertAdjacentHTML() {}
 }
+
+test('overview excludes future findings while whole-recording activities label them and keep related nodes', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const load = (name) =>
+    new TraceModel(
+      JSON.parse(
+        gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))),
+      ),
+    );
+  const contents = (el) => [el.textContent, ...el.children.map(contents)].join('\n');
+  try {
+    setLocale('en');
+    const model = load('03_macro_expansion').seek(62);
+    let seek;
+    const render = () =>
+      renderInspector(
+        model,
+        12,
+        () => {},
+        () => {},
+        (index) => (seek = index),
+      );
+    render();
+    assert.equal(get('node-type').textContent, t('unknown'));
+    assert.equal(get('node-activity-count').textContent, '4');
+    assert.match(contents(get('node-overview')), /3 \* 3/);
+    assert(!contents(get('node-overview')).includes('Int32'));
+    const buttons = get('node-activities')
+      .children.flatMap((el) => el.children)
+      .filter((el) => el.dataset.index);
+    assert.deepEqual(
+      buttons.filter((el) => el.dataset.future === 'true').map((el) => el.dataset.index),
+      ['171', '219'],
+    );
+    buttons.find((el) => el.dataset.index === '171').onclick();
+    assert.equal(seek, 171);
+    assert.equal(model.index, 62);
+    model.seek(171);
+    render();
+    assert.equal(get('node-type').textContent, 'Int32');
+    assert.match(contents(get('node-overview')), /Int32/);
+    assert.match(get('node-type-at').textContent, /171/);
+    const union = load('02_union_and_narrowing').seek(218);
+    renderInspector(union, 3, () => {});
+    assert(contents(get('node-activities')).includes(t('activity.related', { id: 2 })));
+    const broken = load('08_type_error').seek(85);
+    renderInspector(broken, 1, () => {});
+    assert.equal(get('node-incomplete').hidden, false);
+    assert.equal(get('node-incomplete').textContent, t('activity.incomplete'));
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
+  }
+});
+
+test('long node code is previewed without losing generated text and source navigation requires a loaded file', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const text = 'def generated\n  a = 1\n  b = 2\n  "<script>"\nend';
+  const model = new TraceModel({
+    schema_version: 1,
+    compiler_version: 'WASI',
+    source: '',
+    filename: 'input.cr',
+    snapshots: [],
+    events: [],
+    nodes: [{ id: 1, kind: 'Def', text, filename: 'input.cr', line: 1 }],
+  });
+  try {
+    let sourceNode;
+    renderInspector(
+      model,
+      1,
+      () => {},
+      () => {},
+      () => {},
+      () => {},
+      (node) => (sourceNode = node),
+    );
+    assert.equal(get('node-code').innerHTML.split('\n').length, 3);
+    assert.equal(get('node-open-source').disabled, false);
+    get('node-open-source').onclick();
+    assert.equal(sourceNode.id, 1);
+    get('node-expand-code').onclick();
+    assert.equal(get('node-code').innerHTML.split('\n').length, 5);
+    assert.match(get('node-code').innerHTML, /&lt;script&gt;/);
+    get('node-expand-code').onclick();
+    assert.equal(get('node-code').innerHTML.split('\n').length, 3);
+    model.nodes.get(1).filename = 'stdlib.cr';
+    model.nodes.get(1).text = 'a_very_long_generated_call(' + 'argument, '.repeat(30) + ')';
+    renderInspector(model, 1, () => {});
+    assert.equal(get('node-open-source').disabled, true);
+    assert.equal(get('node-expand-code').hidden, false);
+    get('node-expand-code').onclick();
+    assert.equal(get('node-code').innerHTML, model.nodes.get(1).text);
+  } finally {
+    globalThis.document = original;
+  }
+});
 
 test('node IR follows selection independently of playback and keeps all codegen contexts', () => {
   const elements = new Map();

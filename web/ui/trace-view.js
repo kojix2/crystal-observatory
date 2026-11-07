@@ -6,6 +6,7 @@ import { eventLabel, shortVisitor } from './event-labels.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
 import { renderInspector } from './inspector.js';
+import { setupNodeTabs } from './node-tabs.js';
 import { renderTokens } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
@@ -44,6 +45,7 @@ export class TraceView {
     }
     this.events = new EventList((index) => this.selectEvent(index));
     this.ir = new IRView();
+    this.nodeTabs = setupNodeTabs();
     this.bindControls();
   }
   get trace() {
@@ -192,7 +194,18 @@ export class TraceView {
         this.renderObservation({ reveal: true });
       }
     }
+    if (node) this.showNodeEventTab();
     this.workspace?.showPane('details', { focus: true });
+  }
+  showNodeEventTab() {
+    const event = this.model.event;
+    this.nodeTabs?.show(
+      event?.kind === 'ir' || event?.activity === 'emit_instructions'
+        ? 'ir'
+        : event?.kind === 'activity'
+          ? 'activities'
+          : 'overview',
+    );
   }
   selectNode(id) {
     this.selected = id;
@@ -237,6 +250,7 @@ export class TraceView {
   }
   renderSelection({ reveal = true } = {}) {
     if (!this.model) return;
+    this.nodeTabs?.update(this.model, this.selected);
     this.renderObservation({ reveal });
     renderInspector(
       this.model,
@@ -246,8 +260,14 @@ export class TraceView {
       (index) => {
         this.stop();
         const selected = this.selected;
+        const tab = this.nodeTabs?.current;
         this.seek(index);
         this.selectNode(selected);
+        this.nodeTabs?.show(tab);
+        if (tab === 'activities')
+          $('node-activities')
+            .querySelector(`[data-index="${index}"]`)
+            ?.focus({ preventScroll: true });
       },
       (event) => {
         if (!this.ir.functions.some((fn) => fn.name === event.llvm_function)) {
@@ -256,6 +276,11 @@ export class TraceView {
         }
         this.setView('ir');
         this.ir.follow(event.llvm_function, event.llvm_block, true);
+      },
+      (node) => {
+        this.editor.highlight(node);
+        this.editor.pendingReveal = true;
+        this.setView('source');
       },
     );
     this.editor.highlight(this.model.nodes.get(this.selected));
@@ -510,6 +535,7 @@ export class TraceView {
       $(id).onclick = () => {
         if (kind === 'declaration') this.setView('declarations', { reveal: false });
         this.nextKind(kind);
+        if (kind === 'activity') this.showNodeEventTab();
       };
     $('snapshot').onchange = () => {
       this.snapshot = Number($('snapshot').value);

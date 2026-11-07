@@ -110,18 +110,28 @@
     <aside class="inspector-panel" id="inspector-panel" tabindex="-1">
       <section class="panel detail-panel" id="node-panel" aria-labelledby="node-heading">
         <div class="panel-head"><h2 id="node-heading" tabindex="-1" data-i18n="node.details">Node details</h2><span id="node-id" class="tiny">—</span></div>
-        <div class="inspect-scroll">
-          <h3 id="node-title">—</h3>
-          <dl id="node-facts" class="node-facts">
-            <dt data-i18n="node.location">Location</dt><dd id="node-location"></dd>
-            <dt data-i18n="inferred">Inferred type</dt><dd id="node-type" class="node-type"></dd>
-            <dt data-i18n="node.eventCount">Events</dt><dd id="node-summary"></dd>
-          </dl>
+        <div class="node-content">
+          <div class="node-identity">
+            <div class="node-title-row"><h3 id="node-title">—</h3><span id="node-type-badge" class="node-type-badge"><span data-i18n="node.expressionType">Expression type</span> <code id="node-type"></code><small id="node-type-at"></small></span></div>
+            <div id="node-facts" class="node-facts"><span id="node-location"></span><span id="node-summary"></span></div>
+          </div>
+          <div id="node-source" class="node-source"><pre id="node-code" class="crystal-code"></pre><div class="node-source-actions"><button id="node-expand-code" class="link-button" aria-expanded="false" aria-controls="node-code" hidden></button><button id="node-open-source" class="link-button" data-i18n="node.openSource">Open in Source</button></div></div>
           <div class="inspector-actions"><button id="node-prev" class="quiet" data-i18n="node.prev">← Previous visit</button><button id="node-next" class="quiet" data-i18n="node.next">Next visit →</button><button id="node-filter" class="quiet" data-i18n="node.filter">Only this node</button></div>
-          <pre id="node-code" class="crystal-code"></pre>
-          <div id="node-declarations"></div>
-          <h4 data-i18n="activity.title">Visitor activities</h4><div id="node-activities"></div>
-          <h4>LLVM IR</h4><p id="node-ir-note" class="tiny" data-i18n="node.irNote" hidden></p><div id="node-ir">—</div>
+          <div class="node-tabs" role="tablist" data-i18n-aria="node.details">
+            <button id="node-tab-overview" role="tab" aria-selected="true" aria-controls="node-overview-panel" data-i18n="node.overview">Overview</button>
+            <button id="node-tab-activities" role="tab" aria-selected="false" aria-controls="node-activities-panel" tabindex="-1"><span data-i18n="node.activities">Activities</span> <span id="node-activity-count" class="node-count">0</span></button>
+            <button id="node-tab-ir" role="tab" aria-selected="false" aria-controls="node-ir-panel" tabindex="-1">IR <span id="node-ir-count" class="node-count">0</span></button>
+          </div>
+          <section id="node-overview-panel" class="node-tab-panel" role="tabpanel" tabindex="0" aria-labelledby="node-tab-overview">
+            <p id="node-at-event" class="node-context"></p><p id="node-incomplete" class="node-incomplete" hidden></p>
+            <div id="node-declarations"></div><div id="node-overview"></div>
+          </section>
+          <section id="node-activities-panel" class="node-tab-panel" role="tabpanel" tabindex="0" aria-labelledby="node-tab-activities" hidden>
+            <p class="node-context" data-i18n="node.wholeRecording">Whole recording</p><div id="node-activities"></div>
+          </section>
+          <section id="node-ir-panel" class="node-tab-panel" role="tabpanel" tabindex="0" aria-labelledby="node-tab-ir" hidden>
+            <p class="node-context" data-i18n="node.wholeRecording">Whole recording</p><p id="node-ir-note" class="tiny" hidden></p><div id="node-ir">—</div>
+          </section>
         </div>
       </section>
       <div class="splitter horizontal" id="detail-splitter" role="separator" tabindex="0" data-i18n-aria="split.details" aria-orientation="horizontal" aria-controls="node-panel event-panel"></div>

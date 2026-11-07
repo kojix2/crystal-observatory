@@ -26,6 +26,7 @@ export function renderInspector(
   onDeclaration = () => {},
   onSeek = () => {},
   onIR = () => {},
+  onSource = () => {},
 ) {
   const node = model.nodes.get(selected),
     event = model.event,
@@ -41,9 +42,31 @@ export function renderInspector(
     ? t('count.events', { count: nodeEvents.length.toLocaleString() })
     : '';
   $('node-facts').hidden = !node;
-  $('node-code').hidden = !node;
+  $('node-source').hidden = !node;
+  $('node-type-badge').hidden = !node;
   $('node-type').textContent = model.types.get(selected) || t('unknown');
-  renderCrystal($('node-code'), node?.text || '—');
+  $('node-type-at').textContent = model.index >= 0 ? t('node.typeAt', { index: model.index }) : '';
+  const lines = (node?.text || '—').split('\n');
+  const renderCode = () => {
+    const expanded = $('node-expand-code').ariaExpanded === 'true';
+    renderCrystal($('node-code'), (expanded ? lines : lines.slice(0, 3)).join('\n'));
+    $('node-source').dataset.expanded = String(expanded);
+    $('node-expand-code').textContent = t(
+      expanded ? 'node.collapseCode' : lines.length > 3 ? 'node.showLines' : 'node.showCode',
+      { count: lines.length },
+    );
+  };
+  renderCode();
+  $('node-expand-code').hidden = lines.length <= 3 && lines.every((line) => line.length <= 32);
+  $('node-expand-code').onclick = () => {
+    $('node-expand-code').ariaExpanded = String($('node-expand-code').ariaExpanded !== 'true');
+    renderCode();
+  };
+  $('node-open-source').disabled =
+    !node?.line || Boolean(node.filename && node.filename !== model.trace.filename);
+  $('node-open-source').title = $('node-open-source').disabled ? t('node.sourceUnavailable') : '';
+  $('node-open-source').onclick = () => onSource(node);
+  $('node-location').title = $('node-location').textContent;
   const declarations = [...model.declarations.values()].filter(
     (state) =>
       state.declarations.some((event) => event.node_id === selected) ||
@@ -64,8 +87,10 @@ export function renderInspector(
       return button;
     }),
   );
-  renderNodeIR(node, nodeEvents);
+  renderNodeOverview(model, node, nodeEvents, declarations, onSeek);
+  renderNodeIR(node, nodeEvents, model.index, onIR);
   renderActivities(model, node, onSeek);
+  $('node-activity-count').textContent = String((model.activities.get(selected) || []).length);
   for (const id of ['node-prev', 'node-next', 'node-filter']) $(id).disabled = !node;
 
   $('event-id').textContent = event ? `#${event.index}` : '—';
@@ -182,13 +207,61 @@ function renderLinkDetails(event) {
   command.append(summary, code);
   root.append(command);
 }
-function renderNodeIR(node, events) {
+function renderNodeOverview(model, node, events, declarations, onSeek) {
+  $('node-at-event').textContent = node
+    ? t(model.index >= 0 ? 'node.atEvent' : 'node.beforeRecording', { index: model.index })
+    : '';
+  $('node-incomplete').hidden = !node || !(model.trace.truncated || model.trace.errors?.length);
+  $('node-incomplete').textContent = t('activity.incomplete');
+  const root = $('node-overview');
+  root.replaceChildren();
+  if (!node) return;
+  const observed = events.filter((event) => event.index <= model.index);
+  const facts = ['expand', 'dispatch', 'rewrite', 'type']
+    .map((kind) => observed.findLast((event) => event.kind === kind))
+    .filter(Boolean);
+  const latest = observed.findLast(
+    (event) =>
+      event.kind === 'activity' &&
+      !['emit_instructions', 'assign_type', 'rewrite', 'resolve_target'].includes(event.activity) &&
+      !(declarations.length && event.activity === 'declare_type'),
+  );
+  if (latest) facts.push(latest);
+  for (const event of facts.slice(0, 3)) {
+    const button = document.createElement('button');
+    button.className = 'node-overview-link link-button';
+    const label = document.createElement('span');
+    label.className = 'node-fact-label';
+    label.textContent =
+      event.kind === 'activity' ? activityLabel(event.activity) : eventLabel(event.kind);
+    const value = document.createElement('span');
+    value.className = 'node-fact-value';
+    value.textContent =
+      event.kind === 'type'
+        ? `${event.before || t('unknown')} → ${event.after || '—'}`
+        : event.after || '—';
+    const index = document.createElement('small');
+    index.textContent = `#${event.index}`;
+    button.append(label, value, index);
+    button.onclick = () => onSeek(event.index);
+    root.append(button);
+  }
+  if (!facts.length && !declarations.length) {
+    const empty = document.createElement('p');
+    empty.className = 'node-context';
+    empty.textContent = t('node.noFacts');
+    root.append(empty);
+  }
+}
+
+function renderNodeIR(node, events, index, onIR) {
   // Like source, show the selected node's records from the whole compilation,
   // independently of the event currently being replayed in the lower inspector.
   const activities = events.filter(
     (event) => event.kind === 'activity' && event.activity === 'emit_instructions',
   );
   const entries = activities.length ? activities : events.filter((event) => event.kind === 'ir');
+  $('node-ir-count').textContent = String(entries.length);
   $('node-ir-note').hidden = entries.length === 0;
   $('node-ir-note').textContent = t(activities.length ? 'activity.ir' : 'node.irNote');
   if (!entries.length) {
@@ -207,6 +280,17 @@ function renderNodeIR(node, events) {
       if (event.after) renderLLVM(code, event.after);
       else code.textContent = t('node.irEmpty');
       entry.append(location, code);
+      const action = document.createElement('button');
+      action.className = 'link-button node-ir-open';
+      action.textContent = `#${event.index} · ${t('activity.openIR')}`;
+      action.onclick = () => onIR(event);
+      entry.append(action);
+      if (event.index > index) {
+        const future = document.createElement('small');
+        future.className = 'node-future';
+        future.textContent = t('node.future');
+        entry.append(future);
+      }
       return entry;
     }),
   );
@@ -256,7 +340,21 @@ export function renderActivities(
       button.dataset.index = String(event.index);
       const helper = visitorKey(event.visitor) === 'HasSelfVisitor';
       button.dataset.visitor = visitorKey(event.visitor);
-      button.textContent = `${helper ? '↳ ' : ''}${shortVisitor(helper && event.parent_visitor ? event.parent_visitor : event.visitor)}${helper ? ` / HasSelfVisitor` : ''} · #${event.node_id} ${activitySummary(event)}`;
+      button.dataset.future = String(event.index > model.index);
+      button.dataset.current = String(event.index === model.index);
+      const action = document.createElement('span');
+      action.className = 'activity-action';
+      action.textContent = `#${event.index} · ${activitySummary(event)}`;
+      const context = document.createElement('small');
+      context.className = 'activity-context';
+      context.textContent = `${shortVisitor(helper && event.parent_visitor ? event.parent_visitor : event.visitor)}${helper ? ' / HasSelfVisitor' : ''}${event.node_id !== node.id ? ` · ${t('activity.related', { id: event.node_id })}` : ''}`;
+      button.append(action, context);
+      if (event.index > model.index) {
+        const future = document.createElement('small');
+        future.className = 'node-future';
+        future.textContent = t('node.future');
+        button.append(future);
+      }
       button.title = `${t('activity.observed')} · ${event.reason || ''}`;
       button.onclick = () => onSeek(event.index);
       section.append(button);

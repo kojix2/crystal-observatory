@@ -63,6 +63,19 @@ History selects an event; the node inspector independently follows the selected
 node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
 
+Node details keeps the node kind, expression type and source location above
+**Overview**, **Activities** and **IR** tabs. Code initially shows three lines;
+**Show all … lines** expands the full recorded node text, including generated code.
+**Open in Source** reveals its location in the source editor when that file is loaded.
+Overview shows declarations, type changes, expansion and resolved calls recorded
+through the selected event. The expression type also follows that event; a
+declaration's expression type (for example `Nil`) is distinct from its declared type.
+Activities and IR cover the whole recording, label entries after the selected
+event, and show counts even when their tabs are closed. Selecting a History
+activity or IR event opens the corresponding node tab. Playback keeps the current
+tab for the same node; selecting another node starts with Overview. Arrow keys,
+Home and End switch between node tabs without stepping History.
+
 History initially shows one row per completed compiler stage, grouping its start,
 end and intervening events. Open a stage with its arrow to see Visitor groups,
 then open a Visitor to see individual events. Filtering keeps the enclosing stage

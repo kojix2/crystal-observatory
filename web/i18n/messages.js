@@ -7,8 +7,10 @@ import { comparisonMessages } from './comparison-messages.js';
 import { pipelineMessages } from './pipeline-messages.js';
 
 import { mobileMessages } from './mobile-messages.js';
+import { nodeMessages } from './node-messages.js';
 
 export const messages = {
+  ...nodeMessages,
   ...mobileMessages,
   ...declarationMessages,
   ...activityMessages,
