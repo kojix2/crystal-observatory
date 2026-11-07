@@ -361,6 +361,8 @@ td { padding:4px 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowra
 .event-node,.event-result { font-size:10px; color:var(--muted); }
 .event-label { font-size:11px; }
 .event-group { background:var(--soft); }
+.event-stage .event-visitor { font-weight:600; }
+.event-call .event-group-heading { padding-left:10px; }
 .event-group td:first-child { font-size:10px; white-space:normal; }
 .event-group-heading { display:flex; align-items:center; gap:4px; }
 .event-group-toggle { display:inline-flex; align-items:center; flex-shrink:0; padding:0 2px; border:0; background:transparent; color:var(--muted); }

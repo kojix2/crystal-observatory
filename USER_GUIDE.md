@@ -64,6 +64,13 @@ History selects an event; the node inspector independently follows the selected
 node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
 
+History initially shows one row per completed compiler stage, grouping its start,
+end and intervening events. Open a stage with its arrow to see Visitor groups,
+then open a Visitor to see individual events. Filtering keeps the enclosing stage
+and matching event counts; declaration-only filtering shows operations directly.
+Playback marks the current event inside a collapsed group without opening it.
+Stages missing an end event stay visible individually, including compiler errors.
+
 With **Follow history** enabled, clicking a History event or Visitor name opens its
 node in AST, selecting a recorded snapshot containing it and opening folded ancestors.
 The arrow beside a Visitor only opens or closes its event group. Disable Follow history

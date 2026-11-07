@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { groupEvents, eventRows } from '../web/core/event-groups.js';
+import { groupEvents, groupStages, eventRows } from '../web/core/event-groups.js';
 import { TraceModel } from '../web/core/trace-model.js';
 import { EventList } from '../web/ui/event-list.js';
 import { setLocale } from '../web/i18n/index.js';
@@ -139,6 +139,72 @@ test('all bundled traces expand back to the original event order with no nested 
   assert.equal(cleanup.events[group.end].kind, 'transform_leave');
 });
 
+test('stage boundaries collapse Visitors together and both levels restore every original event', () => {
+  for (const directory of ['../web/traces/', './fixtures/traces/']) {
+    const root = new URL(directory, import.meta.url);
+    for (const file of readdirSync(root).filter((name) => name.endsWith('.json.gz'))) {
+      const trace = JSON.parse(gunzipSync(readFileSync(new URL(file, root)))),
+        original = structuredClone(trace),
+        groups = groupStages(trace.events),
+        phases = groups.filter((group) => group.kind === 'phase'),
+        expanded = new Set(
+          groups.flatMap((group) => [group.start, ...(group.children || []).map((g) => g.start)]),
+        );
+      assert(phases.length > 0, file);
+      assert(eventRows(trace.events, groups).length < 70, file);
+      for (const phase of phases) {
+        assert.equal(trace.events[phase.start].kind, 'phase_enter', file);
+        assert.equal(trace.events[phase.end].kind, 'phase_leave', file);
+        assert.equal(trace.events[phase.start].phase, trace.events[phase.end].phase, file);
+        for (const child of phase.children || [])
+          assert(child.start > phase.start && child.end < phase.end, file);
+      }
+      assert.deepEqual(
+        eventRows(trace.events, groups, expanded)
+          .filter((row) => row.event)
+          .map((row) => row.event),
+        trace.events,
+        file,
+      );
+      assert.deepEqual(trace, original, file);
+    }
+  }
+});
+
+test('stages require matching recorded boundaries and never conceal compiler errors', () => {
+  const events = sample();
+  assert.equal(groupStages(events).length, 1);
+  assert.deepEqual(groupStages(events)[0].children, groupEvents(events));
+  for (const damage of [
+    (items) => items.pop(),
+    (items) => (items.at(-1).phase = 'Other phase'),
+    (items) => (items[3].phase = 'Other phase'),
+    (items) => (items[7].kind = 'error'),
+    (items) => (items[7].kind = 'complete'),
+  ]) {
+    const damaged = structuredClone(events);
+    damage(damaged);
+    assert(!groupStages(damaged).some((group) => group.kind === 'phase'));
+  }
+  assert.deepEqual(groupStages([]), []);
+  assert.deepEqual(groupStages(events.slice(1, -1)), groupEvents(events.slice(1, -1)));
+  const repeated = [...events, ...events.map((event) => ({ ...event, index: event.index + 12 }))];
+  assert.deepEqual(
+    groupStages(repeated).map(({ start, end }) => [start, end]),
+    [
+      [0, 11],
+      [12, 23],
+    ],
+  );
+
+  const failed = load('08_type_error'),
+    rows = eventRows(failed.events, groupStages(failed.events));
+  assert(rows.some((row) => row.event?.kind === 'error'));
+  assert(
+    rows.some((row) => row.event?.kind === 'phase_enter' && row.event.phase === 'Semantic (main)'),
+  );
+});
+
 // Keep paging/filtering tests independent of browser setup; this small fixture
 // supplies the DOM fields EventList uses, without emulating native button events.
 function withList(trace, run) {
@@ -161,6 +227,58 @@ function withList(trace, run) {
     setLocale('en');
   }
 }
+
+test('stage disclosure preserves selection, nested state, localized names and filter counts', () => {
+  withList(load('06_cleanup'), (list, element, seeks) => {
+    assert.equal(list.rows.length, 14);
+    assert.equal(list.rows.filter((row) => row.group?.kind === 'phase').length, 13);
+    assert.equal(element('page-state').textContent, '1 / 1');
+    const visitor = list.groups.find(
+        (group) => group.event.visitor === 'Crystal::CleanupTransformer',
+      ),
+      phase = list.historyGroups.find((group) => group.children?.includes(visitor)),
+      current = visitor.start + 1;
+    list.model.seek(current);
+    list.follow();
+    assert.equal(list.activeGroup, phase.start);
+    assert(element('events').innerHTML.includes(`Current: #${current}`));
+    const toggleTarget = {
+      closest: (selector) =>
+        selector === '[data-group]' ? { dataset: { group: String(phase.start) } } : null,
+    };
+    element('events').onclick({ target: toggleTarget });
+    assert(list.expanded.has(phase.start));
+    assert.equal(list.activeGroup, visitor.start);
+    list.toggle(visitor.start);
+    assert(list.rows.some((row) => row.event?.index === current));
+    list.toggle(phase.start);
+    assert.equal(list.activeGroup, phase.start);
+    assert(list.expanded.has(visitor.start));
+    list.toggle(phase.start);
+    assert(list.rows.some((row) => row.event?.index === current));
+
+    element('kind').value = 'rewrite';
+    element('kind').onchange();
+    // Current event is hidden by the filter; highlight only its deepest visible parent.
+    const activeRows = [...element('events').innerHTML.matchAll(/aria-current="step"/g)];
+    assert.equal(activeRows.length, 1);
+    setLocale('ja');
+    list.render();
+    assert(element('events').innerHTML.includes('件中'));
+    assert(element('events').innerHTML.includes(list.stageLabel(phase.event)));
+    assert.equal(list.model.index, current);
+    assert.deepEqual(seeks, []);
+
+    const target = {
+      closest: (selector) =>
+        selector === '[data-index]' ? { dataset: { index: String(phase.start) } } : null,
+    };
+    element('events').onkeydown({ target, key: 'Enter', preventDefault() {} });
+    assert.deepEqual(seeks, [phase.start]);
+    list.load(new TraceModel(load('01_specialization')));
+    assert.equal(list.expanded.size, 0);
+  });
+});
 
 test('opening, closing, filtering and localizing keep playback position and expanded state', () => {
   withList(load('06_cleanup'), (list, element, seeks) => {
@@ -188,7 +306,7 @@ test('opening, closing, filtering and localizing keep playback position and expa
     element('kind').value = 'rewrite';
     element('search').value = 'CleanupTransformer';
     element('kind').onchange();
-    assert.equal(list.rows.length, 2);
+    assert.equal(list.rows.length, 3);
     const groupSize = cleanupGroup.end - cleanupGroup.start + 1;
     assert(element('events').innerHTML.includes(`1 of ${groupSize} events match`));
     setLocale('ja');
@@ -197,7 +315,7 @@ test('opening, closing, filtering and localizing keep playback position and expa
     assert.equal(list.model.index, current);
     assert(list.expanded.has(cleanupGroup.start));
     list.toggle(cleanupGroup.start);
-    assert.equal(list.rows.length, 1);
+    assert.equal(list.rows.length, 2);
     assert.equal(list.model.index, current);
     assert.deepEqual(seeks, []);
 
@@ -213,7 +331,10 @@ test('node/search filters retain parent context, while original event rows still
     element('search').value = 'Call#recalculate';
     element('search').oninput();
     assert(list.rows.every((row) => row.group));
-    const group = list.rows[0].group;
+    const phase = list.rows[0].group;
+    assert.equal(phase.kind, 'phase');
+    list.toggle(phase.start);
+    const group = list.rows.find((row) => row.group && row.group.kind !== 'phase').group;
     list.toggle(group.start);
     assert(list.rows.some((row) => row.event?.index === event.index));
     list.filter(event.node_id);
@@ -278,6 +399,9 @@ test('declaration filtering exposes operations directly and searches relationshi
 
 test('paging follows visible rows and a collapsed group tracks its hidden current event', () => {
   withList(load('10_initializers', './fixtures/traces/'), (list, element) => {
+    assert(list.rows.length < 70);
+    for (const group of list.historyGroups.filter((group) => group.kind === 'phase'))
+      list.toggle(group.start);
     assert(list.rows.length > 70);
     const group = list.groups.find((group) => group.end - group.start > 100 && group.start > 100);
     assert(group);

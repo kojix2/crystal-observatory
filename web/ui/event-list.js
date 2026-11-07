@@ -10,7 +10,8 @@ import {
   explanation,
 } from './event-labels.js';
 import { groupActivitySummary } from '../core/activities.js';
-import { groupEvents, eventRows } from '../core/event-groups.js';
+import { groupEvents, groupStages, eventRows } from '../core/event-groups.js';
+import { compilerStage } from '../core/compiler-stages.js';
 import { declarationSummary } from './declarations.js';
 const PAGE_SIZE = 70;
 
@@ -60,6 +61,7 @@ export class EventList {
   load(model) {
     this.model = model;
     this.groups = groupEvents(model.trace.events);
+    this.historyGroups = groupStages(model.trace.events, this.groups);
     this.activityKinds = [
       ...new Set(model.trace.events.filter((e) => e.kind === 'activity').map((e) => e.activity)),
     ].sort();
@@ -84,7 +86,7 @@ export class EventList {
         (!activity || (event.kind === 'activity' && event.activity === activity)) &&
         (!node || event.node_id === node) &&
         (!query ||
-          `${event.visitor} ${event.node_id} ${this.model.nodes.get(event.node_id)?.kind || ''} ${this.result(event)} ${event.phase}`
+          `${event.visitor} ${event.node_id} ${this.model.nodes.get(event.node_id)?.kind || ''} ${this.result(event)} ${event.phase} ${this.stageLabel(event)}`
             .toLowerCase()
             .includes(query)),
     );
@@ -95,7 +97,11 @@ export class EventList {
         groupActivitySummary(this.model.trace.events, group, this.matchingIndices),
       ]),
     );
-    this.rows = eventRows(this.filtered, kind === 'declaration' ? [] : this.groups, this.expanded);
+    this.rows = eventRows(
+      this.filtered,
+      kind === 'declaration' ? [] : this.historyGroups,
+      this.expanded,
+    );
     this.page = 0;
     this.render();
   }
@@ -105,20 +111,27 @@ export class EventList {
     select.innerHTML = `<option value="">${esc(t('activity.all'))}</option>${(this.activityKinds || []).map((kind) => `<option value="${esc(kind)}">${esc(activityLabel(kind))}</option>`).join('')}`;
     select.value = value || '';
   }
-  follow() {
+  currentRowIndex() {
     let found = this.rows.findIndex((row) => row.event?.index === this.model.index);
     if (found < 0)
-      found = this.rows.findIndex(
+      found = this.rows.findLastIndex(
         ({ group }) => group && this.model.index >= group.start && this.model.index <= group.end,
       );
+    return found;
+  }
+  follow() {
+    const found = this.currentRowIndex();
     if (found >= 0) this.page = Math.floor(found / PAGE_SIZE);
     this.render();
   }
   toggle(start) {
+    for (const group of this.historyGroups)
+      if (group.start < start && start <= group.end && group.kind === 'phase')
+        this.expanded.add(group.start);
     this.expanded.has(start) ? this.expanded.delete(start) : this.expanded.add(start);
     this.rows = eventRows(
       this.filtered,
-      $('kind').value === 'declaration' ? [] : this.groups,
+      $('kind').value === 'declaration' ? [] : this.historyGroups,
       this.expanded,
     );
     const found = this.rows.findIndex((row) => row.group?.start === start);
@@ -131,6 +144,7 @@ export class EventList {
     const pages = Math.max(1, Math.ceil(this.rows.length / PAGE_SIZE));
     this.page = Math.max(0, Math.min(this.page, pages - 1));
     const empty = this.model.trace.mode === 'empty';
+    this.activeGroup = this.rows[this.currentRowIndex()]?.group?.start;
     $('history-start').hidden = !empty;
     $('history-no-match').hidden = empty || !this.model.trace.events.length || this.rows.length > 0;
     $('events').innerHTML = this.rows
@@ -154,10 +168,10 @@ export class EventList {
   renderRow({ event, group, count }) {
     if (group) {
       event = group.event;
-      const expanded = this.expanded.has(group.start),
-        containsCurrent = this.model.index >= group.start && this.model.index <= group.end,
-        active = containsCurrent && (!expanded || !this.matchingIndices.has(this.model.index)),
-        visitor = shortVisitor(event.visitor),
+      const phase = group.kind === 'phase',
+        expanded = this.expanded.has(group.start),
+        active = this.activeGroup === group.start,
+        visitor = phase ? this.stageLabel(event) : shortVisitor(event.visitor),
         label = t(expanded ? 'event.group.collapse' : 'event.group.expand', { visitor }),
         total = group.end - group.start + 1,
         summary =
@@ -167,13 +181,13 @@ export class EventList {
                 count: count.toLocaleString(),
                 total: total.toLocaleString(),
               });
-      const activities = (this.summaries.get(group.start) || [])
+      const activities = (phase ? [] : this.summaries.get(group.start) || [])
         .map(
           (activity) =>
             `<span class="activity-summary" title="${esc(activitySummary(activity))}">#${activity.node_id} ${esc(brief(activitySummary(activity), 130))}</span>`,
         )
         .join('');
-      return `<tr class="event-group ${active ? 'active' : ''}" data-index="${group.start}" tabindex="0" aria-current="${active ? 'step' : 'false'}"><td>${group.start}–<wbr>${group.end}</td><td title="${esc(event.visitor)}"><span class="event-group-heading"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-label="${esc(label)}" title="${esc(label)}">${icon('disclosure', { size: 12 })}</button><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(visitor)}</span></span>${this.renderNode(event)}</td><td><span class="event-label">${esc(summary)}</span>${activities}${containsCurrent ? `<span class="event-result">${esc(t('event.group.current', { index: this.model.index }))}</span>` : ''}</td></tr>`;
+      return `<tr class="event-group ${phase ? 'event-stage' : 'event-call'} ${active ? 'active' : ''}" data-index="${group.start}" tabindex="0" aria-current="${active ? 'step' : 'false'}"><td>${group.start}–<wbr>${group.end}</td><td title="${esc(phase ? event.phase || event.detail : event.visitor)}"><span class="event-group-heading"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-label="${esc(label)}" title="${esc(label)}">${icon('disclosure', { size: 12 })}</button><span class="event-visitor"${phase ? '' : ` data-visitor="${esc(visitorKey(event.visitor))}"`}>${esc(visitor)}</span></span>${phase ? '' : this.renderNode(event)}</td><td><span class="event-label">${esc(summary)}</span>${activities}${active ? `<span class="event-result">${esc(t('event.group.current', { index: this.model.index }))}</span>` : ''}</td></tr>`;
     }
     return `<tr class="${event.index === this.model.index ? 'active' : ''} ${esc(event.kind)}" data-index="${event.index}" tabindex="0" aria-current="${event.index === this.model.index ? 'step' : 'false'}"><td>${event.index}</td><td title="${esc(event.visitor)}"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(shortVisitor(event.visitor) || event.phase)}</span>${this.renderNode(event)}</td><td><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-result" title="${esc(this.result(event))}">${esc(brief(this.result(event), 130))}</span></td></tr>`;
   }
@@ -185,6 +199,10 @@ export class EventList {
         : event.kind === 'declaration'
           ? declarationSummary(event, this.model)
           : event.after || event.detail;
+  }
+  stageLabel(event) {
+    const stage = compilerStage(event);
+    return stage ? t(`pipeline.stage.${stage.id}`) : event.phase || event.detail || '';
   }
   renderNode(event) {
     return `<span class="event-node">${event.node_id ? `#${event.node_id} ${esc(this.model.nodes.get(event.node_id)?.kind || '')}` : '—'}</span>`;

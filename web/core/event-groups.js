@@ -37,8 +37,40 @@ export function groupEvents(events) {
   return groups;
 }
 
-// Filter the original events first, then project them into display rows using
-// ranges built from the full trace. Expanded children remain a flat event list.
+// Only completed, consistently named stages can hide their events. Failed or
+// truncated stages stay visible, including the error that interrupted them.
+export function groupStages(events, visitors = groupEvents(events)) {
+  const stages = [];
+  let start;
+  const name = (event) => event.phase || event.detail;
+  for (const event of events) {
+    if (event.kind === 'phase_enter') start = event;
+    else if (event.kind === 'phase_leave') {
+      if (start && name(start) && name(start) === name(event))
+        stages.push({ start: start.index, end: event.index, event: start, kind: 'phase' });
+      start = undefined;
+    } else if (
+      event.kind === 'error' ||
+      event.kind === 'complete' ||
+      (start && event.phase && event.phase !== name(start))
+    )
+      start = undefined;
+  }
+  const roots = [...stages];
+  let stageIndex = 0;
+  for (const visitor of visitors) {
+    while (stages[stageIndex]?.end < visitor.start) stageIndex++;
+    const stage = stages[stageIndex];
+    if (stage && stage.start < visitor.start && visitor.end < stage.end) {
+      stage.children ??= [];
+      stage.children.push(visitor);
+    } else roots.push(visitor);
+  }
+  return roots.sort((a, b) => a.start - b.start);
+}
+
+// Filter original events first, then project them into stage/Visitor rows using
+// ranges built from the full trace. Opening every group restores the exact order.
 export function eventRows(filtered, groups, expanded = new Set()) {
   const rows = [];
   let groupIndex = 0;
@@ -50,8 +82,12 @@ export function eventRows(filtered, groups, expanded = new Set()) {
       const start = i;
       while (i < filtered.length && filtered[i].index <= group.end) i++;
       rows.push({ group, count: i - start });
-      if (expanded.has(group.start))
-        for (let j = start; j < i; j++) rows.push({ event: filtered[j] });
+      if (expanded.has(group.start)) {
+        if (group.children)
+          for (const row of eventRows(filtered.slice(start, i), group.children, expanded))
+            rows.push(row);
+        else for (let j = start; j < i; j++) rows.push({ event: filtered[j] });
+      }
     } else {
       rows.push({ event });
       i++;
