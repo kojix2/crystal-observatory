@@ -21,9 +21,8 @@ The app automatically chooses plain text or gzip compression, whichever makes
 the shorter URL. The link opens the code in Source; compiling and running remain
 manual. A recipient does not need a saved file or a GitHub account.
 
-For longer code, the dialog also links to Gist and explains how to save your code
-as `main.cr` after signing in to GitHub. Use the ID at the end of the saved Gist's
-URL in the Gist link example shown in the dialog (`?gist=GIST_ID&file=main.cr`).
+For longer code, save a `.cr` file in a Gist and replace `GIST_ID` in the dialog's
+example link (`?gist=GIST_ID`). The filename is your choice.
 
 Supported URL forms (replace the uppercase placeholders):
 

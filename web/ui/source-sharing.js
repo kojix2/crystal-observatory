@@ -62,7 +62,7 @@ export class SourceSharing {
     const source = this.previewSource;
     const base = localizedURL(window.location.href, this.previewLocale);
     const gistExample = localizedURL(new URL('../', import.meta.url), this.previewLocale);
-    gistExample.search = new URLSearchParams({ gist: 'GIST_ID', file: 'main.cr' });
+    gistExample.search = new URLSearchParams({ gist: 'GIST_ID' });
     $('share-gist-example').textContent = gistExample.href;
     $('share-link').value = '';
     $('copy-source-link').disabled = true;

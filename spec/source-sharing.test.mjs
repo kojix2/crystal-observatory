@@ -115,7 +115,7 @@ test('opening sharing displays the code link without accessing the clipboard', a
     );
     assert.equal(get('copy-source-link').disabled, false);
     assert.equal(copied, undefined);
-    assert.match(get('share-gist-example').textContent, /\?gist=GIST_ID&file=main\.cr$/);
+    assert.match(get('share-gist-example').textContent, /\?gist=GIST_ID$/);
     const link = get('share-link').value;
     await sharing.copy(false);
     assert.equal(copied, link);
