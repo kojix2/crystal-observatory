@@ -7,14 +7,15 @@ import { TraceModel, flattenAST } from '../web/core/trace-model.js';
 import { readFile } from 'node:fs/promises';
 import { LINKER_ARGS } from '../web/runtime/linker-args.js';
 import { compilerStage } from '../web/core/compiler-stages.js';
+import { UIError } from '../web/i18n/index.js';
 
 let assets;
 before(async () => {
   assets = await loadPackagedAssets();
 });
 
-async function compile(code) {
-  const result = await compileSource(code, assets);
+async function compile(code, prelude = 'prelude') {
+  const result = await compileSource(code, assets, undefined, { prelude });
   new TraceModel(result.trace);
   return result;
 }
@@ -171,6 +172,74 @@ test('type and syntax errors return genuine diagnostics without an executable', 
   assert.equal(wrongSyntax.wasm, undefined);
   const recovered = await compile('puts 731\n');
   assert.equal(await execute(recovered), '731\n');
+});
+
+test('empty prelude produces compact IR without linking and preserves semantic diagnostics', async () => {
+  const arithmetic = await compile('42\nif 42 > 3\n 3 &* 7\nend\n', 'empty');
+  assert.deepEqual(arithmetic.trace.errors, []);
+  assert.equal(arithmetic.trace.prelude, 'empty');
+  assert.ok(arithmetic.trace.llvm_ir.length < 20_000);
+  assert.ok(arithmetic.trace.llvm_ir.includes('define '));
+  assert.equal(arithmetic.wasm, undefined);
+  assert.equal(arithmetic.trace.events.at(-1).kind, 'complete');
+  assert.match(arithmetic.trace.events.at(-1).detail, /linking skipped for empty prelude/);
+  assert.equal(
+    arithmetic.trace.events.some((event) => event.kind === 'link'),
+    false,
+  );
+
+  const unavailable = await compile('puts 42\n', 'empty');
+  assert.match(unavailable.trace.errors.join('\n'), /undefined method 'puts'/);
+  assert.equal(unavailable.wasm, undefined);
+  assert.equal(
+    unavailable.trace.events.some((event) => event.kind === 'link'),
+    false,
+  );
+
+  await assert.rejects(compile('3 * 7\n', 'empty'), /Missing __crystal_raise_overflow function/);
+  const recovered = await compile('puts 731\n');
+  assert.equal(recovered.trace.prelude, 'prelude');
+  assert.equal(await execute(recovered), '731\n');
+  const restored = new TraceModel(JSON.parse(JSON.stringify(arithmetic.trace)));
+  assert.equal(restored.trace.prelude, 'empty');
+});
+
+test('WASI program traps and output limits retain their original errors', async () => {
+  const result = await compile('lib C\n fun abort : NoReturn\nend\nputs "before trap"\nC.abort\n');
+  await assert.rejects(
+    runCommand(result.wasm, { args: ['program'], stage: 'running' }),
+    (error) => error instanceof WebAssembly.RuntimeError,
+  );
+  const limit = new UIError('error.output');
+  await assert.rejects(
+    runCommand(result.wasm, {
+      args: ['program'],
+      stage: 'running',
+      onStdout: () => {
+        throw limit;
+      },
+    }),
+    (error) => error === limit,
+  );
+  await assert.rejects(
+    runCommand(result.wasm, { args: ['program'], stage: 'compiling' }),
+    (error) => /before trap/.test(error.message) && error.cause instanceof WebAssembly.RuntimeError,
+  );
+});
+
+test('compiler configuration mismatches and unsuccessful exits cannot become IR-only successes', async () => {
+  const trace = { prelude: 'prelude', errors: [] };
+  const compiler = await compile(
+    `File.write("trace.json", ${JSON.stringify(JSON.stringify(trace))})\nSTDERR.puts "compiler failed"\nexit 9\n`,
+  );
+  const fakeAssets = { ...assets, compiler: compiler.wasm };
+  const failed = await compileSource('42', fakeAssets);
+  assert.match(failed.trace.errors.join('\n'), /compiler failed/);
+  assert.equal(failed.wasm, undefined);
+  await assert.rejects(
+    compileSource('42', fakeAssets, undefined, { prelude: 'empty' }),
+    /Compiler used prelude prelude, expected empty/,
+  );
 });
 
 test('fresh compilations never replay a previous source or executable', async () => {

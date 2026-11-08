@@ -53,6 +53,19 @@ test('cancelling a program preserves the loaded compiler, but discards program m
   }
 });
 
+test('compile sends a validated prelude selection to the compiler Worker', async () => {
+  const { session, workers } = fixture();
+  try {
+    const result = session.compile('42', undefined, 'empty');
+    assert.deepEqual(workers[0].payload, { source: '42', prelude: 'empty' });
+    workers[0].emit({ trace: { source: '42' } });
+    await result;
+    assert.throws(() => session.compile('42', undefined, 'custom'), /Invalid prelude/);
+  } finally {
+    session.dispose();
+  }
+});
+
 test('switching from syntax to compilation ignores queued messages from the old Worker', async () => {
   const { session, workers, states } = fixture();
   try {

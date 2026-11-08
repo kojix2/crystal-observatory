@@ -20,7 +20,9 @@ export class IRView {
       this.render();
     };
   }
-  load(ir) {
+  load(ir, prelude = null) {
+    $('ir-prelude').hidden = !prelude;
+    $('ir-prelude').textContent = prelude ? `--prelude ${prelude}` : '';
     this.hasIR = Boolean(ir);
     this.functions = indexIR(ir);
     this.selected = '';

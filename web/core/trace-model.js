@@ -10,7 +10,8 @@ export function validateTrace(t) {
     !Array.isArray(t.events) ||
     !Array.isArray(t.nodes) ||
     !Array.isArray(t.snapshots) ||
-    typeof t.source !== 'string'
+    typeof t.source !== 'string' ||
+    (t.prelude != null && typeof t.prelude !== 'string')
   )
     throw new UIError('error.traceSchema');
   if (t.events.length > 100000 || t.nodes.length > 20000 || t.source.length > 262144)

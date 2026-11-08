@@ -37,7 +37,12 @@ module Observatory
         result.program.progress_tracker.stage("LLVM → WebAssembly object") do
           result.program.target_machine.emit_obj_to_file(modules.values.first.mod, object_path)
         end
-        rec.event("complete", detail: "Real compiler + LLVM in WebAssembly; verified IR and emitted object; LLD and execution follow in the browser")
+        detail = if compiler.prelude == "empty"
+                   "Real compiler + LLVM in WebAssembly; verified IR and emitted object; linking skipped for empty prelude"
+                 else
+                   "Real compiler + LLVM in WebAssembly; verified IR and emitted object; LLD and execution follow in the browser"
+                 end
+        rec.event("complete", detail: detail)
       rescue ex : Crystal::CodeError
         rec.bundle.errors << ex.to_s
         rec.event("error", detail: ex.message || ex.class.name)

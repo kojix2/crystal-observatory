@@ -107,3 +107,16 @@ test('invalid trace IDs and ordering are rejected before replay', () => {
   t.events[0].node_id = 999999;
   assert.throws(() => validateTrace(t));
 });
+
+test('prelude metadata preserves old recordings and rejects non-text values', () => {
+  const trace = load('01_specialization');
+  delete trace.prelude;
+  assert.equal(validateTrace(trace).prelude, undefined);
+  trace.prelude = 'custom';
+  assert.equal(validateTrace(trace).prelude, 'custom');
+  trace.prelude = { name: 'empty' };
+  assert.throws(
+    () => validateTrace(trace),
+    (error) => error.key === 'error.traceSchema',
+  );
+});

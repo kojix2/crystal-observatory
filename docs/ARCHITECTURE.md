@@ -61,5 +61,14 @@ Older recordings can omit the link event; no result is inferred for them. Select
 the link stage without a result shows its description independently of history,
 without appending synthetic events or changing the selected history position.
 
+The full recording's `prelude` identifies the compiler's automatic require,
+not the current editor setting. Empty-prelude compilation verifies LLVM IR and
+emits an object, but deliberately skips linking and execution in the browser.
+It remains a `full` recording; `mode: "empty"` means no analysis has been run.
+An absent prelude in an older recording is not inferred from the current input.
+Compiler traps may prevent a trace from being written; their WASI diagnostics
+are surfaced as errors rather than a successful IR-only result. Program traps
+and output-limit errors keep their original error identity.
+
 Runtime limits are defined in `web/core/limits.js` and the Crystal entrypoints.
 They bound resources, not compiler coverage or a complete memory sandbox.

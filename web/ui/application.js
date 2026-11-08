@@ -29,6 +29,7 @@ export class Application {
     });
     this.trace = new TraceView(this.editor);
     this.session = new WorkSession({ onState: () => this.updateControls() });
+    $('prelude').onchange = () => this.updateControls();
     $('compile-run').onclick = () => this.compile(true);
     $('compile-only').onclick = () => this.compile(false);
     $('analyze').onclick = () => this.parse();
@@ -71,10 +72,17 @@ export class Application {
   }
   updateControls() {
     const busy = this.session?.busy || false;
-    for (const id of ['compile-run', 'compile-only', 'analyze']) $(id).disabled = busy;
+    $('prelude-hint').hidden = $('prelude').value !== 'empty';
+    $('compile-run').disabled = busy || $('prelude').value === 'empty';
+    for (const id of ['compile-only', 'analyze']) $(id).disabled = busy;
+    $('prelude').disabled = busy;
     $('cancel-job').disabled = !busy;
-    $('rerun').disabled = busy || !this.artifact || this.artifact.source !== this.editor.value;
-    $('download-wasm').disabled = !this.artifact;
+    $('rerun').disabled =
+      busy ||
+      !this.artifact ||
+      this.artifact.source !== this.editor.value ||
+      this.artifact.prelude !== $('prelude').value;
+    $('download-wasm').disabled = !this.artifact || this.artifact.prelude !== $('prelude').value;
     $('recorded').disabled = !$('example').value;
     this.sharing?.update();
   }
@@ -113,28 +121,42 @@ export class Application {
     return !changed;
   }
   async compile(andRun) {
+    const prelude = $('prelude').value;
     this.prepare('state.compiling');
     const source = this.editor.value;
     notify(() => t('notice.prepare'));
     try {
-      const result = await this.session.compile(source, (data) => {
-        if (data.progress != null)
-          text('engine', () => t('engine.progress', { percent: Math.round(data.progress * 100) }));
-        if (['loading', 'compiling', 'linking'].includes(data.status))
-          notify(() => t(`notice.${data.status}`, { detail: data.detail || '' }));
-      });
+      const result = await this.session.compile(
+        source,
+        (data) => {
+          if (data.progress != null)
+            text('engine', () =>
+              t('engine.progress', { percent: Math.round(data.progress * 100) }),
+            );
+          if (['loading', 'compiling', 'linking'].includes(data.status))
+            notify(() => t(`notice.${data.status}`, { detail: data.detail || '' }));
+        },
+        prelude,
+      );
       const current = this.acceptTrace(result.trace, () => t('origin.live'), source, true);
-      if (!result.wasm) {
+      if (result.trace.errors.length) {
         state('state.compileFailed');
         return;
       }
-      this.artifact = { wasm: result.wasm, source };
+      if (!result.wasm) {
+        if (prelude !== 'empty' || !result.trace.llvm_ir)
+          throw new Error('Compiler did not return the expected output');
+        state('state.irReady');
+        this.trace.setView('ir');
+        return;
+      }
+      this.artifact = { wasm: result.wasm, source, prelude };
       state('state.timings', {
         compile: (result.timings.compile / 1000).toFixed(2),
         link: (result.timings.link / 1000).toFixed(2),
       });
       this.updateControls();
-      if (andRun && current) await this.execute();
+      if (andRun && prelude !== 'empty' && current) await this.execute();
       else this.trace.setView('ir');
     } catch (error) {
       this.showError(error);
@@ -153,7 +175,11 @@ export class Application {
     }
   }
   async execute() {
-    if (!this.artifact || this.artifact.source !== this.editor.value)
+    if (
+      !this.artifact ||
+      this.artifact.source !== this.editor.value ||
+      this.artifact.prelude !== $('prelude').value
+    )
       return notify(() => t('notice.needCompile'), 'warning');
     let args;
     try {

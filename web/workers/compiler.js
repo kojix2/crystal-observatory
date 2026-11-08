@@ -22,8 +22,11 @@ self.onmessage = async ({ data }) => {
         throw error;
       });
     const assets = await ready;
-    const result = await compileSource(data.source, assets, (status) =>
-      self.postMessage({ status }),
+    const result = await compileSource(
+      data.source,
+      assets,
+      (status) => self.postMessage({ status }),
+      { prelude: data.prelude },
     );
     self.postMessage(result, result.wasm ? [result.wasm.buffer] : []);
   } catch (error) {

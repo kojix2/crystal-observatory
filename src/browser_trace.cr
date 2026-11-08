@@ -5,6 +5,11 @@ require "./lab/compilation"
 Crystal::Config.path = "/src:/"
 compiler = Crystal::Compiler.new
 compiler.codegen_target = Crystal::Codegen::Target.new("wasm32-unknown-wasi")
+prelude = File.read("/prelude.txt").strip
+unless prelude == "prelude" || prelude == "empty"
+  raise "Invalid prelude selection"
+end
+compiler.prelude = prelude
 # PCRE2 is supplied as a WASI archive. This flag avoids pkg-config subprocesses;
 # WASI has no host process API. This port also requires the single-thread runtime.
 compiler.flags.concat ["without_mt", "use_pcre2"]

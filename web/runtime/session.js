@@ -39,10 +39,11 @@ export class WorkSession {
     }
   }
 
-  compile(source, onMessage) {
+  compile(source, onMessage, prelude = 'prelude') {
     validateSource(source);
+    if (!['prelude', 'empty'].includes(prelude)) throw new TypeError('Invalid prelude selection');
     return this.perform('compile', () =>
-      this.clients.compile.request({ source }, { timeout: LIMITS.compileMs, onMessage }),
+      this.clients.compile.request({ source, prelude }, { timeout: LIMITS.compileMs, onMessage }),
     );
   }
   parse(source) {

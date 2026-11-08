@@ -171,6 +171,7 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .source-panel { flex:1; min-height:0; overflow:hidden; background:var(--editor-bg); color:var(--editor-ink); }
 .source-tools { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:6px 8px; background:var(--editor-bg); }
 .source-tools label { font-size:var(--text-small); color:var(--editor-ink); white-space:nowrap; }
+.prelude-hint { flex:1 0 100%; padding-left:4px; }
 #example { flex:1; width:0; min-width:90px; font-size:var(--text-small); background:#2c2c31; color:var(--editor-ink); }
 #recorded { background:#37343e; color:#e7ddef; font-size:var(--text-small); }
 #share-source { background:#37343e; color:#e7ddef; font-size:var(--text-small); }
@@ -461,6 +462,7 @@ tr.activity { border-left:3px solid #599c83; }
 .ir-tools select { flex: 1; min-width: 0; font: var(--text-small) var(--mono); }
 .ir-tools button { font-size: var(--text-small); padding: 4px; color: var(--editor-ink); }
 .ir-tools button:hover { color: #fff; background: #45454f; }
+#ir-prelude { align-self:center; white-space:nowrap; color:var(--editor-ink); }
 .ir-view pre { padding: 13px 15px; overflow: auto; flex: 1; white-space: pre; font: var(--text-body)/1.75 var(--mono); }
 .ir-view .token.variable { color:var(--syntax-function); }
 .ir-view .token.label { color:var(--syntax-symbol); }

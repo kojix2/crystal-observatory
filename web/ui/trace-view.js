@@ -101,8 +101,8 @@ export class TraceView {
     text('engine', () => t(engine));
     $('engine').classList.toggle('syntax', trace.mode !== 'full');
     $('versions').textContent =
-      `Engine ${trace.compiler_version} · ${trace.llvm_version ? `LLVM ${trace.llvm_version} · ` : ''}schema ${trace.schema_version}`;
-    this.ir.load(trace.llvm_ir || '');
+      `Engine ${trace.compiler_version} · ${trace.llvm_version ? `LLVM ${trace.llvm_version} · ` : ''}${trace.mode === 'full' && trace.prelude ? `--prelude ${trace.prelude} · ` : ''}schema ${trace.schema_version}`;
+    this.ir.load(trace.llvm_ir || '', trace.mode === 'full' ? trace.prelude : null);
     renderTokens(trace, (node) => this.editor.highlight(node));
     this.events.load(model);
     this.scrollPositions.clear();
@@ -119,7 +119,7 @@ export class TraceView {
     else
       notify(() =>
         live
-          ? t('notice.compiled')
+          ? t(trace.prelude === 'empty' ? 'notice.irOnly' : 'notice.compiled')
           : trace.mode === 'empty'
             ? t('notice.input')
             : t(trace.mode === 'full' ? 'notice.recorded' : 'notice.syntax', {

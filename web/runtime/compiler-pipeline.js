@@ -3,9 +3,18 @@ import { LIMITS, validateSource } from '../core/limits.js';
 import { runCommand, stripAnsi } from './wasi-command.js';
 import { LINKER_ARGS } from './linker-args.js';
 
-export async function compileSource(source, assets, onStage = () => {}) {
+export async function compileSource(
+  source,
+  assets,
+  onStage = () => {},
+  { prelude = 'prelude' } = {},
+) {
   validateSource(source);
-  const entries = [['main.cr', source]];
+  if (!['prelude', 'empty'].includes(prelude)) throw new TypeError('Invalid prelude selection');
+  const entries = [
+    ['main.cr', source],
+    ['prelude.txt', prelude],
+  ];
   for (const [path, text] of Object.entries(assets.stdlib)) entries.push([`src/${path}`, text]);
   onStage('compiling');
   const started = performance.now();
@@ -22,10 +31,18 @@ export async function compileSource(source, assets, onStage = () => {}) {
         `Compiler exited ${compiled.exitCode} without a trace`,
     );
   const trace = JSON.parse(new TextDecoder().decode(traceFile.data));
+  if (trace.prelude !== prelude)
+    throw new Error(`Compiler used prelude ${trace.prelude}, expected ${prelude}`);
   const timings = { compile: performance.now() - started };
-  if (trace.errors.length || compiled.exitCode !== 0) return { trace, timings };
+  if (compiled.exitCode !== 0 && !trace.errors.length)
+    trace.errors.push(
+      stripAnsi(compiled.stderr || compiled.stdout) || `Compiler exited ${compiled.exitCode}`,
+    );
+  if (trace.errors.length) return { trace, timings };
+  if (!trace.llvm_ir) throw new Error('LLVM did not emit LLVM IR');
   const object = compiled.root.contents.get('out.o.wasm')?.data;
   if (!object) throw new Error('LLVM did not emit a WebAssembly object');
+  if (prelude === 'empty') return { trace, timings };
   onStage('linking');
   const args = [
     ...LINKER_ARGS,

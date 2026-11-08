@@ -66,6 +66,34 @@ with one click. **Open…** and **Save** in the History header import and export
 recordings.
 Compilation always analyzes the current editor contents.
 
+The **Prelude** selector chooses whether Crystal loads its standard `prelude`
+or uses `--prelude empty`. Empty mode can make LLVM IR much smaller, but many
+standard methods are unavailable; even checked integer arithmetic may need a
+runtime helper from the standard prelude. In this mode **Compile & run** is
+disabled and **Compile to IR** stops after LLVM code generation, without WASM
+linking. The selected prelude is included in each compiler recording. Shared
+source links contain source only, so select the desired prelude after opening
+one.
+The LLVM IR toolbar shows the recording's `--prelude` condition, even on phones.
+Changing the input selection does not change an existing recording or an imported
+trace. **Parse only** is independent of this selection. `puts`, array construction
+and other standard methods may fail in empty mode; checked `+`, `-` and `*` can
+also fail without runtime helpers. Wrapping operators `&+`, `&-` and `&*` have
+different overflow semantics and are not substituted automatically.
+
+For example, choose **Empty** and **Compile to IR** for:
+
+```crystal
+def square(x)
+  x &* x
+end
+
+square(7)
+```
+
+Explicitly requiring `"prelude"` is still permitted, but loads the standard
+library again and makes the IR larger.
+
 **Compare…** shows any two different views of the same recording side by side:
 Source, Tokens, AST, State, Types, LLVM IR, or Output. AST snapshots and history
 playback can refer to different times; Types follows the selected history event.

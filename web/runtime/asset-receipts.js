@@ -1,8 +1,8 @@
 // Pinned assets. compiler.wasm.gz is the Observatory instrumented build.
 export const ASSET_RECEIPTS = {
   "compiler.wasm.gz": {
-    "bytes": 14944439,
-    "sha256": "92425684b6da3edbadc71117b89f79ecc895c2d1c5d29e1d85b628482fe54cee"
+    "bytes": 14945893,
+    "sha256": "ccb00e9a55fd0eac7f4b5bbea47c8c39b514929c9c396912e70042f4d57b5bc0"
   },
   "lib/eh/libc++abi.a.gz": {
     "bytes": 472129,

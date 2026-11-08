@@ -165,7 +165,7 @@ test('comparison widths preserve readable panes, valid ratios, and the outer col
 
 test('IR searches and manual function choices survive automatic following and resizing', () => {
   const elements = Object.fromEntries(
-    ['ir-search', 'ir-function', 'ir-code', 'ir-caption'].map((id) => [
+    ['ir-search', 'ir-function', 'ir-code', 'ir-caption', 'ir-prelude'].map((id) => [
       id,
       {
         value: '',
@@ -191,7 +191,10 @@ test('IR searches and manual function choices survive automatic following and re
     const view = new IRView();
     view.load(
       'define void @alpha() {\nentry:\n  ret void\n}\ndefine void @beta() {\nentry:\n  ret void\n}\n',
+      'empty',
     );
+    assert.equal(elements['ir-prelude'].textContent, '--prelude empty');
+    assert.equal(elements['ir-prelude'].hidden, false);
     view.render(true);
     elements['ir-search'].value = 'beta';
     elements['ir-search'].oninput();
@@ -210,6 +213,9 @@ test('IR searches and manual function choices survive automatic following and re
     assert.equal(view.selected, 'beta');
     view.follow('missing_function', '', true);
     assert.equal(view.selected, 'beta');
+    view.load('');
+    assert.equal(elements['ir-prelude'].hidden, true);
+    assert.equal(elements['ir-prelude'].textContent, '');
   } finally {
     globalThis.document = oldDocument;
     globalThis.Option = oldOption;

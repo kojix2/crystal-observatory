@@ -107,7 +107,16 @@ export async function runCommand(
     wasi_snapshot_preview1: wasi.wasiImport,
   });
 
-  const exitCode = wasi.start(instance);
+  let exitCode;
+  try {
+    exitCode = wasi.start(instance);
+  } catch (error) {
+    stdout.flush();
+    stderr.flush();
+    const diagnostic = stage === 'running' ? '' : stripAnsi(stderr.text || stdout.text);
+    if (diagnostic) throw new Error(diagnostic, { cause: error });
+    throw error;
+  }
   stdout.flush();
   stderr.flush();
 
