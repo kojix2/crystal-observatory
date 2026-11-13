@@ -811,15 +811,6 @@ export const messages = {
     de: 'Ereignisse von {visitor} einklappen',
     ru: 'Свернуть события {visitor}',
   },
-  'event.group.matches': {
-    ja: '{total}件中{count}件が一致',
-    en: '{count} of {total} events match',
-    es: '{count} de {total} eventos coinciden',
-    'zh-CN': '{total} 个事件中有 {count} 个匹配',
-    fr: '{count} événements sur {total} correspondent',
-    de: '{count} von {total} Ereignissen passen',
-    ru: 'Совпадений: {count} из {total} событий',
-  },
   'trace.filters': {
     ja: '絞り込み',
     en: 'Filters',

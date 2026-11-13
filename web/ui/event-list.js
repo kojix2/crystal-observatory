@@ -214,29 +214,21 @@ export class EventList {
       wrap.scrollTop += bounds.top - top;
     else if (bounds.bottom > viewport.bottom) wrap.scrollTop += bounds.bottom - viewport.bottom;
   }
-  renderRow({ event, group, count }, children = [], parent, renderItems = () => '') {
+  renderRow({ event, group }, children = [], parent, renderItems = () => '') {
     if (group) {
       event = group.event;
       const phase = group.kind === 'phase',
         expanded = this.expanded.has(group.start),
         active = this.activeGroup === group.start,
         visitor = phase ? this.stageLabel(event) : shortVisitor(event.visitor),
-        label = t(expanded ? 'event.group.collapse' : 'event.group.expand', { visitor }),
-        total = group.end - group.start + 1,
-        summary =
-          count === total
-            ? t('count.events', { count: total.toLocaleString() })
-            : t('event.group.matches', {
-                count: count.toLocaleString(),
-                total: total.toLocaleString(),
-              });
+        label = t(expanded ? 'event.group.collapse' : 'event.group.expand', { visitor });
       const activities = (phase ? [] : this.summaries.get(group.start) || [])
         .map(
           (activity) =>
             `<span class="activity-summary" title="${esc(activitySummary(activity))}">#${activity.node_id} ${esc(brief(activitySummary(activity), 130))}</span>`,
         )
         .join('');
-      return `<li class="event-branch"><div class="event-row event-group ${phase ? 'event-stage' : 'event-call'} ${active ? 'active' : ''}"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-controls="event-children-${group.start}" aria-label="${esc(label)}" title="${esc(label)}">${icon('disclosure', { size: 12 })}</button><button type="button" class="event-select event-group-select" data-index="${group.start}" aria-current="${active ? 'step' : 'false'}"><span class="event-heading" title="${esc(phase ? event.phase || event.detail : event.visitor)}"><span class="event-visitor"${phase ? '' : ` data-visitor="${esc(visitorKey(event.visitor))}"`}>${esc(visitor)}</span>${phase ? '' : this.renderNode(event)}</span><span class="event-meta-line"><span class="event-number">#${group.start}–${group.end}</span><span class="event-count">${esc(summary)}</span></span>${activities}</button></div><ol id="event-children-${group.start}" class="event-children"${expanded ? '' : ' hidden'}>${renderItems(children, group)}</ol></li>`;
+      return `<li class="event-branch"><div class="event-row event-group ${phase ? 'event-stage' : 'event-call'} ${active ? 'active' : ''}"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-controls="event-children-${group.start}" aria-label="${esc(label)}" title="${esc(label)}">${icon('disclosure', { size: 12 })}</button><button type="button" class="event-select event-group-select" data-index="${group.start}" aria-current="${active ? 'step' : 'false'}"><span class="event-heading" title="${esc(phase ? event.phase || event.detail : event.visitor)}"><span class="event-visitor"${phase ? '' : ` data-visitor="${esc(visitorKey(event.visitor))}"`}>${esc(visitor)}</span>${phase ? '' : this.renderNode(event)}</span>${activities}</button></div><ol id="event-children-${group.start}" class="event-children"${expanded ? '' : ' hidden'}>${renderItems(children, group)}</ol></li>`;
     }
     const active = event.index === this.model.index,
       sameContext =

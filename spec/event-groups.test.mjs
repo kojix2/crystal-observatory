@@ -239,7 +239,7 @@ function withList(trace, run) {
   }
 }
 
-test('stage disclosure preserves selection, nested state, localized names and filter counts', () => {
+test('stage disclosure preserves selection, nested state, localized names and filter context', () => {
   withList(load('06_cleanup'), (list, element, seeks) => {
     assert.equal(list.rows.length, 15);
     assert.equal(list.rows.filter((row) => row.group?.kind === 'phase').length, 13);
@@ -279,7 +279,7 @@ test('stage disclosure preserves selection, nested state, localized names and fi
     assert.equal(activeRows.length, 1);
     setLocale('ja');
     list.render();
-    assert(element('events').innerHTML.includes('件中'));
+    assert(list.filtered.every((event) => event.kind === 'rewrite'));
     assert(element('events').innerHTML.includes(list.stageLabel(phase.event)));
     assert.equal(list.model.index, current);
     assert.deepEqual(seeks, []);
@@ -325,11 +325,10 @@ test('opening, closing, filtering and localizing keep playback position and expa
     element('search').value = 'CleanupTransformer';
     element('kind').onchange();
     assert.equal(list.rows.length, 3);
-    const groupSize = cleanupGroup.end - cleanupGroup.start + 1;
-    assert(element('events').innerHTML.includes(`1 of ${groupSize} events match`));
+    assert.equal(list.rows.find((row) => row.group?.start === cleanupGroup.start).count, 1);
     setLocale('ja');
     list.render();
-    assert(element('events').innerHTML.includes(`${groupSize}件中1件が一致`));
+    assert(element('events').innerHTML.includes(list.stageLabel(phase.event)));
     assert.equal(list.model.index, current);
     assert(list.expanded.has(cleanupGroup.start));
     list.toggle(cleanupGroup.start);
@@ -373,7 +372,7 @@ test('node/search filters retain parent context, while original event rows still
 test('Visitor headings select an event by click or keyboard, separately from disclosure', () => {
   withList(load('01_specialization'), (list, element, seeks) => {
     const group = list.groups[0];
-    const html = list.renderRow({ group, count: group.end - group.start + 1 });
+    const html = list.renderRow({ group });
     assert(html.includes(`class="event-select event-group-select" data-index="${group.start}"`));
     assert.match(html, /<\/button><button type="button" class="event-select event-group-select"/);
     const target = {

@@ -196,8 +196,8 @@ Home and End switch between node tabs without stepping Compilation trace.
 
 Compilation trace initially shows one row per completed compiler stage, grouping its start,
 end and intervening events. Open a stage with its arrow to see Visitor groups,
-then open a Visitor to see individual events. Filtering keeps the enclosing stage
-and matching event counts; declaration-only filtering shows operations directly.
+then open a Visitor to see individual events. Filtering keeps the enclosing stage;
+declaration-only filtering shows operations directly.
 Playback highlights the selected event or its collapsed parent without opening it;
 the position beside the slider shows progress through the recording.
 Stages missing an end event stay visible individually, including compiler errors.
@@ -206,7 +206,7 @@ Stages missing an end event stay visible individually, including compiler errors
 playback and shows the beginning of the page.
 
 Compilation trace uses a nested list: stage, Visitor and target node, then
-operation and result. Event numbers appear alongside each item. Use a disclosure
+operation and result. Individual operations retain their event numbers. Use a disclosure
 button to expand a branch, or select its name to inspect that point in the recording.
 When a branch spans pages, its parent headings are repeated to preserve context.
 
