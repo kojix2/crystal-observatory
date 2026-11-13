@@ -168,9 +168,6 @@ export class EventList {
       .slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE)
       .map((row) => this.renderRow(row))
       .join('');
-    $('filter-count').textContent =
-      t('count.events', { count: this.filtered.length.toLocaleString() }) +
-      (this.nodeFilter ? ` · #${this.nodeFilter}` : '');
     $('page-state').textContent = `${this.page + 1} / ${pages}`;
     $('page-prev').disabled = this.page === 0;
     $('page-next').disabled = this.page >= pages - 1;

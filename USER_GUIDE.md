@@ -135,8 +135,9 @@ without a new selection keeps the reading position. Trace events and stage
 headings open their operation details, while playback and stepping stay in place.
 The active observation tab stays visible as views change.
 
-Previous, Play, Next and the seek bar stay visible in Trace. Its filter button
-opens search, filters, jumps, speed and first/last event controls. Closing this
+Previous, Play, Next and the seek bar stay visible in Trace. The filter button
+shares the playback row and opens search, filters, jumps, speed and first/last
+event controls. Closing this
 popup gives the space back to the event list. A highlighted
 filter button indicates an active filter. Search and filter changes keep the popup
 open so conditions can be combined. Trace rows place names and results on separate
