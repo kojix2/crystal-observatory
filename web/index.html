@@ -75,7 +75,7 @@
           <div id="activity-filter" hidden><label class="filter-field"><span data-i18n="activity.kind">Activity type</span><select id="activity-kind"><option value="" data-i18n="activity.all">All activity types</option></select></label><button id="next-activity" class="quiet" data-i18n="activity.next">Next activity</button></div>
           <div class="filter-actions"><button id="clear-filter" class="quiet" data-i18n="clear">Clear</button></div>
         </div>
-        <div class="table-wrap" id="trace-content"><table id="history-table"><colgroup><col><col><col></colgroup><thead><tr><th scope="col"><span class="history-column-label">#</span><span class="history-column-divider" role="separator" aria-orientation="vertical" aria-controls="history-table" data-i18n-aria="history.resize.index" data-i18n-title="history.resize.help"></span></th><th scope="col"><span class="history-column-label" data-i18n="event.column">Stage / visitor / node</span><span class="history-column-divider" role="separator" aria-orientation="vertical" aria-controls="history-table" data-i18n-aria="history.resize.visitor" data-i18n-title="history.resize.help"></span></th><th scope="col"><span class="history-column-label" data-i18n="result.column">Event / result</span></th></tr></thead><tbody id="events"></tbody></table>
+        <div class="trace-content" id="trace-content"><ol id="events" class="event-outline" role="list"></ol>
           <p id="trace-empty-message" class="empty" data-i18n="trace.empty" hidden>Compile or parse source to see stages and events.</p>
           <p id="history-no-match" class="empty" data-i18n="event.none" hidden>No events match the current filter.</p>
         </div>

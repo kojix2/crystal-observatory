@@ -143,8 +143,8 @@ Choosing Activity reveals its subtype filter and the next-activity action.
 An active node condition can be removed separately in the same popup. Closing this
 popup gives the space back to the event list. A highlighted
 filter button indicates an active filter. Search and filter changes keep the popup
-open so conditions can be combined. Trace rows place names and results on separate
-lines; a single-page list hides its unused page controls.
+open so conditions can be combined. The trace list nests operations beneath
+their Visitor and stage; a single-page list hides its unused page controls.
 Output initially folds stdin and
 arguments under **Input & arguments**; expanding it preserves the entered values.
 
@@ -204,14 +204,15 @@ Stages missing an end event stay visible individually, including compiler errors
 `#7`, for example, to match node 7 exactly. Manually changing Compilation trace pages stops
 playback and shows the beginning of the page.
 
-Drag the dividers in the Compilation trace table header to resize its columns. Column widths
-are saved across reloads. Double-click a divider to restore the default column
-widths; **Reset layout** also resets them. With a divider focused, Left/Right changes
-the width, Shift moves in larger steps, and Home restores the defaults.
+Compilation trace uses a nested list: stage, Visitor and target node, then
+operation and result. Event numbers appear alongside each item. Use a disclosure
+button to expand a branch, or select its name to inspect that point in the recording.
+When a branch spans pages, its parent headings are repeated to preserve context.
 
-The **Tokens** table supports the same column resizing controls. Drag any header
-divider to resize its adjacent columns. Token column widths are saved separately
-and survive language changes and recording reloads; **Reset layout** resets them too.
+The **Tokens** table supports column resizing. Drag a header divider or use
+Left/Right with it focused; Shift moves in larger steps. Double-click or Home
+restores the defaults. Widths survive language changes and recording reloads;
+**Reset layout** resets them too.
 
 With **Follow trace** enabled, clicking a Compilation trace event or Visitor name opens its
 node in AST, selecting a recorded snapshot containing it and opening folded ancestors.

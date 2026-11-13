@@ -371,11 +371,15 @@ test('Visitor headings select an event by click or keyboard, separately from dis
   withList(load('01_specialization'), (list, element, seeks) => {
     const group = list.groups[0];
     const html = list.renderRow({ group, count: group.end - group.start + 1 });
-    assert(html.includes(`data-index="${group.start}" tabindex="0"`));
-    assert.match(html, /<\/button><span class="event-visitor"/);
+    assert(html.includes(`class="event-select event-group-select" data-index="${group.start}"`));
+    assert.match(html, /<\/button><button type="button" class="event-select event-group-select"/);
     const target = {
       closest: (selector) =>
-        selector === '[data-index]' ? { dataset: { index: String(group.start) } } : null,
+        selector === '[data-index]'
+          ? { dataset: { index: String(group.start) } }
+          : selector === 'button'
+            ? {}
+            : null,
     };
     element('events').onclick({ target });
     let prevented = false;
@@ -386,7 +390,10 @@ test('Visitor headings select an event by click or keyboard, separately from dis
         prevented = true;
       },
     });
-    assert.equal(prevented, true);
+    assert.equal(prevented, false);
+    // Native buttons dispatch one click for Enter/Space; the delegated key
+    // handler must not dispatch an additional selection.
+    element('events').onclick({ target });
     assert.deepEqual(seeks, [group.start, group.start]);
     assert.equal(list.expanded.has(group.start), false);
   });

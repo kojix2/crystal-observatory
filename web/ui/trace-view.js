@@ -686,7 +686,10 @@ export class TraceView {
         $('timeline').hidden ||
         event.defaultPrevented ||
         event.target.getAttribute('role') === 'separator' ||
-        ['TEXTAREA', 'INPUT', 'SELECT', 'BUTTON'].includes(event.target.tagName) ||
+        (['TEXTAREA', 'INPUT', 'SELECT', 'BUTTON'].includes(event.target.tagName) &&
+          !(
+            event.target.closest('.event-select') && ['ArrowRight', 'ArrowLeft'].includes(event.key)
+          )) ||
         document.querySelector('dialog[open]')
       )
         return;

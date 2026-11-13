@@ -11,6 +11,7 @@ import {
 } from './event-labels.js';
 import { groupActivitySummary } from '../core/activities.js';
 import { groupEvents, groupStages, eventRows } from '../core/event-groups.js';
+import { eventOutline } from '../core/event-outline.js';
 import { compilerStage } from '../core/compiler-stages.js';
 import { declarationSummary } from './declarations.js';
 const PAGE_SIZE = 70;
@@ -183,17 +184,18 @@ export class EventList {
     const focused = document.activeElement,
       focusedRow = focused?.closest?.('#events [data-index]'),
       focusedGroup = focused?.closest?.('[data-group]');
-    $('events').innerHTML = this.rows
-      .slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE)
-      .map((row) => this.renderRow(row))
-      .join('');
+    const renderItems = (items, parent) =>
+      items.map(({ row, children }) => this.renderRow(row, children, parent, renderItems)).join('');
+    $('events').innerHTML = renderItems(
+      eventOutline(this.rows, this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE),
+    );
     $('page-state').textContent = `${this.page + 1} / ${pages}`;
     $('page-prev').disabled = this.page === 0;
     $('page-next').disabled = this.page >= pages - 1;
-    if (focusedRow) {
+    if (focusedRow || focusedGroup) {
       const selector = focusedGroup
         ? `[data-group="${focusedGroup.dataset.group}"]`
-        : `tr${focusedRow.classList.contains('event-group') ? '.event-group' : ':not(.event-group)'}[data-index="${focusedRow.dataset.index}"]`;
+        : `.${focusedRow.classList.contains('event-group-select') ? 'event-group-select' : 'event-leaf-select'}[data-index="${focusedRow.dataset.index}"]`;
       $('events').querySelector(selector)?.focus({ preventScroll: true });
     }
     this.pendingReveal = false;
@@ -207,13 +209,12 @@ export class EventList {
     if (this.pendingReveal) return;
     const bounds = active.getBoundingClientRect(),
       viewport = wrap.getBoundingClientRect(),
-      header = $('history-table').tHead.getBoundingClientRect().height,
-      top = viewport.top + header;
+      top = viewport.top;
     if (bounds.top < top || bounds.height > viewport.bottom - top)
       wrap.scrollTop += bounds.top - top;
     else if (bounds.bottom > viewport.bottom) wrap.scrollTop += bounds.bottom - viewport.bottom;
   }
-  renderRow({ event, group, count }) {
+  renderRow({ event, group, count }, children = [], parent, renderItems = () => '') {
     if (group) {
       event = group.event;
       const phase = group.kind === 'phase',
@@ -235,9 +236,21 @@ export class EventList {
             `<span class="activity-summary" title="${esc(activitySummary(activity))}">#${activity.node_id} ${esc(brief(activitySummary(activity), 130))}</span>`,
         )
         .join('');
-      return `<tr class="event-group ${phase ? 'event-stage' : 'event-call'} ${active ? 'active' : ''}" data-index="${group.start}" tabindex="0" aria-current="${active ? 'step' : 'false'}"><td>${group.start}–<wbr>${group.end}</td><td title="${esc(phase ? event.phase || event.detail : event.visitor)}"><span class="event-group-heading"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-label="${esc(label)}" title="${esc(label)}">${icon('disclosure', { size: 12 })}</button><span class="event-visitor"${phase ? '' : ` data-visitor="${esc(visitorKey(event.visitor))}"`}>${esc(visitor)}</span></span>${phase ? '' : this.renderNode(event)}</td><td><span class="event-label">${esc(summary)}</span>${activities}${active ? `<span class="event-result">${esc(t('event.group.current', { index: this.model.index }))}</span>` : ''}</td></tr>`;
+      return `<li class="event-branch"><div class="event-row event-group ${phase ? 'event-stage' : 'event-call'} ${active ? 'active' : ''}"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-controls="event-children-${group.start}" aria-label="${esc(label)}" title="${esc(label)}">${icon('disclosure', { size: 12 })}</button><button type="button" class="event-select event-group-select" data-index="${group.start}" aria-current="${active ? 'step' : 'false'}"><span class="event-heading" title="${esc(phase ? event.phase || event.detail : event.visitor)}"><span class="event-visitor"${phase ? '' : ` data-visitor="${esc(visitorKey(event.visitor))}"`}>${esc(visitor)}</span>${phase ? '' : this.renderNode(event)}</span><span class="event-meta-line"><span class="event-number">#${group.start}–${group.end}</span><span class="event-count">${esc(summary)}</span>${active ? `<span class="event-current">${esc(t('event.group.current', { index: this.model.index }))}</span>` : ''}</span>${activities}</button></div><ol id="event-children-${group.start}" class="event-children"${expanded ? '' : ' hidden'}>${renderItems(children, group)}</ol></li>`;
     }
-    return `<tr class="${event.index === this.model.index ? 'active' : ''} ${esc(event.kind)}" data-index="${event.index}" tabindex="0" aria-current="${event.index === this.model.index ? 'step' : 'false'}"><td>${event.index}</td><td title="${esc(event.visitor)}"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}">${esc(shortVisitor(event.visitor) || event.phase)}</span>${this.renderNode(event)}</td><td><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-result" title="${esc(this.result(event))}">${esc(brief(this.result(event), 130))}</span></td></tr>`;
+    const active = event.index === this.model.index,
+      sameContext =
+        parent &&
+        parent.kind !== 'phase' &&
+        event.visitor === parent.event.visitor &&
+        event.node_id === parent.event.node_id,
+      actor = shortVisitor(event.visitor) || (!parent ? this.stageLabel(event) : ''),
+      result = this.result(event),
+      context =
+        !sameContext && (actor || event.node_id)
+          ? `<span class="event-context"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}" title="${esc(event.visitor)}">${esc(actor)}</span>${this.renderNode(event)}</span>`
+          : '';
+    return `<li class="event-entry"><div class="event-row event-leaf ${active ? 'active' : ''} ${esc(event.kind)}"><button type="button" class="event-select event-leaf-select" data-index="${event.index}" aria-current="${active ? 'step' : 'false'}"><span class="event-heading"><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-number">#${event.index}</span></span>${result ? `<span class="event-result" title="${esc(result)}">${esc(brief(result, 130))}</span>` : ''}${context}</button></div></li>`;
   }
   result(event) {
     return event.kind === 'link'
@@ -253,6 +266,8 @@ export class EventList {
     return stage ? t(`pipeline.stage.${stage.id}`) : event.phase || event.detail || '';
   }
   renderNode(event) {
-    return `<span class="event-node">${event.node_id ? `#${event.node_id} ${esc(this.model.nodes.get(event.node_id)?.kind || '')}` : '—'}</span>`;
+    return event.node_id
+      ? `<span class="event-node">#${event.node_id} ${esc(this.model.nodes.get(event.node_id)?.kind || '')}</span>`
+      : '';
   }
 }
