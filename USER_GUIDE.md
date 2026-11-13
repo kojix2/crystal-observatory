@@ -56,17 +56,19 @@ an existing Observatory source link.
 
 ## Files and templates
 
-The app starts in **Files**, available from the folder icon in the sidebar.
-The central screen has two tabs: **Templates** and **File operations**.
+The left side panel has **Files** and **Compilation trace** tabs. It starts in
+**Files**, with **Templates** and **File operations** inside it. The source editor
+and observation views stay visible in the center while using either side tab.
 Each template offers **Use source** to begin editing without compiling, and
 **Open trace** to inspect its bundled compilation recording.
 
 **File operations** contains **New source**, **Open source** (`.cr` / UTF-8),
 **Save source**, and separate **Open trace** / **Save trace** actions for JSON or
 gzip recordings. **Close current file** clears the source, recording and executable
-and returns to Files. Saving downloads a file to your computer.
-**Return to workspace** resumes your current work without replacing it.
-Opening Files or a reference page preserves the editor, selected event and node.
+and selects Files in the side panel. Saving downloads a file to your computer.
+Switching side tabs preserves the editor, observation view, selected event and
+node. Compiling or parsing selects **Compilation trace**; opening a recording
+also reveals that tab.
 
 ## Compile and inspect
 
@@ -115,17 +117,17 @@ Editing source does not update an existing AST or IR. Escape exits maximization;
 
 ## On a smartphone
 
-At widths up to 960 px, use the toolbar menu to open **Files**. Startup shows
-the same Templates and File operations tabs as desktop. Opening source or a
-recording reveals the workspace, whose bottom navigation is **Work**, **Trace**,
-and **Details**. Work contains the source editor and all observation tabs.
+At widths up to 960 px, the bottom navigation is **Work**, **Files & trace**,
+and **Details**. The initial pane is **Files & trace**, containing the same Files
+and Compilation trace tabs as the desktop side panel. Opening source or a
+recording reveals Work, which contains the editor and all observation tabs.
 Swipe the tab row to reach more views. Compile & run and Stop remain
 in a single top toolbar. The arrow beside the play icon opens Compile to IR and
 Parse only; the options button opens Compare, language, settings, and GitHub.
 Layout reset is available in Settings. Editing remains available while compilation runs.
 
 Selecting a trace event or stage heading opens Details, with the operation
-above the node information. Return to Trace to continue from the same selection,
+above the node information. Return to Files & trace to continue from the same selection,
 filters, and scroll position. Playback and stepping stay in the current screen.
 Selecting an AST node updates its details and source location without leaving
 AST. The existing Details navigation opens that node's information; the Source
@@ -151,7 +153,7 @@ navigation and other controls.
 
 Rotating the device or returning to a desktop-sized window preserves source,
 selection, and comparison. Desktop divider sizes and collapsed panels remain
-separate from phone navigation. Within the workspace, Work is the initial phone pane.
+separate from phone navigation. The phone initially shows Files in the side panel.
 
 ## Read observations
 
@@ -240,9 +242,10 @@ references. The zoom slider spreads the branches out; scroll to explore and use
 **Fit all** to return to the overview. Switching layouts preserves selection,
 playback, the snapshot and branch folds; the chosen layout is saved in the browser.
 
-The desktop workspace uses three columns: **Compilation trace**, the selected observation
-(AST, source, IR or output), and node/operation details. Drag the column dividers
-to resize them, or collapse Compilation trace with its header button. Widths and the
+The desktop workspace uses three columns: the **Files / Compilation trace** side
+panel, the selected observation (AST, source, IR or output), and node/operation
+details. Drag the column dividers to resize them, or collapse the side panel
+with its header button. Widths and the
 collapsed state are saved in the browser. Select a stage heading in Compilation trace to
 jump to its recorded start; its arrow opens or closes the stage without moving
 playback. The operation inspector puts the observed Visitor, target and result first.

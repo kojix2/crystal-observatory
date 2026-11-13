@@ -106,7 +106,7 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
       setHandleEnabled(handle, enabled() && (i !== 0 || !historyCollapsed()));
     });
     $('toggle-trace').setAttribute('aria-expanded', !historyCollapsed());
-    label($('toggle-trace'), historyCollapsed() ? 'trace.expand' : 'trace.collapse');
+    label($('toggle-trace'), historyCollapsed() ? 'side.expand' : 'side.collapse');
     const [top, bottom] = heights();
     $('inspector-panel').style.gridTemplateRows = `${top}px 6px ${bottom}px`;
     range($('detail-splitter'), top, 150, top + bottom - 190);

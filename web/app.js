@@ -37,7 +37,7 @@ const navigation = setupLearningNavigation({
   },
 });
 app.navigation = navigation;
-setupFileWorkspace(app, navigation);
-navigation.show(new URL(window.location.href).searchParams.get('page') === 'api' ? 'api' : 'files');
+app.sidePanel = setupFileWorkspace(app);
+if (new URL(window.location.href).searchParams.get('page') === 'api') navigation.show('api');
 app.loadManifest();
 app.sharing.openURL(window.location.href);

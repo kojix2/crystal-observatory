@@ -165,13 +165,13 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   }
 }
 
-test('mobile starts in Work and trace navigation retains scroll and selection', () => {
+test('mobile starts in the side panel and navigation retains scroll and selection', () => {
   workspace({}, ({ controller, element, buttons }) => {
     assert.equal(controller.mobile, true);
-    assert.equal(element('app').dataset.mobilePane, 'work');
-    assert.equal(element('timeline').inert, true);
-    assert.equal(element('graph-panel').inert, false);
-    assert.equal(buttons[0].getAttribute('aria-pressed'), 'true');
+    assert.equal(element('app').dataset.mobilePane, 'history');
+    assert.equal(element('side-panel').inert, false);
+    assert.equal(element('graph-panel').inert, true);
+    assert.equal(buttons[1].getAttribute('aria-pressed'), 'true');
     assert.equal(element('header-options').getAttribute('popover'), 'auto');
     assert.deepEqual(
       buttons.map((button) => button.dataset.pane),
@@ -185,13 +185,13 @@ test('mobile starts in Work and trace navigation retains scroll and selection', 
     element('trace-content').scrollTop = 237;
     element('search').value = 'MainVisitor';
     buttons[1].onclick();
-    assert.equal(element('timeline').inert, false);
-    element('timeline').focus();
+    assert.equal(element('side-panel').inert, false);
+    element('side-panel').focus();
     element('inspector-panel').scrollTop = 650;
     controller.showPane('details', { focus: true });
     assert.equal(document.activeElement.id, 'event-heading');
     assert.equal(element('inspector-panel').scrollTop, 0);
-    assert.equal(element('timeline').inert, true);
+    assert.equal(element('side-panel').inert, true);
     buttons[1].onclick();
     assert.equal(element('trace-content').scrollTop, 237);
     assert.equal(element('search').value, 'MainVisitor');

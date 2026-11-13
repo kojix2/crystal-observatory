@@ -21,12 +21,12 @@ export function setupMobileWorkspace(onModeChange) {
   });
   const panes = {
     work: $('graph-panel'),
-    history: $('timeline'),
+    history: $('side-panel'),
     details: $('inspector-panel'),
   };
   const buttons = [...navigation.querySelectorAll('[data-pane]')];
-  // Templates and file tasks live outside the observation workspace.
-  let current = 'work';
+  // Start with the Files tab of the shared Files / compilation trace panel.
+  let current = 'history';
   let wasMobile = false;
   let mobileInputsOpen = false;
   let detailContext = { section: 'event', key: null };

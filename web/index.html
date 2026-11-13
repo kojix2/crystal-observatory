@@ -29,15 +29,13 @@
       <select id="language" data-i18n-aria="language" data-i18n-title="language"><option value="en">EN</option><option value="ja">JA</option><option value="es">ES</option><option value="zh-CN">中文</option><option value="fr">FR</option><option value="de">DE</option><option value="ru">RU</option></select>
       <a class="quiet icon-button" href="https://github.com/kojix2/crystal-observatory" target="_blank" rel="noreferrer" data-i18n-title="github" data-i18n-aria="github" title="GitHub repository" aria-label="GitHub repository"><svg data-icon="github"></svg></a>
       <button id="settingsButton" class="quiet icon-button" data-i18n-title="settings.title" data-i18n-aria="settings.title" aria-haspopup="dialog" aria-controls="settings"><svg data-icon="settings"></svg></button>
-      <button type="button" class="quiet icon-button mobile-only" data-learning-view="files" aria-controls="file-panel" data-i18n-title="files.title" data-i18n-aria="files.title"><svg data-icon="files"></svg></button>
       <button type="button" class="quiet icon-button mobile-only" data-learning-view="api" aria-controls="learning-panel" data-i18n-title="learning.api" data-i18n-aria="learning.api"><svg data-icon="api"></svg></button>
       <button type="button" class="quiet icon-button mobile-only" data-learning-view="observatory" aria-controls="app" data-i18n-title="learning.observatory" data-i18n-aria="learning.observatory"><svg data-icon="observatory"></svg></button>
     </div>
   </div>
 </header>
 <nav id="learning-navigation" class="learning-navigation" data-i18n-aria="learning.navigation">
-  <button type="button" data-learning-view="files" aria-controls="file-panel" data-i18n-aria="files.title" data-i18n-title="files.title"><svg data-icon="files" data-size="20"></svg></button>
-  <button type="button" data-learning-view="observatory" aria-controls="app" data-i18n-aria="learning.observatory" data-i18n-title="learning.observatory"><svg data-icon="observatory" data-size="20"></svg></button>
+  <button type="button" data-learning-view="observatory" aria-current="page" aria-controls="app" data-i18n-aria="learning.observatory" data-i18n-title="learning.observatory"><svg data-icon="observatory" data-size="20"></svg></button>
   <div class="learning-navigation-divider" aria-hidden="true"></div>
   <button type="button" data-learning-view="workflow" aria-controls="learning-panel" data-i18n-aria="learning.workflow" data-i18n-title="learning.workflow"><svg data-icon="workflow" data-size="20"></svg></button>
   <button type="button" data-learning-view="nodes" aria-controls="learning-panel" data-i18n-aria="learning.nodes" data-i18n-title="learning.nodes"><svg data-icon="nodes" data-size="20"></svg></button>
@@ -47,8 +45,31 @@
 <main id="app" tabindex="-1">
   <div class="workbench-scroll">
   <section class="workbench" id="workbench" data-i18n-aria="workspace">
-    <section class="timeline panel" id="timeline" tabindex="-1">
-      <div class="panel-head"><h2 data-i18n="trace">Compilation trace</h2><span id="filter-count" class="subtle"></span><button id="history-tools" class="quiet icon-button mobile-only" popovertarget="history-controls" data-i18n-aria="mobile.historyTools" data-i18n-title="mobile.historyTools"><svg data-icon="filter"></svg></button><button id="toggle-trace" class="quiet icon-button" data-i18n-aria="trace.collapse" data-i18n-title="trace.collapse" aria-expanded="true" aria-controls="history-list"><svg data-icon="collapse"></svg></button></div>
+    <section class="side-panel panel" id="side-panel" tabindex="-1">
+      <div class="panel-head side-head"><div id="side-tabs" class="tabs side-tabs" role="tablist" data-i18n-aria="files.sidebar">
+        <button type="button" id="side-tab-files" data-side-tab="files" role="tab" aria-selected="true" aria-controls="file-panel" data-i18n="files.title">Files</button>
+        <button type="button" id="side-tab-trace" data-side-tab="trace" role="tab" aria-selected="false" aria-controls="timeline" tabindex="-1" data-i18n="trace">Compilation trace</button>
+      </div><button id="toggle-trace" class="quiet icon-button" data-i18n-aria="side.collapse" data-i18n-title="side.collapse" aria-expanded="true" aria-controls="side-panel"><svg data-icon="collapse"></svg></button></div>
+      <section id="file-panel" class="file-panel" role="tabpanel" aria-labelledby="side-tab-files">
+        <div class="file-inner">
+          <div id="file-tabs" class="tabs file-tabs" role="tablist" data-i18n-aria="files.title">
+            <button id="tab-templates" type="button" role="tab" data-file-tab="templates" aria-selected="true" aria-controls="templates-panel" data-i18n="files.templates">Templates</button>
+            <button id="tab-documents" type="button" role="tab" data-file-tab="documents" aria-selected="false" aria-controls="documents-panel" data-i18n="files.documents" tabindex="-1">File operations</button>
+          </div>
+          <section id="templates-panel" role="tabpanel" aria-labelledby="tab-templates">
+            <p class="file-intro" data-i18n="files.templatesIntro">Start from example source or explore a recorded compilation trace.</p>
+            <p id="template-status" class="empty" data-i18n="files.loading">Loading templates</p>
+            <div id="template-list" class="template-list"></div>
+          </section>
+          <section id="documents-panel" role="tabpanel" aria-labelledby="tab-documents" hidden>
+            <section class="file-section"><h3 data-i18n="files.source">Source code</h3><div class="file-actions"><button id="new-source" data-i18n="files.newSource">New source</button><button id="open-source" data-i18n="files.openSource">Open source</button><button id="save-source" data-i18n="files.saveSource">Save source</button><input id="source-file" type="file" accept=".cr,.txt,text/plain" hidden></div></section>
+            <section class="file-section"><h3 data-i18n="files.trace">Compilation trace recording</h3><p class="subtle" data-i18n="files.traceFormats">Trace recordings in JSON or gzip format</p><div class="file-actions"><button id="import" data-i18n="files.openTrace">Open trace</button><button id="export" data-i18n="files.saveTrace" disabled>Save trace</button><input id="file" type="file" accept=".json,.gz,application/json" hidden></div></section>
+            <div class="file-actions"><button id="close-document" class="quiet" data-i18n="files.close">Close current file</button></div>
+          </section>
+        </div>
+      </section>
+      <section class="timeline" id="timeline" role="tabpanel" aria-labelledby="side-tab-trace" tabindex="-1" hidden>
+      <div class="panel-head"><h2 class="sr-only" data-i18n="trace">Compilation trace</h2><span id="filter-count" class="subtle"></span><button id="history-tools" class="quiet icon-button mobile-only" popovertarget="history-controls" data-i18n-aria="mobile.historyTools" data-i18n-title="mobile.historyTools"><svg data-icon="filter"></svg></button></div>
       <div id="history-list" class="history-list">
         <div class="playback"><button id="first" class="quiet icon-button" data-i18n-title="first" data-i18n-aria="first"><svg data-icon="first"></svg></button><button id="prev" class="quiet icon-button" data-i18n-title="prev" data-i18n-aria="prev"><svg data-icon="previous"></svg></button><button id="play" class="play icon-button" data-i18n-title="play" data-i18n-aria="play"><svg data-icon="play"></svg></button><button id="next" class="quiet icon-button" data-i18n-title="next" data-i18n-aria="next"><svg data-icon="next"></svg></button><button id="last" class="quiet icon-button" data-i18n-title="last" data-i18n-aria="last"><svg data-icon="last"></svg></button><select id="speed" data-i18n-aria="speed"><option value="700" data-i18n="slow">Slow</option><option value="220" selected data-i18n="normal">Normal</option><option value="55" data-i18n="fast">Fast</option></select><span id="position">0 / 0</span></div>
         <div class="seek-bar"><input id="scrubber" type="range" min="0" max="1" value="0" data-i18n-aria="position"></div>
@@ -65,7 +86,8 @@
         <div class="table-footer"><button id="page-prev" class="quiet icon-button" data-i18n-aria="prev"><svg data-icon="previous" data-size="12"></svg></button><span id="page-state"></span><button id="page-next" class="quiet icon-button" data-i18n-aria="next"><svg data-icon="next" data-size="12"></svg></button><span class="spacer"></span><span class="keys"><kbd>←</kbd><kbd>→</kbd> <span data-i18n="keys.step">step</span> · <kbd data-i18n="keys.space">Space</kbd> <span data-i18n="keys.play">play</span></span></div>
       </div>
     </section>
-    <div class="splitter" id="timeline-splitter" role="separator" tabindex="0" data-i18n-aria="split.trace" aria-orientation="vertical" aria-controls="timeline graph-panel"></div>
+    </section>
+    <div class="splitter" id="timeline-splitter" role="separator" tabindex="0" data-i18n-aria="split.trace" aria-orientation="vertical" aria-controls="side-panel graph-panel"></div>
     <article class="panel graph-panel" id="graph-panel" tabindex="-1">
       <div class="panel-head"><div class="tabs" id="view-tabs" role="tablist" data-i18n-aria="views">
         <button class="active" id="tab-source" data-view="source" role="tab" aria-selected="true" aria-controls="source-view" data-i18n="source">Source</button>
@@ -196,31 +218,13 @@
   </section>
   </div>
   <nav id="mobile-navigation" data-i18n-aria="mobile.navigation" hidden>
-    <button type="button" data-pane="work" aria-controls="graph-panel" aria-pressed="true"><svg data-icon="parse"></svg><span data-i18n="mobile.work">Work</span></button>
-    <button type="button" data-pane="history" aria-controls="timeline" aria-pressed="false"><svg data-icon="history"></svg><span data-i18n="mobile.trace">Trace</span></button>
+    <button type="button" data-pane="work" aria-controls="graph-panel" aria-pressed="false"><svg data-icon="parse"></svg><span data-i18n="mobile.work">Work</span></button>
+    <button type="button" data-pane="history" aria-controls="side-panel" aria-pressed="true"><svg data-icon="history"></svg><span data-i18n="files.sidebar">Files &amp; trace</span></button>
     <button type="button" data-pane="details" aria-controls="inspector-panel" aria-pressed="false"><svg data-icon="info"></svg><span data-i18n="mobile.details">Details</span></button>
   </nav>
   <footer><span id="engine"></span><span id="meta"></span><span class="spacer"></span><span id="versions"></span><a href="https://github.com/crystal-lang/crystal" target="_blank" rel="noreferrer">Crystal<svg data-icon="external" data-size="10"></svg></a></footer>
 </main>
-<main id="file-panel" class="file-panel" hidden>
-  <div class="file-inner">
-    <div class="file-heading"><h2 id="files-title" tabindex="-1" data-i18n="files.title">Files</h2><button type="button" data-learning-view="observatory" aria-controls="app" data-i18n="files.continue">Return to workspace</button></div>
-    <div id="file-tabs" class="tabs file-tabs" role="tablist" data-i18n-aria="files.title">
-      <button id="tab-templates" type="button" role="tab" data-file-tab="templates" aria-selected="true" aria-controls="templates-panel" data-i18n="files.templates">Templates</button>
-      <button id="tab-documents" type="button" role="tab" data-file-tab="documents" aria-selected="false" aria-controls="documents-panel" data-i18n="files.documents" tabindex="-1">File operations</button>
-    </div>
-    <section id="templates-panel" role="tabpanel" aria-labelledby="tab-templates">
-      <p class="file-intro" data-i18n="files.templatesIntro">Start from example source or explore a recorded compilation trace.</p>
-      <p id="template-status" class="empty" data-i18n="files.loading">Loading templates</p>
-      <div id="template-list" class="template-list"></div>
-    </section>
-    <section id="documents-panel" role="tabpanel" aria-labelledby="tab-documents" hidden>
-      <section class="file-section"><h3 data-i18n="files.source">Source code</h3><div class="file-actions"><button id="new-source" data-i18n="files.newSource">New source</button><button id="open-source" data-i18n="files.openSource">Open source</button><button id="save-source" data-i18n="files.saveSource">Save source</button><input id="source-file" type="file" accept=".cr,.txt,text/plain" hidden></div></section>
-      <section class="file-section"><h3 data-i18n="files.trace">Compilation trace recording</h3><p class="subtle" data-i18n="files.traceFormats">Trace recordings in JSON or gzip format</p><div class="file-actions"><button id="import" data-i18n="files.openTrace">Open trace</button><button id="export" data-i18n="files.saveTrace" disabled>Save trace</button><input id="file" type="file" accept=".json,.gz,application/json" hidden></div></section>
-      <div class="file-actions"><button id="close-document" class="quiet" data-i18n="files.close">Close current file</button></div>
-    </section>
-  </div>
-</main>
+
 <main id="learning-panel" class="learning-panel" hidden>
   <div class="learning-inner">
     <header class="learning-heading"><h2 id="learning-title" tabindex="-1"></h2><p id="learning-intro"></p></header>

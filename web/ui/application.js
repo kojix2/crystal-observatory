@@ -142,6 +142,7 @@ export class Application {
     return !changed;
   }
   async compile(andRun) {
+    this.sidePanel?.showSide('trace');
     const prelude = $('prelude').value;
     this.prepare('state.compiling');
     const source = this.editor.value;
@@ -184,6 +185,7 @@ export class Application {
     }
   }
   async parse() {
+    this.sidePanel?.showSide('trace');
     this.prepare('state.parsing');
     const source = this.editor.value;
     notify(() => t('notice.parsing'));
@@ -239,6 +241,7 @@ export class Application {
       const trace = await this.session.load(load);
       const current = this.acceptTrace(trace, origin, source);
       if (current) this.sourceName = trace.filename || 'main.cr';
+      this.sidePanel?.showSide('trace');
       this.navigation?.show('observatory');
       state('state.recorded');
     } catch (error) {

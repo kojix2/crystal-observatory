@@ -698,6 +698,7 @@ export class TraceView {
       if (
         !this.model ||
         $('app').hidden ||
+        $('timeline').hidden ||
         event.defaultPrevented ||
         event.target.getAttribute('role') === 'separator' ||
         ['TEXTAREA', 'INPUT', 'SELECT', 'BUTTON'].includes(event.target.tagName) ||

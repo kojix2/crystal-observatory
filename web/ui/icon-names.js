@@ -31,5 +31,4 @@ export const lucideNames = {
   nodes: 'boxes',
   visitors: 'scan-eye',
   api: 'file-code',
-  files: 'folder-open',
 };

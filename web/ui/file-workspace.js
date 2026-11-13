@@ -1,19 +1,19 @@
 import { $ } from './dom.js';
 
-// File tasks have their own tabs; switching them never changes the loaded trace.
-export function setupFileWorkspace(app, navigation) {
-  const tabs = [...$('file-tabs').querySelectorAll('[data-file-tab]')];
+function setupTabs(id, key, onChange = () => {}) {
+  const tabs = [...$(id).querySelectorAll('[role="tab"]')];
   function show(name) {
     for (const tab of tabs) {
-      const selected = tab.dataset.fileTab === name;
+      const selected = tab.dataset[key] === name;
       tab.classList.toggle('active', selected);
       tab.setAttribute('aria-selected', selected);
       tab.tabIndex = selected ? 0 : -1;
       $(tab.getAttribute('aria-controls')).hidden = !selected;
     }
+    onChange(name);
   }
   tabs.forEach((tab, index) => {
-    tab.onclick = () => show(tab.dataset.fileTab);
+    tab.onclick = () => show(tab.dataset[key]);
     tab.onkeydown = (event) => {
       const next = {
         ArrowRight: (index + 1) % tabs.length,
@@ -24,9 +24,20 @@ export function setupFileWorkspace(app, navigation) {
       if (next === undefined) return;
       event.preventDefault();
       event.stopPropagation();
-      show(tabs[next].dataset.fileTab);
+      show(tabs[next].dataset[key]);
       tabs[next].focus();
     };
+  });
+  return show;
+}
+
+// Files and the compilation trace share the left column. These tabs never
+// replace the center editor, observation view, selection, or comparison.
+export function setupFileWorkspace(app) {
+  const show = setupTabs('file-tabs', 'fileTab');
+  const showSide = setupTabs('side-tabs', 'sideTab', (name) => {
+    $('side-panel').dataset.view = name;
+    if (name === 'files') app.trace.stop();
   });
   $('new-source').onclick = () => app.showInput('');
   $('open-source').onclick = () => $('source-file').click();
@@ -38,9 +49,11 @@ export function setupFileWorkspace(app, navigation) {
   $('save-source').onclick = () => app.saveSource();
   $('close-document').onclick = () => {
     app.showInput('');
-    navigation.show('files');
+    showSide('files');
     show('documents');
+    app.trace.workspace?.showPane('history');
   };
   show('templates');
-  return { show };
+  showSide('files');
+  return { show, showSide };
 }
