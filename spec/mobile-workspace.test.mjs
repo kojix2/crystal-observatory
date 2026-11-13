@@ -189,7 +189,7 @@ test('mobile starts in the side panel and navigation retains scroll and selectio
     element('side-panel').focus();
     element('inspector-panel').scrollTop = 650;
     controller.showPane('details', { focus: true });
-    assert.equal(document.activeElement.id, 'event-heading');
+    assert.equal(document.activeElement.id, 'event-panel');
     assert.equal(element('inspector-panel').scrollTop, 0);
     assert.equal(element('side-panel').inert, true);
     buttons[1].onclick();
@@ -213,7 +213,7 @@ test('secondary controls move into popovers and restore desktop order without re
     controller.showPane('details');
     assert.equal(element('inspector-panel').scrollTop, 330);
     controller.showPane('details', { focus: true, section: 'node' });
-    assert.equal(document.activeElement.id, 'node-heading');
+    assert.equal(document.activeElement.id, 'node-panel');
     assert.equal(element('node-panel').scrolled, true);
     resize(false);
     assert.deepEqual(
@@ -339,7 +339,7 @@ test('existing Details navigation follows a new node and preserves reading posit
     const node = { id: 7 };
     controller.setDetailContext('node', node);
     buttons[2].onclick();
-    assert.equal(document.activeElement.id, 'node-heading');
+    assert.equal(document.activeElement.id, 'node-panel');
     assert.equal(element('node-panel').scrolled, true);
     element('inspector-panel').scrollTop = 330;
     buttons[0].onclick();
@@ -351,6 +351,6 @@ test('existing Details navigation follows a new node and preserves reading posit
     assert.equal(element('inspector-panel').scrollTop, 0);
     controller.setDetailContext('event', { index: 4 });
     buttons[2].onclick();
-    assert.equal(document.activeElement.id, 'event-heading');
+    assert.equal(document.activeElement.id, 'event-panel');
   });
 });

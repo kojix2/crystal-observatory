@@ -95,7 +95,7 @@ export function setupMobileWorkspace(onModeChange) {
     if (focus || newDetail) {
       // Reset only for a new selection, preserving reading position on a round trip.
       if (name === 'details') panes.details.scrollTop = 0;
-      const target = name === 'details' ? $(`${section}-heading`) : panes[name];
+      const target = name === 'details' ? $(`${section}-panel`) : panes[name];
       target.focus({ preventScroll: true });
       if (name === 'details' && section === 'node')
         $('node-panel').scrollIntoView({ block: 'start', inline: 'nearest' });
