@@ -118,13 +118,11 @@ export class TraceView {
     else if (trace.truncated) notify(() => t('notice.truncated'), 'warning');
     else
       notify(() =>
-        live
-          ? t(trace.prelude === 'empty' ? 'notice.irOnly' : 'notice.compiled')
-          : trace.mode === 'empty'
-            ? ''
-            : t(trace.mode === 'full' ? 'notice.recorded' : 'notice.syntax', {
-                origin: originText(),
-              }),
+        trace.mode === 'empty'
+          ? ''
+          : !live && trace.mode === 'full'
+            ? t('notice.recorded', { origin: originText() })
+            : t('notice.done'),
       );
   }
 
@@ -338,10 +336,8 @@ export class TraceView {
       this.editor.scroll();
     } else if (view === 'ir') {
       this.ir.render();
-    } else if (view === 'run' || view === 'tokens') {
-      $(`${view}-caption`).textContent = t(
-        view === 'run' ? 'graph.runCaption' : 'graph.tokenCaption',
-      );
+    } else if (view === 'tokens') {
+      $('tokens-caption').textContent = t('graph.tokenCaption');
     } else if (view === 'declarations') {
       renderDeclarations(this.model, this.selectedType, {
         section: this.stateSection,
@@ -357,7 +353,7 @@ export class TraceView {
           this.seek(index);
         },
       });
-    } else {
+    } else if (view === 'ast' || view === 'types') {
       if (view === 'ast') {
         const radial = this.astLayout === 'radial';
         $('ast-layout').value = this.astLayout || 'cards';

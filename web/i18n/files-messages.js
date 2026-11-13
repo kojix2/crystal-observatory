@@ -128,15 +128,6 @@ export const filesMessages = {
     'Keine Vorlagen verfügbar.',
     'Шаблоны недоступны.',
   ),
-  'files.traceFormats': entry(
-    'JSON / gzip形式の工程記録',
-    'Trace recordings in JSON or gzip format',
-    'Trazas en formato JSON o gzip',
-    'JSON 或 gzip 格式的轨迹记录',
-    'Traces au format JSON ou gzip',
-    'Aufzeichnungen im JSON- oder gzip-Format',
-    'Записи трасс в формате JSON или gzip',
-  ),
   'trace.empty': entry(
     'コンパイルまたは構文解析を行うと、工程とイベントが表示されます。',
     'Compile or parse source to see stages and events.',

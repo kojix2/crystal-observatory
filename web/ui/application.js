@@ -226,7 +226,8 @@ export class Application {
       );
       state('state.exit', { code: result.exitCode, seconds: (result.elapsed / 1000).toFixed(3) });
       notify(
-        () => t('notice.executed', { code: result.exitCode }),
+        () =>
+          result.exitCode ? t('notice.executed', { code: result.exitCode }) : t('notice.done'),
         result.exitCode ? 'warning' : '',
       );
     } catch (error) {

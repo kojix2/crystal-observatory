@@ -59,15 +59,13 @@ export class IRView {
   render(visible = this.visible) {
     this.visible = visible;
     const fn = this.functions.find((fn) => fn.name === this.selected);
-    const content = fn?.text ?? t(this.hasIR ? 'ir.noMatch' : 'ir.none');
+    const content = fn?.text ?? (this.hasIR ? t('ir.noMatch') : '');
     if (content !== this.renderedText) {
       if (fn) renderLLVM($('ir-code'), content);
       else $('ir-code').textContent = content;
       this.renderedText = content;
     }
-    if (visible)
-      $('ir-caption').textContent = fn
-        ? t('ir.caption', { count: this.functions.length })
-        : t('ir.prompt');
+    $('ir-caption').hidden = !fn;
+    $('ir-caption').textContent = fn ? t('ir.caption', { count: this.functions.length }) : '';
   }
 }
