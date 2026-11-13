@@ -84,9 +84,9 @@ The **Standard library** checkbox controls whether Crystal loads its standard
 `prelude`. Clearing it uses `--prelude empty` and shows **IR only**. This can make
 LLVM IR much smaller, but many standard methods are unavailable; even checked
 integer arithmetic may need a runtime helper from the standard prelude.
-In this mode **Compile & run** is
-disabled and **Compile to IR** stops after LLVM code generation, without WASM
-linking. The selected prelude is included in each compiler recording. Shared
+In this mode the primary button switches from **Compile & run** to **Compile to IR**,
+with a braces icon. It stops after LLVM code generation, without WASM linking
+or execution. The selected prelude is included in each compiler recording. Shared
 source links contain source only, so select the desired prelude after opening
 one.
 The LLVM IR toolbar shows the recording's `--prelude` condition, even on phones.

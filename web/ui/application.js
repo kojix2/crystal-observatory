@@ -2,6 +2,7 @@ import { $, notify, download } from './dom.js';
 import { t, onLocaleChange, UIError, errorText } from '../i18n/index.js';
 import { messages } from '../i18n/messages.js';
 import { text } from './language.js';
+import { setIcon } from './icons.js';
 import { SourceEditor } from './source-editor.js';
 import { TraceView } from './trace-view.js';
 import { WorkSession } from '../runtime/session.js';
@@ -30,7 +31,7 @@ export class Application {
     this.trace = new TraceView(this.editor);
     this.session = new WorkSession({ onState: () => this.updateControls() });
     $('prelude').onchange = () => this.updateControls();
-    $('compile-run').onclick = () => this.compile(true);
+    $('compile-run').onclick = () => this.compile(this.prelude !== 'empty');
     $('compile-only').onclick = () => {
       $('compile-options').hidePopover();
       this.compile(false);
@@ -77,9 +78,16 @@ export class Application {
   }
   updateControls() {
     const busy = this.session?.busy || false,
-      prelude = this.prelude;
+      prelude = this.prelude,
+      runnable = prelude !== 'empty',
+      primary = $('compile-run');
     $('prelude-hint').hidden = prelude !== 'empty';
-    $('compile-run').disabled = busy || prelude === 'empty';
+    primary.disabled = busy;
+    primary.dataset.i18nAria = runnable ? 'run' : 'compile';
+    primary.dataset.i18nTitle = runnable ? 'run.title' : 'compile';
+    primary.ariaLabel = t(primary.dataset.i18nAria);
+    primary.title = t(primary.dataset.i18nTitle);
+    setIcon(primary, runnable ? 'run' : 'codegen');
     for (const id of ['compile-only', 'analyze']) $(id).disabled = busy;
     $('prelude').disabled = busy;
     $('cancel-job').disabled = !busy;

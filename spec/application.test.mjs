@@ -8,10 +8,20 @@ async function fixture(run) {
   const oldDocument = globalThis.document;
   const elements = new Map();
   const get = (id) => {
-    if (!elements.has(id)) elements.set(id, { value: '', textContent: '' });
+    if (!elements.has(id))
+      elements.set(id, {
+        value: '',
+        textContent: '',
+        dataset: {},
+        querySelector: () => null,
+        prepend() {},
+      });
     return elements.get(id);
   };
-  globalThis.document = { getElementById: get };
+  globalThis.document = {
+    getElementById: get,
+    createElement: () => ({ content: { firstChild: {} } }),
+  };
   get('prelude').checked = false;
   const app = Object.assign(Object.create(Application.prototype), {
     artifact: null,
@@ -40,7 +50,9 @@ test('empty prelude allows IR compilation and disables execution of a standard-p
   await fixture(async ({ app, get }) => {
     app.artifact = { source: '42', prelude: 'prelude', wasm: new Uint8Array([1]) };
     app.updateControls();
-    assert.equal(get('compile-run').disabled, true);
+    assert.equal(get('compile-run').disabled, false);
+    assert.equal(get('compile-run').ariaLabel, t('compile'));
+    assert.equal(get('compile-run').title, t('compile'));
     assert.equal(get('compile-only').disabled, false);
     assert.equal(get('rerun').disabled, true);
     assert.equal(get('download-wasm').disabled, true);
@@ -49,8 +61,14 @@ test('empty prelude allows IR compilation and disables execution of a standard-p
     assert.equal(get('notice').textContent, t('notice.needCompile'));
     get('prelude').checked = true;
     app.updateControls();
+    assert.equal(get('compile-run').ariaLabel, t('run'));
+    assert.equal(get('compile-run').title, t('run.title'));
     assert.equal(get('rerun').disabled, false);
     assert.equal(get('prelude-hint').hidden, true);
+    app.session.busy = true;
+    app.updateControls();
+    assert.equal(get('compile-run').disabled, true);
+    assert.equal(get('prelude').disabled, true);
   });
 });
 
