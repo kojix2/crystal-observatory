@@ -7,7 +7,6 @@ export function setupMobileWorkspace(onModeChange) {
   const navigation = $('mobile-navigation');
   const options = $('header-options');
   const menuButton = $('more-actions');
-  const historyControls = $('history-controls');
   const inputs = $('runtime-inputs');
   // Restore the same elements (and their handlers) to their desktop positions.
   const relocated = [['compare-view', options]].map(([id, destination]) => {
@@ -49,12 +48,10 @@ export function setupMobileWorkspace(onModeChange) {
           parent.insertBefore(node, next);
       }
     }
-    for (const popover of [options, historyControls]) {
-      if (mobile && !popover.hasAttribute('popover')) popover.setAttribute('popover', 'auto');
-      if (!mobile && popover.hasAttribute('popover')) {
-        popover.hidePopover();
-        popover.removeAttribute('popover');
-      }
+    if (mobile && !options.hasAttribute('popover')) options.setAttribute('popover', 'auto');
+    if (!mobile && options.hasAttribute('popover')) {
+      options.hidePopover();
+      options.removeAttribute('popover');
     }
     for (const [name, panel] of Object.entries(panes)) {
       const inactive = mobile && name !== current;
@@ -105,10 +102,6 @@ export function setupMobileWorkspace(onModeChange) {
   });
   options.addEventListener('change', (event) => {
     if (media.matches && event.target.id === 'compare-view') options.hidePopover();
-  });
-  historyControls.addEventListener('click', (event) => {
-    const button = event.target.closest('button');
-    if (media.matches && button && button.id !== 'clear-filter') historyControls.hidePopover();
   });
   media.addEventListener('change', onModeChange);
 

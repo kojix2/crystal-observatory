@@ -22,7 +22,13 @@ export class EventList {
     this.filtered = [];
     this.rows = [];
     this.expanded = new Set();
-    $('search').oninput = $('kind').onchange = $('activity-kind').onchange = () => this.filter();
+    $('search').oninput = $('activity-kind').onchange = () => this.filter();
+    $('kind').onchange = () => {
+      if ($('kind').value !== 'activity') $('activity-kind').value = '';
+      this.filter();
+    };
+    $('clear-node-filter').onclick = () => this.filter(0);
+    $('next-activity').addEventListener('click', () => $('history-controls').hidePopover());
     $('clear-filter').onclick = () => {
       this.nodeFilter = 0;
       $('search').value = '';
@@ -90,7 +96,20 @@ export class EventList {
       kind = $('kind').value,
       activity = $('activity-kind').value,
       nodeQuery = /^#(\d+)$/.exec(query);
-    $('history-tools')?.classList.toggle('filtered', Boolean(query || kind || activity || node));
+    const filtered = Boolean(query || kind || activity || node),
+      tools = $('history-tools'),
+      label = filtered ? 'trace.filtersActive' : 'trace.filters';
+    tools.classList.toggle('filtered', filtered);
+    tools.dataset.i18nAria = tools.dataset.i18nTitle = label;
+    tools.ariaLabel = tools.title = t(label);
+    $('clear-filter').disabled = !filtered;
+    $('activity-filter').hidden = kind !== 'activity' && !activity;
+    $('clear-node-filter').hidden = !node;
+    const nodeLabel = node
+      ? t('event.target', { id: node, kind: this.model.nodes.get(node)?.kind || '' })
+      : '';
+    $('node-filter-label').textContent = nodeLabel;
+    $('clear-node-filter').ariaLabel = `${t('clear')}: ${nodeLabel}`;
     this.filtered = this.model.trace.events.filter(
       (event) =>
         (!kind || event.kind === kind) &&

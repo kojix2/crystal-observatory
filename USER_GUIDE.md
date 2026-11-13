@@ -137,8 +137,10 @@ The active observation tab stays visible as views change.
 
 The Play/Pause button sits to the left of the seek bar in Trace. Drag the bar
 to move through the recording, or select an event in the list. The speed menu
-offers Slow, Normal and Fast on both desktop and mobile. The mobile filter button
-shares the playback row and opens search, filters and activity jumps. Closing this
+offers Slow, Normal and Fast on both desktop and mobile. The filter button
+shares the playback row on both layouts and opens search, event kind, and Clear.
+Choosing Activity reveals its subtype filter and the next-activity action.
+An active node condition can be removed separately in the same popup. Closing this
 popup gives the space back to the event list. A highlighted
 filter button indicates an active filter. Search and filter changes keep the popup
 open so conditions can be combined. Trace rows place names and results on separate

@@ -215,7 +215,13 @@ function withList(trace, run) {
     browses = [];
   const element = (id) => {
     if (!elements.has(id))
-      elements.set(id, { value: '', querySelector: () => null, classList: { toggle() {} } });
+      elements.set(id, {
+        value: '',
+        dataset: {},
+        querySelector: () => null,
+        classList: { toggle() {} },
+        addEventListener() {},
+      });
     return elements.get(id);
   };
   globalThis.document = { getElementById: element };

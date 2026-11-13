@@ -28,6 +28,15 @@ export const activityMessages = {
     'Nächste Aktivität',
     'Следующее действие',
   ),
+  'activity.kind': entry(
+    '活動種別',
+    'Activity type',
+    'Tipo de actividad',
+    '活动类型',
+    'Type d’activité',
+    'Aktivitätstyp',
+    'Тип действия',
+  ),
   'activity.all': entry(
     'すべての活動種別',
     'All activity types',
