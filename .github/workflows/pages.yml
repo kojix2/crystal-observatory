@@ -31,7 +31,7 @@ jobs:
           test -s web/traces/manifest.json
           test -s web/assets/compiler/compiler.wasm.gz
           test -s web/assets/compiler/lld.wasm.gz
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           # Keep artifacts from earlier attempts out of this deployment.
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
