@@ -141,8 +141,9 @@
       <section class="panel detail-panel" id="node-panel" tabindex="-1" data-i18n-aria="node.details">
         <div class="node-content">
           <div class="node-identity">
-            <div class="node-title-row"><h3 id="node-title">—</h3><span id="node-type-badge" class="node-type-badge"><span data-i18n="node.expressionType">Expression type</span> <code id="node-type"></code><small id="node-type-at"></small></span></div>
-            <div id="node-facts" class="node-facts"><span id="node-id" class="tiny">—</span><span id="node-location"></span><span id="node-summary"></span></div>
+            <div class="node-title-row"><h3 id="node-title">—</h3><span id="node-id" class="tiny">—</span></div>
+            <div id="node-type-badge" class="node-type-badge"><span data-i18n="node.expressionType">Expression type</span><code id="node-type"></code><small id="node-type-at"></small></div>
+            <div id="node-facts" class="node-facts"><span id="node-location"></span><span id="node-summary"></span></div>
           </div>
           <div id="node-source" class="node-source"><pre id="node-code" class="crystal-code"></pre><div class="node-source-actions"><button id="node-expand-code" class="link-button" aria-expanded="false" aria-controls="node-code" hidden></button><button id="node-open-source" class="link-button" data-i18n="node.openSource">Open in Source</button></div></div>
           <div class="inspector-actions"><button id="node-prev" class="quiet" data-i18n="node.prev">← Previous visit</button><button id="node-next" class="quiet" data-i18n="node.next">Next visit →</button><button id="node-filter" class="quiet" data-i18n="node.filter">Only this node</button></div>
@@ -167,9 +168,9 @@
       <section class="panel detail-panel" id="event-panel" tabindex="-1" data-i18n-aria="event.details">
         <div class="event-content">
           <div class="event-identity">
-            <button id="event-phase" class="link-button event-phase" aria-controls="event-context-panel"></button>
-            <div class="event-title-row"><h3 id="visitor-title">—</h3><span id="event-kind" class="event-kind"></span></div>
-            <div class="event-meta"><button id="event-node" class="link-button"></button><span id="activity-observed"></span><span id="event-id" class="tiny">—</span></div>
+            <div class="event-title-row"><h3 id="visitor-title">—</h3><span id="event-id" class="tiny">—</span></div>
+            <div class="event-operation"><span id="event-kind" class="event-kind"></span><button id="event-phase" class="link-button event-phase" aria-controls="event-context-panel"></button></div>
+            <div class="event-meta"><button id="event-node" class="link-button"></button><span id="activity-observed"></span></div>
           </div>
           <div class="event-tabs" role="tablist" data-i18n-aria="event.tabs">
             <button type="button" id="event-tab-operation" role="tab" aria-selected="true" aria-controls="event-operation-panel" data-i18n="event.tab.operation">Operation</button>

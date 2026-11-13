@@ -367,23 +367,24 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 }
 #node-declarations button { display:block; font-size:var(--text-small); }
 .inspect-scroll { padding: 10px 13px; overflow: auto; flex: 1; min-height: 0; }
-.event-kind { font:var(--text-small) var(--mono); color: var(--type); margin-bottom: 7px; }
 .inspect-scroll p { font-size: var(--text-body); line-height: 1.8; color: var(--muted); margin: 9px 0; }
 /* Event identity and tabs stay visible; the selected detail gets the remaining space. */
 .event-content { display:flex; flex:1; flex-direction:column; min-height:0; overflow:auto; container-type:inline-size; }
-.event-identity { flex-shrink:0; padding:7px 12px 5px; }
-.event-phase { display:block; max-width:100%; padding:0; margin-bottom:4px; font-size:var(--text-small); text-align:left; white-space:normal; color:var(--muted); }
-.event-title-row { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px; }
-.event-title-row #visitor-title { min-width:0; margin:0; font-size:var(--text-body); overflow-wrap:anywhere; }
-.event-title-row .event-kind { margin:0; padding:2px 5px; border-radius:3px; background:var(--soft); font:var(--text-small)/1.5 var(--sans); overflow-wrap:anywhere; }
-.event-meta { display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 10px; color:var(--muted); font-size:var(--text-small); margin-top:4px; }
+.node-identity,.event-identity { display:flex; flex-direction:column; gap:5px; flex-shrink:0; padding:10px 12px 8px; }
+.node-title-row,.event-title-row { display:flex; align-items:baseline; gap:8px; }
+#node-title,#visitor-title { flex:1; min-width:0; margin:0; font:600 var(--text-heading)/1.4 var(--mono); overflow-wrap:anywhere; }
+#node-id,#event-id { flex-shrink:0; font-variant-numeric:tabular-nums; }
+.event-operation { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px; }
+.event-kind { padding:1px 5px; border-radius:3px; background:var(--soft); color:var(--type); font:var(--text-small)/1.5 var(--sans); overflow-wrap:anywhere; }
+.event-phase { max-width:100%; min-width:0; padding:0; font-size:var(--text-small); text-align:left; white-space:normal; color:var(--muted); }
+.event-meta { display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 10px; color:var(--muted); font-size:var(--text-small); }
+.event-meta:has(>:not([hidden])) { min-height:20px; }
 .event-meta .link-button { font-size:var(--text-small); padding:0; white-space:normal; text-align:left; }
-#event-id { margin-left:auto; }
-.event-tabs { display:flex; gap:8px; padding:0 12px; border-bottom:1px solid var(--line); flex-shrink:0; overflow-x:auto; }
-.event-tabs button { flex-shrink:0; background:transparent; font-size:var(--text-small); padding:4px 3px; border-radius:0; border-bottom:2px solid transparent; }
-.event-tabs [aria-selected="true"] { color:var(--type); border-bottom-color:var(--type); font-weight:600; }
-.event-tab-panel { padding:6px 12px 10px; min-height:72px; overflow-wrap:anywhere; }
-.event-tab-panel h4 { margin:6px 0 4px; font-size:var(--text-small); }
+.node-tabs,.event-tabs { display:flex; gap:12px; padding:0 12px; border-bottom:1px solid var(--line); flex-shrink:0; overflow-x:auto; }
+.node-tabs button,.event-tabs button { flex-shrink:0; background:transparent; font-size:var(--text-small); padding:5px 0; border-radius:0; border-bottom:2px solid transparent; }
+.node-tabs [aria-selected="true"],.event-tabs [aria-selected="true"] { color:var(--type); border-bottom-color:var(--type); font-weight:600; }
+.event-tab-panel { padding:8px 12px 12px; min-height:72px; overflow-wrap:anywhere; }
+.event-tab-panel h4 { margin:8px 0 4px; font-size:var(--text-small); letter-spacing:0; }
 .event-tab-panel p { margin:6px 0; font-size:var(--text-body); line-height:1.6; }
 .event-tab-panel.inspect-scroll pre { margin:0; padding:7px 8px; font:var(--text-body)/1.6 var(--mono); max-height:180px; white-space:pre-wrap; overflow-wrap:anywhere; }
 .event-tab-panel details { margin-top:8px; font-size:var(--text-small); }
@@ -409,14 +410,10 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 /* Fixed node identity and navigation; only the chosen tab normally scrolls.
    A very short pane or long type can scroll the outer content as a fallback. */
 .node-content { display:flex; flex:1; flex-direction:column; min-height:0; overflow:auto; }
-.node-identity { flex-shrink:0; padding:7px 12px 5px; }
-.node-title-row { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
-#node-title { font:600 var(--text-heading)/1.5 var(--mono); min-width:0; }
-.node-type-badge { background:var(--type-bg); color:var(--type); border-radius:3px; padding:2px 5px; min-width:0; overflow-wrap:anywhere; text-align:right; font-size:var(--text-small); }
-.node-type-badge code { font:600 var(--text-body) var(--mono); }
-.node-type-badge small { margin-left:4px; font-size:var(--text-small); font-weight:400; }
-.node-facts { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:4px; font-size:var(--text-small); color:var(--muted); }
-#node-id { flex-shrink:0; }
+.node-type-badge { display:flex; align-items:baseline; flex-wrap:wrap; gap:3px 6px; min-width:0; color:var(--muted); font-size:var(--text-small); }
+.node-type-badge code { min-width:0; padding:1px 5px; border-radius:3px; background:var(--type-bg); color:var(--type); font:600 var(--text-body)/1.5 var(--mono); overflow-wrap:anywhere; }
+.node-type-badge small { font-size:var(--text-small); }
+.node-facts { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:var(--text-small); color:var(--muted); }
 #node-location { flex:1; min-width:0; overflow-wrap:anywhere; font-family:var(--mono); }
 #node-summary { flex-shrink:0; }
 .node-source { flex-shrink:0; margin:0 12px; border-radius:3px; background:var(--soft); }
@@ -424,13 +421,10 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .node-source-actions { display:flex; justify-content:flex-end; gap:4px; border-top:1px solid var(--hairline); }
 .node-source-actions .link-button { font-size:var(--text-small); padding:2px 6px; white-space:normal; }
 .node-source[data-expanded="true"] #node-code { max-height:none; white-space:pre-wrap; }
-.inspector-actions { display:flex; gap:2px; flex-wrap:wrap; flex-shrink:0; padding:3px 8px; }
-.inspector-actions button { font-size: var(--text-small); padding: 3px 4px; color: var(--muted); }
-.node-tabs { display:flex; gap:8px; padding:0 12px; border-bottom:1px solid var(--line); flex-shrink:0; }
-.node-tabs button { background:transparent; font-size:var(--text-small); padding:4px 6px; border-radius:0; border-bottom:2px solid transparent; }
-.node-tabs [aria-selected="true"] { color:var(--type); border-bottom-color:var(--type); font-weight:600; }
+.inspector-actions { display:flex; gap:2px 8px; flex-wrap:wrap; flex-shrink:0; padding:4px 12px; }
+.inspector-actions button { font-size:var(--text-small); padding:3px 0; color:var(--muted); }
 .node-count { padding:0 4px; background:var(--soft-2); border-radius:3px; font:var(--text-small) var(--mono); }
-.node-tab-panel { flex:1 1 auto; min-height:72px; padding:6px 12px 10px; overflow:auto; overflow-wrap:anywhere; }
+.node-tab-panel { flex:1 1 auto; min-height:72px; padding:8px 12px 12px; overflow:auto; overflow-wrap:anywhere; }
 .node-tab-panel p { font-size:var(--text-body); line-height:1.6; margin:5px 0; }
 .node-tab-panel .node-context { color:var(--muted); font-size:var(--text-small); margin:0 0 5px; }
 .node-incomplete { padding:5px 7px; border-left:2px solid var(--type); background:var(--type-bg); }
@@ -456,7 +450,6 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .stack-frame:last-child { background: var(--selection); border-color: var(--muted); }
 #compiler-link { font-size:var(--text-small); }
 #compiler-link a { display:block; margin-block:4px; overflow-wrap:anywhere; }
-#visitor-title { font:var(--text-heading)/1.5 var(--mono); color:#4d3a61; }
 /* Use the same visitor color in history, details and the visit stack. */
 [data-visitor="TopLevelVisitor"] { --visitor-ink:var(--visitor-top-level); }
 [data-visitor="MainVisitor"],[data-visitor="Call"] { --visitor-ink:var(--visitor-main); }
@@ -477,7 +470,6 @@ tr.activity { border-left:3px solid #599c83; }
 [data-visitor="MacroInterpreter"],[data-visitor="ExpandableNode"] { --visitor-ink:var(--visitor-macros); }
 .event-visitor[data-visitor],#visitor-title[data-visitor],.stack-frame[data-visitor] { color:var(--visitor-ink,inherit); }
 .stack-frame[data-visitor] { border-left-color:var(--visitor-ink,#d6d6e0); }
-#node-title { font:var(--text-title)/1.4 var(--mono); }
 #raw-event { margin-top:10px; color:var(--muted); font-size:var(--text-small); }
 #raw-event summary { cursor:pointer; }
 .ir-view { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--editor-bg); color: var(--editor-ink); }
@@ -682,14 +674,9 @@ dialog .close:hover { color:var(--ink); }
   .mobile #inspector-panel .inspect-scroll { overflow:visible; }
   .mobile .node-content { flex:0 0 auto; overflow:visible; }
   .mobile .event-content { flex:0 0 auto; overflow:visible; }
-  .mobile .event-tabs { position:sticky; top:0; z-index:1; background:var(--paper); }
-  .mobile .event-tabs button { font-size:var(--text-small); padding:7px 3px; }
+  .mobile .node-tabs,.mobile .event-tabs { position:sticky; top:0; z-index:1; background:var(--paper); }
+  .mobile .node-tabs button,.mobile .event-tabs button { flex:1 0 auto; font-size:var(--text-small); padding:7px 0; }
   .mobile .event-tab-panel { min-height:140px; }
-  .mobile .node-identity { padding-top:10px; }
-  .mobile .node-type-badge,.mobile .node-facts { font-size:var(--text-small); }
-  .mobile .node-type-badge small { font-size:var(--text-small); }
-  .mobile .node-tabs { position:sticky; top:0; z-index:1; background:var(--paper); }
-  .mobile .node-tabs button { flex:1; font-size:var(--text-body); }
   .mobile .node-tab-panel { flex:0 0 auto; min-height:140px; overflow:visible; }
   .mobile .node-tab-panel p { font-size:var(--text-body); }
   .mobile .node-tab-panel .node-context { font-size:var(--text-small); }

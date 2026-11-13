@@ -34,6 +34,7 @@ export function renderInspector(
     stage = compilerStage(event),
     nodeEvents = node ? model.eventsFor(selected) : [];
   $('node-id').textContent = node ? `#${node.id}` : '—';
+  $('node-id').hidden = !node;
   $('node-title').textContent = node?.kind || (model.trace.mode === 'empty' ? '' : t('node.empty'));
   $('node-title').hidden = !node && model.trace.mode === 'empty';
   $('node-location').textContent = node?.line
@@ -95,6 +96,7 @@ export function renderInspector(
   for (const id of ['node-prev', 'node-next', 'node-filter']) $(id).disabled = !node;
 
   $('event-id').textContent = event ? `#${event.index}` : '—';
+  $('event-id').hidden = !event;
   renderStageContext(event, stage);
   $('visitor-title').textContent = event
     ? shortVisitor(event.visitor) || stage?.driver.split(' → ')[0] || t('event.noVisitor')
