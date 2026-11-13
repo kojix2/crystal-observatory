@@ -12,7 +12,6 @@ export function setupMobileWorkspace(onModeChange) {
   // Restore the same elements (and their handlers) to their desktop positions.
   const relocated = [
     ['compare-view', options],
-    ['record-tools', historyControls],
     ['first', $('history-extra-playback')],
     ['last', $('history-extra-playback')],
     ['speed', $('history-extra-playback')],
@@ -26,8 +25,8 @@ export function setupMobileWorkspace(onModeChange) {
     details: $('inspector-panel'),
   };
   const buttons = [...navigation.querySelectorAll('[data-pane]')];
-  // Start with bundled recordings; opening one reveals Work without compiling.
-  let current = 'history';
+  // Templates and file tasks live outside the observation workspace.
+  let current = 'work';
   let wasMobile = false;
   let mobileInputsOpen = false;
   let detailContext = { section: 'event', key: null };

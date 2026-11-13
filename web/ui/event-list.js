@@ -159,7 +159,7 @@ export class EventList {
     this.page = Math.max(0, Math.min(this.page, pages - 1));
     const empty = this.model.trace.mode === 'empty';
     this.activeGroup = this.rows[this.currentRowIndex()]?.group?.start;
-    $('history-start').hidden = !empty;
+    $('trace-empty-message').hidden = !empty;
     $('history-no-match').hidden = empty || !this.model.trace.events.length || this.rows.length > 0;
     const focused = document.activeElement,
       focusedRow = focused?.closest?.('#events [data-index]'),

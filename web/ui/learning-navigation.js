@@ -16,7 +16,7 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
   let current = 'observatory';
 
   function render() {
-    if (current === 'observatory') return;
+    if (current === 'observatory' || current === 'files') return;
     $('learning-title').textContent = t(`learning.${current}`);
     $('learning-intro').hidden = current === 'workflow';
     $('learning-intro').textContent = current === 'workflow' ? '' : t(`learning.${current}.intro`);
@@ -70,7 +70,9 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
     if ($('header-options').matches(':popover-open')) $('header-options').hidePopover();
     const observing = current === 'observatory';
     $('app').hidden = !observing;
-    panel.hidden = observing;
+    const files = current === 'files';
+    $('file-panel').hidden = !files;
+    panel.hidden = observing || files;
     for (const button of buttons) {
       if (button.dataset.learningView === current) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
@@ -78,6 +80,8 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
     if (observing) {
       onReturn();
       $('app').focus({ preventScroll: true });
+    } else if (files) {
+      $('files-title').focus({ preventScroll: true });
     } else {
       search.value = queries.get(current) || '';
       render();

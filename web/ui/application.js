@@ -1,4 +1,4 @@
-import { $, notify, download } from './dom.js';
+import { $, esc, notify, download } from './dom.js';
 import { t, onLocaleChange, UIError, errorText } from '../i18n/index.js';
 import { messages } from '../i18n/messages.js';
 import { text } from './language.js';
@@ -8,6 +8,7 @@ import { WorkSession } from '../runtime/session.js';
 import { CancelledError, TimeoutError } from '../runtime/worker-client.js';
 import { decodeTrace, fetchTrace, emptyTrace } from '../core/trace-io.js';
 import { SourceSharing } from './source-sharing.js';
+import { LIMITS, validateSource } from '../core/limits.js';
 
 const DEFAULT_SOURCE =
   'def square(x)\n  x * x\nend\n\nputs "Hello, Crystal!"\n(1..5).each do |n|\n  puts "#{n}² = #{square(n)}"\nend\n';
@@ -23,7 +24,6 @@ export class Application {
     this.editor = new SourceEditor(() => {
       this.sharing?.cancel();
       if (this.sharing) this.sharing.origin = null;
-      if (this.editor.dirty) $('example').value = '';
       this.updateControls();
       this.trace?.renderSourceCaption();
     });
@@ -51,8 +51,6 @@ export class Application {
     $('download-wasm').onclick = () => {
       if (this.artifact) download('program.wasm', this.artifact.wasm, 'application/wasm');
     };
-    $('example').onchange = () => this.loadExample(false);
-    $('recorded').onclick = () => this.loadExample(true);
     $('import').onclick = () => $('file').click();
     $('file').onchange = () => {
       const file = $('file').files[0];
@@ -87,7 +85,6 @@ export class Application {
       this.artifact.source !== this.editor.value ||
       this.artifact.prelude !== $('prelude').value;
     $('download-wasm').disabled = !this.artifact || this.artifact.prelude !== $('prelude').value;
-    $('recorded').disabled = !$('example').value;
     this.sharing?.update();
   }
   prepare(key = 'state.idle') {
@@ -99,10 +96,34 @@ export class Application {
     state(key);
     this.updateControls();
   }
-  showInput(source) {
+  showInput(source, name = 'main.cr') {
     if (this.sharing) this.sharing.origin = null;
     this.prepare();
+    this.sourceName = name;
     this.trace.load(emptyTrace(source));
+    this.revealWork();
+  }
+  revealWork() {
+    this.navigation?.show('observatory');
+    this.trace.workspace?.showPane('work');
+  }
+  async openSource(file) {
+    this.sharing?.cancel();
+    state('state.loading');
+    try {
+      const source = await this.session.load(async () => {
+        if (file.size > LIMITS.sourceBytes) throw new UIError('error.sourceLimit');
+        const value = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+        validateSource(value);
+        return value;
+      });
+      this.showInput(source, file.name);
+    } catch (error) {
+      this.showError(error);
+    }
+  }
+  saveSource() {
+    download(this.sourceName || 'main.cr', this.editor.value, 'text/plain;charset=utf-8');
   }
   showError(error) {
     if (error instanceof CancelledError) return;
@@ -116,10 +137,6 @@ export class Application {
     const changed = this.editor.value !== submittedSource;
     this.trace.load(trace, { origin, preserveEdits: changed, live });
     this.trace.workspace?.showPane('work');
-    // Imported traces can replace the editor with unrelated code. Do not keep
-    // offering the previous example's recording as though it matched this input.
-    if (this.manifest[Number($('example').value) - 1]?.source !== this.editor.value)
-      $('example').value = '';
     this.updateControls();
     if (changed) notify(() => t('notice.changed'), 'warning');
     return !changed;
@@ -220,7 +237,9 @@ export class Application {
     notify(() => t('notice.recordLoading'));
     try {
       const trace = await this.session.load(load);
-      this.acceptTrace(trace, origin, source);
+      const current = this.acceptTrace(trace, origin, source);
+      if (current) this.sourceName = trace.filename || 'main.cr';
+      this.navigation?.show('observatory');
       state('state.recorded');
     } catch (error) {
       this.showError(error);
@@ -231,30 +250,25 @@ export class Application {
     return messages[`example.${id}`] ? t(`example.${id}`) : item.title;
   }
   renderExamples() {
-    const selection = $('example').value;
-    $('example').replaceChildren(
-      new Option(t('source.custom'), ''),
-      ...this.manifest.map((item, index) => new Option(this.exampleTitle(item), String(index + 1))),
-    );
-    $('example').value = selection;
-    // The empty History doubles as the entry point: one click opens a recording.
-    $('start-examples').replaceChildren(
+    $('template-status').hidden = this.manifest.length > 0;
+    if (!this.manifest.length) {
+      $('template-status').dataset.i18n = 'files.noTemplates';
+      $('template-status').textContent = t('files.noTemplates');
+    }
+    $('template-list').replaceChildren(
       ...this.manifest.map((item, index) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = this.exampleTitle(item);
-        button.onclick = () => {
-          $('example').value = String(index + 1);
-          this.loadExample(true);
-        };
-        return button;
+        const card = document.createElement('article');
+        card.className = 'template-card';
+        card.dataset.template = index;
+        card.innerHTML = `<h3>${esc(this.exampleTitle(item))}</h3><pre>${esc(item.source.split('\n').slice(0, 5).join('\n'))}</pre><div class="file-actions"><button type="button" data-template-source>${esc(t('files.useSource'))}</button><button type="button" data-template-trace>${esc(t('files.openTrace'))}</button></div>`;
+        card.querySelector('[data-template-source]').onclick = () => this.loadExample(item, false);
+        card.querySelector('[data-template-trace]').onclick = () => this.loadExample(item, true);
+        return card;
       }),
     );
     this.updateControls();
   }
-  loadExample(recorded) {
-    const item = this.manifest[Number($('example').value) - 1];
-    if (!item) return;
+  loadExample(item, recorded) {
     // The manifest already contains source: input selection must not fetch and
     // decode a multi-megabyte archived LLVM trace just to fill the editor.
     if (!recorded) this.showInput(item.source);
@@ -271,6 +285,8 @@ export class Application {
       this.manifest = await response.json();
       this.renderExamples();
     } catch (error) {
+      this.manifest = [];
+      this.renderExamples();
       notify(() => t('notice.serving', { error: errorText(error) }), 'error');
     }
   }

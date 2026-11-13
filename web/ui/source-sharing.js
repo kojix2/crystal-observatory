@@ -112,7 +112,6 @@ export class SourceSharing {
       this.pending = null;
       this.app.showInput(result.source);
       this.origin = result.origin ? { ...result.origin, source: result.source } : null;
-      $('example').value = '';
       this.app.trace.setView('source');
       this.app.trace.workspace?.showPane('work');
       this.app.updateControls();

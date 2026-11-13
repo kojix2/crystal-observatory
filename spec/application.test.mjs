@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Application } from '../web/ui/application.js';
 import { t, setLocale } from '../web/i18n/index.js';
+import { WorkSession } from '../web/runtime/session.js';
 
 async function fixture(run) {
   const oldDocument = globalThis.document;
@@ -86,5 +87,49 @@ test('missing compiler outputs and diagnostics cannot be shown as IR success', a
     await app.compile(false);
     assert.equal(get('run-state').textContent, t('state.compileFailed'));
     assert.equal(app.artifact, null);
+  });
+});
+
+test('opening UTF-8 source validates size before replacing the current document', async () => {
+  await fixture(async ({ app, get }) => {
+    app.session = new WorkSession();
+    const opened = [];
+    app.showInput = (source, name) => opened.push({ source, name });
+    await app.openSource(new File(['puts "結晶"\n'], 'unicode.cr'));
+    assert.deepEqual(opened, [{ source: 'puts "結晶"\n', name: 'unicode.cr' }]);
+    let read = false;
+    await app.openSource({
+      size: 256 * 1024 + 1,
+      arrayBuffer() {
+        read = true;
+      },
+    });
+    assert.equal(read, false);
+    assert.equal(opened.length, 1);
+    assert.equal(get('notice').textContent, t('error.sourceLimit'));
+    assert.equal(app.session.busy, false);
+    await app.openSource(new File([new Uint8Array([0xff])], 'invalid.cr'));
+    assert.equal(opened.length, 1);
+    assert.equal(app.session.busy, false);
+  });
+});
+
+test('a pending local source read cannot replace a newer document after cancellation', async () => {
+  await fixture(async ({ app }) => {
+    app.session = new WorkSession();
+    let complete;
+    const opened = [];
+    app.showInput = (source) => opened.push(source);
+    const pending = app.openSource({
+      name: 'old.cr',
+      size: 2,
+      arrayBuffer: () => new Promise((resolve) => (complete = resolve)),
+    });
+    assert.equal(app.session.busy, true);
+    app.prepare();
+    complete(new TextEncoder().encode('42').buffer);
+    await pending;
+    assert.deepEqual(opened, []);
+    assert.equal(app.session.busy, false);
   });
 });

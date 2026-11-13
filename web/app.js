@@ -6,6 +6,7 @@ import { mountIcons } from './ui/icons.js';
 import { setupHistoryColumns } from './ui/history-columns.js';
 import { resetTokenColumns } from './ui/tokens.js';
 import { setupLearningNavigation } from './ui/learning-navigation.js';
+import { setupFileWorkspace } from './ui/file-workspace.js';
 
 mountIcons();
 setupSettings();
@@ -35,6 +36,8 @@ const navigation = setupLearningNavigation({
     app.trace.revealActiveTab();
   },
 });
+app.navigation = navigation;
+setupFileWorkspace(app, navigation);
+navigation.show(new URL(window.location.href).searchParams.get('page') === 'api' ? 'api' : 'files');
 app.loadManifest();
 app.sharing.openURL(window.location.href);
-if (new URL(window.location.href).searchParams.get('page') === 'api') navigation.show('api');

@@ -107,7 +107,6 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
     ['compile-options', ['compile-only', 'analyze']],
     ['header-options', ['language']],
     ['graph-head', ['view-tabs', 'compare-view', 'maximize-graph']],
-    ['timeline-head', ['record-tools']],
     ['playback', ['first', 'prev', 'play', 'next', 'last', 'speed', 'position']],
   ])
     for (const id of children) element(parent).append(element(id));
@@ -166,13 +165,13 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   }
 }
 
-test('mobile starts in History and navigation retains scroll and selection', () => {
+test('mobile starts in Work and trace navigation retains scroll and selection', () => {
   workspace({}, ({ controller, element, buttons }) => {
     assert.equal(controller.mobile, true);
-    assert.equal(element('app').dataset.mobilePane, 'history');
-    assert.equal(element('timeline').inert, false);
-    assert.equal(element('graph-panel').inert, true);
-    assert.equal(buttons[1].getAttribute('aria-pressed'), 'true');
+    assert.equal(element('app').dataset.mobilePane, 'work');
+    assert.equal(element('timeline').inert, true);
+    assert.equal(element('graph-panel').inert, false);
+    assert.equal(buttons[0].getAttribute('aria-pressed'), 'true');
     assert.equal(element('header-options').getAttribute('popover'), 'auto');
     assert.deepEqual(
       buttons.map((button) => button.dataset.pane),

@@ -24,11 +24,12 @@ export const lucideNames = {
   info: 'info',
   menu: 'ellipsis',
   filter: 'list-filter',
-  history: 'rotate-ccw-clock',
+  history: 'list-tree',
   reference: 'arrow-up-right',
   observatory: 'telescope',
   workflow: 'workflow',
   nodes: 'boxes',
   visitors: 'scan-eye',
   api: 'file-code',
+  files: 'folder-open',
 };

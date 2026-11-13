@@ -1,12 +1,12 @@
 export const mobileMessages = {
   'mobile.historyTools': {
-    en: 'History filters and jumps',
-    ja: '履歴の絞り込み・移動',
-    es: 'Filtros y saltos del historial',
-    'zh-CN': '历史筛选和跳转',
-    fr: 'Filtres et sauts dans l’historique',
-    de: 'Verlauf filtern und springen',
-    ru: 'Фильтры и переходы истории',
+    en: 'Compilation trace filters and jumps',
+    ja: 'コンパイル工程の絞り込み・移動',
+    es: 'Filtros y saltos de la traza de compilación',
+    'zh-CN': '编译轨迹筛选和跳转',
+    fr: 'Filtres et sauts dans la trace de compilation',
+    de: 'Kompilierungsablauf filtern und springen',
+    ru: 'Фильтры и переходы трассы компиляции',
   },
   'mobile.inputs': {
     en: 'Input & arguments',

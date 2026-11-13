@@ -58,11 +58,11 @@ test('additional languages translate UI text and preserve compiler-provided valu
   const original = structuredClone(event);
   try {
     for (const [locale, history] of [
-      ['es', 'Historial'],
-      ['zh-CN', '历史'],
-      ['fr', 'Historique'],
-      ['de', 'Verlauf'],
-      ['ru', 'История'],
+      ['es', 'Traza de compilación'],
+      ['zh-CN', '编译轨迹'],
+      ['fr', 'Trace de compilation'],
+      ['de', 'Kompilierungsablauf'],
+      ['ru', 'Трасса компиляции'],
     ]) {
       setLocale(locale);
       assert.equal(getLocale(), locale);

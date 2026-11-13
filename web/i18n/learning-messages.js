@@ -2,13 +2,13 @@ const entry = (ja, en, es, zh, fr, de, ru) => ({ ja, en, es, 'zh-CN': zh, fr, de
 
 export const learningMessages = {
   'learning.navigation': entry(
-    '学習資料・アプリ',
-    'Learning resources and apps',
-    'Recursos y aplicaciones',
-    '学习资料与应用',
-    'Ressources et applications',
-    'Lernmaterial und Apps',
-    'Учебные материалы и приложения',
+    '画面の切り替え',
+    'Navigation',
+    'Navegación',
+    '导航',
+    'Navigation',
+    'Navigation',
+    'Навигация',
   ),
   'learning.observatory': entry(
     'Crystal Observatory',
