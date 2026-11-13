@@ -231,18 +231,25 @@ export class EventList {
       return `<li class="event-branch"><div class="event-row event-group ${phase ? 'event-stage' : 'event-call'} ${active ? 'active' : ''}"><button type="button" class="event-group-toggle" data-group="${group.start}" aria-expanded="${expanded}" aria-controls="event-children-${group.start}" aria-label="${esc(label)}" title="${esc(label)}">${icon('disclosure', { size: 12 })}</button><button type="button" class="event-select event-group-select" data-index="${group.start}" aria-current="${active ? 'step' : 'false'}"><span class="event-heading" title="${esc(phase ? event.phase || event.detail : event.visitor)}"><span class="event-visitor"${phase ? '' : ` data-visitor="${esc(visitorKey(event.visitor))}"`}>${esc(visitor)}</span>${phase ? '' : this.renderNode(event)}</span>${activities}</button></div><ol id="event-children-${group.start}" class="event-children"${expanded ? '' : ' hidden'}>${renderItems(children, group)}</ol></li>`;
     }
     const active = event.index === this.model.index,
+      milestone = !parent && ['complete', 'link'].includes(event.kind),
+      failedLink =
+        event.kind === 'link' && (event.link.exitCode !== 0 || event.link.outputBytes === null),
+      label =
+        milestone && event.kind === 'link'
+          ? `${this.stageLabel(event)}${failedLink ? ` · ${eventLabel('error')}` : ''}`
+          : eventLabel(event.kind),
       sameContext =
         parent &&
         parent.kind !== 'phase' &&
         event.visitor === parent.event.visitor &&
         event.node_id === parent.event.node_id,
       actor = shortVisitor(event.visitor) || (!parent ? this.stageLabel(event) : ''),
-      result = this.result(event),
+      result = milestone ? '' : this.result(event),
       context =
-        !sameContext && (actor || event.node_id)
+        !milestone && !sameContext && (actor || event.node_id)
           ? `<span class="event-context"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}" title="${esc(event.visitor)}">${esc(actor)}</span>${this.renderNode(event)}</span>`
           : '';
-    return `<li class="event-entry"><div class="event-row event-leaf ${active ? 'active' : ''} ${esc(event.kind)}"><button type="button" class="event-select event-leaf-select" data-index="${event.index}" aria-current="${active ? 'step' : 'false'}"><span class="event-heading"><span class="event-label">${esc(eventLabel(event.kind))}</span><span class="event-number">#${event.index}</span></span>${result ? `<span class="event-result" title="${esc(result)}">${esc(brief(result, 130))}</span>` : ''}${context}</button></div></li>`;
+    return `<li class="event-entry"><div class="event-row event-leaf ${milestone ? 'event-milestone' : ''} ${active ? 'active' : ''} ${esc(event.kind)} ${failedLink ? 'error' : ''}"><button type="button" class="event-select event-leaf-select" data-index="${event.index}" aria-current="${active ? 'step' : 'false'}"><span class="event-heading"><span class="event-label">${esc(label)}</span>${milestone ? '' : `<span class="event-number">#${event.index}</span>`}</span>${result ? `<span class="event-result" title="${esc(result)}">${esc(brief(result, 130))}</span>` : ''}${context}</button></div></li>`;
   }
   result(event) {
     return event.kind === 'link'

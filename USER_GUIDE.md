@@ -210,6 +210,11 @@ Compilation trace uses a nested list: stage, Visitor and target node, then
 operation and result. Individual operations retain their event numbers. Use a disclosure
 button to expand a branch, or select its name to inspect that point in the recording.
 When a branch spans pages, its parent headings are repeated to preserve context.
+Completion and linking appear as compact top-level entries; selecting them opens
+their recorded details. A failed link remains marked as an error in the list.
+Left/Right moves by one event, including events inside collapsed branches;
+Space toggles autoplay when the trace panel itself has focus. Page controls appear only
+when the list spans multiple pages and do not change the selected event.
 
 The footer reports the compiler and LLVM versions from the selected recording.
 Bundled recordings, syntax analysis and new compilations can use different
