@@ -2224,15 +2224,6 @@ export const messages = {
     de: 'Bereit zum Kompilieren',
     ru: 'Готово к компиляции',
   },
-  'source.caption': {
-    ja: '初期コードを選ぶか自由に編集し、上の操作で解析・実行します。',
-    en: 'Choose initial code or edit freely, then compile or parse from the toolbar.',
-    es: 'Elige el código inicial o edítalo libremente y luego compila o analiza desde la barra de herramientas.',
-    'zh-CN': '选择初始代码或自由编辑，然后通过工具栏编译或分析。',
-    fr: 'Choisissez un code initial ou modifiez-le librement, puis compilez ou analysez depuis la barre d’outils.',
-    de: 'Wähle einen Ausgangscode oder bearbeite ihn frei und starte dann Kompilierung oder Syntaxanalyse über die Werkzeugleiste.',
-    ru: 'Выберите исходный пример или отредактируйте код, затем запустите компиляцию или анализ с панели инструментов.',
-  },
   'visitor.TopLevelVisitor': {
     ja: 'クラス・メソッド・マクロなどの宣言を登録します。呼ばれていないメソッド本体まで型推論する工程ではありません。',
     en: 'Registers classes, methods and macros so later passes can resolve declarations. It does not infer every unused method body.',

@@ -312,9 +312,9 @@ export class TraceView {
     this.editor.highlight(this.model.nodes.get(this.selected));
   }
   renderSourceCaption() {
-    $('source-caption').textContent = t(
-      this.editor.hasRecord && this.editor.dirty ? 'comparison.sourceStale' : 'source.caption',
-    );
+    const stale = this.editor.hasRecord && this.editor.dirty;
+    $('source-caption').hidden = !stale;
+    $('source-caption').textContent = stale ? t('comparison.sourceStale') : '';
   }
   renderObservation({ reveal = false } = {}) {
     if (!this.model) return;
