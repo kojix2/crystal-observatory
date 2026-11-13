@@ -2038,15 +2038,6 @@ export const messages = {
     de: 'LLVM-IR mit leerem Prelude erzeugt. WASM wurde weder gelinkt noch ausgeführt.',
     ru: 'LLVM IR создан с пустым Prelude. WASM не компоновался и не запускался.',
   },
-  'notice.input': {
-    ja: '「コンパイルして実行」で、このコードをブラウザ内で実行します。',
-    en: 'Choose Compile & run to execute this source in the browser.',
-    es: 'Elige Compilar y ejecutar para ejecutar este código en el navegador.',
-    'zh-CN': '选择“编译并运行”即可在浏览器中执行此代码。',
-    fr: 'Choisissez Compiler et exécuter pour lancer ce code dans le navigateur.',
-    de: 'Wähle Kompilieren und ausführen, um diesen Quellcode im Browser auszuführen.',
-    ru: 'Выберите «Компилировать и запустить», чтобы выполнить этот код в браузере.',
-  },
   'notice.recorded': {
     ja: '{origin} · 収録済みの実測記録です。',
     en: '{origin} · a previously recorded compiler trace.',

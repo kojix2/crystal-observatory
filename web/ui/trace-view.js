@@ -121,7 +121,7 @@ export class TraceView {
         live
           ? t(trace.prelude === 'empty' ? 'notice.irOnly' : 'notice.compiled')
           : trace.mode === 'empty'
-            ? t('notice.input')
+            ? ''
             : t(trace.mode === 'full' ? 'notice.recorded' : 'notice.syntax', {
                 origin: originText(),
               }),
