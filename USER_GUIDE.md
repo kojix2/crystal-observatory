@@ -80,10 +80,11 @@ The **Compilation trace** panel shows compiler stages, Visitor calls and their
 events. It contains playback, search and filters; templates and file operations
 are in **Files**. Compilation always analyzes the current editor contents.
 
-The **Prelude** selector chooses whether Crystal loads its standard `prelude`
-or uses `--prelude empty`. Empty mode can make LLVM IR much smaller, but many
-standard methods are unavailable; even checked integer arithmetic may need a
-runtime helper from the standard prelude. In this mode **Compile & run** is
+The **Standard library** checkbox controls whether Crystal loads its standard
+`prelude`. Clearing it uses `--prelude empty` and shows **IR only**. This can make
+LLVM IR much smaller, but many standard methods are unavailable; even checked
+integer arithmetic may need a runtime helper from the standard prelude.
+In this mode **Compile & run** is
 disabled and **Compile to IR** stops after LLVM code generation, without WASM
 linking. The selected prelude is included in each compiler recording. Shared
 source links contain source only, so select the desired prelude after opening
@@ -95,7 +96,7 @@ and other standard methods may fail in empty mode; checked `+`, `-` and `*` can
 also fail without runtime helpers. Wrapping operators `&+`, `&-` and `&*` have
 different overflow semantics and are not substituted automatically.
 
-For example, choose **Empty** and **Compile to IR** for:
+For example, clear **Standard library** and choose **Compile to IR** for:
 
 ```crystal
 def square(x)

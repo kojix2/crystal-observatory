@@ -12,7 +12,7 @@ async function fixture(run) {
     return elements.get(id);
   };
   globalThis.document = { getElementById: get };
-  get('prelude').value = 'empty';
+  get('prelude').checked = false;
   const app = Object.assign(Object.create(Application.prototype), {
     artifact: null,
     manifest: [],
@@ -47,7 +47,7 @@ test('empty prelude allows IR compilation and disables execution of a standard-p
     assert.equal(get('prelude-hint').hidden, false);
     await app.execute();
     assert.equal(get('notice').textContent, t('notice.needCompile'));
-    get('prelude').value = 'prelude';
+    get('prelude').checked = true;
     app.updateControls();
     assert.equal(get('rerun').disabled, false);
     assert.equal(get('prelude-hint').hidden, true);
@@ -66,7 +66,7 @@ test('successful empty-prelude IR does not require an executable and uses the su
     assert.equal(app.trace.view, 'ir');
     assert.equal(app.trace.recording.prelude, 'empty');
     assert.equal(get('run-state').textContent, t('state.irReady'));
-    get('prelude').value = 'prelude';
+    get('prelude').checked = true;
     app.updateControls();
     assert.equal(app.trace.recording.prelude, 'empty');
   });
@@ -75,7 +75,7 @@ test('successful empty-prelude IR does not require an executable and uses the su
 test('missing compiler outputs and diagnostics cannot be shown as IR success', async () => {
   await fixture(async ({ app, get }) => {
     for (const prelude of ['prelude', 'empty']) {
-      get('prelude').value = prelude;
+      get('prelude').checked = prelude === 'prelude';
       app.session.compile = async (source) => ({ trace: { source, errors: [], llvm_ir: '' } });
       await app.compile(false);
       assert.equal(get('run-state').textContent, t('state.failed'));

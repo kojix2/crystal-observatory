@@ -72,10 +72,14 @@ export class Application {
     this.showInput(DEFAULT_SOURCE);
     this.sharing = new SourceSharing(this);
   }
+  get prelude() {
+    return $('prelude').checked ? 'prelude' : 'empty';
+  }
   updateControls() {
-    const busy = this.session?.busy || false;
-    $('prelude-hint').hidden = $('prelude').value !== 'empty';
-    $('compile-run').disabled = busy || $('prelude').value === 'empty';
+    const busy = this.session?.busy || false,
+      prelude = this.prelude;
+    $('prelude-hint').hidden = prelude !== 'empty';
+    $('compile-run').disabled = busy || prelude === 'empty';
     for (const id of ['compile-only', 'analyze']) $(id).disabled = busy;
     $('prelude').disabled = busy;
     $('cancel-job').disabled = !busy;
@@ -83,8 +87,8 @@ export class Application {
       busy ||
       !this.artifact ||
       this.artifact.source !== this.editor.value ||
-      this.artifact.prelude !== $('prelude').value;
-    $('download-wasm').disabled = !this.artifact || this.artifact.prelude !== $('prelude').value;
+      this.artifact.prelude !== prelude;
+    $('download-wasm').disabled = !this.artifact || this.artifact.prelude !== prelude;
     this.sharing?.update();
   }
   prepare(key = 'state.idle') {
@@ -143,7 +147,7 @@ export class Application {
   }
   async compile(andRun) {
     this.sidePanel?.showSide('trace');
-    const prelude = $('prelude').value;
+    const prelude = this.prelude;
     this.prepare('state.compiling');
     const source = this.editor.value;
     notify(() => t('notice.prepare'));
@@ -201,7 +205,7 @@ export class Application {
     if (
       !this.artifact ||
       this.artifact.source !== this.editor.value ||
-      this.artifact.prelude !== $('prelude').value
+      this.artifact.prelude !== this.prelude
     )
       return notify(() => t('notice.needCompile'), 'warning');
     let args;
