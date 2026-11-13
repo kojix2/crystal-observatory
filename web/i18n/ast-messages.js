@@ -59,6 +59,24 @@ const families = {
 };
 
 export const astMessages = {
+  'ast.typeUnobserved': entry(
+    '型未観測',
+    'Unobserved',
+    'Sin observar',
+    '类型未观测',
+    'Non observé',
+    'Unbeobachtet',
+    'Не наблюдался',
+  ),
+  'ast.branchCount': entry(
+    '{count} 本の枝',
+    '{count} branches',
+    '{count} ramas',
+    '{count} 个分支',
+    '{count} branches',
+    '{count} Zweige',
+    '{count} ветвей',
+  ),
   'ast.layout': entry(
     'ASTの表示形式',
     'AST layout',
