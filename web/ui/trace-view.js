@@ -88,6 +88,7 @@ export class TraceView {
     $('follow').checked = true;
     $('snapshot').replaceChildren(...trace.snapshots.map((item, i) => new Option(item.name, i)));
     $('scrubber').max = Math.max(0, trace.events.length - 1);
+    for (const id of ['play', 'scrubber', 'playback-options']) $(id).disabled = !trace.events.length;
     text('meta', () =>
       t('count.trace', { events: trace.events.length.toLocaleString(), nodes: trace.nodes.length }),
     );
@@ -686,7 +687,7 @@ export class TraceView {
       if (
         !this.model ||
         $('app').hidden ||
-        $('timeline').hidden ||
+        ($('timeline').hidden && ($('ast-view').hidden || $('graph-panel').inert)) ||
         event.defaultPrevented ||
         event.target.getAttribute('role') === 'separator' ||
         (['TEXTAREA', 'INPUT', 'SELECT', 'BUTTON'].includes(event.target.tagName) &&

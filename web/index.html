@@ -32,7 +32,7 @@
       <div class="panel-head side-head"><div id="side-tabs" class="tabs side-tabs" role="tablist" data-i18n-aria="files.sidebar">
         <button type="button" id="side-tab-files" data-side-tab="files" role="tab" aria-selected="true" aria-controls="file-panel" data-i18n="files.title">Files</button>
         <button type="button" id="side-tab-trace" data-side-tab="trace" role="tab" aria-selected="false" aria-controls="timeline" tabindex="-1" data-i18n="trace">Compilation trace</button>
-      </div><button id="toggle-trace" class="quiet icon-button" data-i18n-aria="side.collapse" data-i18n-title="side.collapse" aria-expanded="true" aria-controls="side-panel"><svg data-icon="collapse"></svg></button></div>
+      </div><button id="history-tools" class="quiet icon-button" popovertarget="history-controls" data-i18n-aria="trace.filters" data-i18n-title="trace.filters"><svg data-icon="filter"></svg></button><button id="toggle-trace" class="quiet icon-button" data-i18n-aria="side.collapse" data-i18n-title="side.collapse" aria-expanded="true" aria-controls="side-panel"><svg data-icon="collapse"></svg></button></div>
       <section id="file-panel" class="file-panel" role="tabpanel" aria-labelledby="side-tab-files">
         <div class="file-inner">
           <section class="file-section"><h3 data-i18n="files.source">Source code</h3><div class="file-actions"><button id="new-source" data-i18n="files.newSource">New source</button><button id="open-source" data-i18n="files.openSource">Open source</button><button id="save-source" data-i18n="files.saveSource">Save source</button><input id="source-file" type="file" accept=".cr,.txt,text/plain" hidden></div></section>
@@ -47,9 +47,6 @@
       </section>
       <section class="timeline" id="timeline" role="tabpanel" aria-labelledby="side-tab-trace" tabindex="-1" hidden>
       <div id="history-list" class="history-list">
-        <div class="playback"><button id="play" class="play icon-button" data-i18n-title="play" data-i18n-aria="play"><svg data-icon="play"></svg></button><input id="scrubber" type="range" min="0" max="1" value="0" data-i18n-aria="position"><span id="position">0 / 0</span><button id="playback-options" class="quiet icon-button" popovertarget="playback-settings" data-i18n-title="speed" data-i18n-aria="speed"><svg data-icon="menu"></svg></button><button id="history-tools" class="quiet icon-button" popovertarget="history-controls" data-i18n-aria="trace.filters" data-i18n-title="trace.filters"><svg data-icon="filter"></svg></button>
-          <div id="playback-settings" class="playback-settings" popover><fieldset><legend data-i18n="speed">Playback speed</legend><label><input type="radio" name="playback-speed" value="700"><span data-i18n="slow">Slow</span></label><label><input type="radio" name="playback-speed" value="220" checked><span data-i18n="normal">Normal</span></label><label><input type="radio" name="playback-speed" value="55"><span data-i18n="fast">Fast</span></label></fieldset></div>
-        </div>
         <div id="history-controls" class="history-controls" popover data-i18n-aria="trace.filters" role="group">
           <input id="search" type="text" data-i18n-placeholder="event.search" data-i18n-aria="event.search">
           <button id="clear-node-filter" class="node-filter-condition quiet" hidden><span id="node-filter-label"></span><svg data-icon="close" data-size="12"></svg></button>
@@ -103,6 +100,9 @@
       </section>
       </div>
       <section id="ast-view" class="observation-view" data-observation="ast" role="tabpanel" aria-labelledby="tab-ast" hidden><div class="observation-title">AST</div>
+      <div class="playback" role="group" data-i18n-aria="play"><button id="play" class="play icon-button" data-i18n-title="play" data-i18n-aria="play"><svg data-icon="play"></svg></button><input id="scrubber" type="range" min="0" max="1" value="0" data-i18n-aria="position"><span id="position">0 / 0</span><button id="playback-options" class="quiet icon-button" popovertarget="playback-settings" data-i18n-title="speed" data-i18n-aria="speed"><svg data-icon="menu"></svg></button>
+        <div id="playback-settings" class="playback-settings" popover><fieldset><legend data-i18n="speed">Playback speed</legend><label><input type="radio" name="playback-speed" value="700"><span data-i18n="slow">Slow</span></label><label><input type="radio" name="playback-speed" value="220" checked><span data-i18n="normal">Normal</span></label><label><input type="radio" name="playback-speed" value="55"><span data-i18n="fast">Fast</span></label></fieldset></div>
+      </div>
       <div class="view-tools ast-tools"><select id="ast-layout" data-i18n-aria="ast.layout"><option value="cards" data-i18n="ast.layout.cards">Cards</option><option value="mindmap" data-i18n="ast.layout.mindmap">Mind map</option><option value="radial" data-i18n="ast.layout.radial">Radial tree</option></select><select id="snapshot" data-i18n-aria="snapshot"></select><label data-i18n-title="follow.title"><input id="follow" type="checkbox" checked><span data-i18n="follow">Follow trace</span></label><button id="expand" class="quiet" data-i18n="expand" data-i18n-title="expand.title" hidden>Expand all</button></div>
       <div id="ast-radial-controls" class="view-tools radial-controls" hidden><label id="ast-zoom-label" for="ast-zoom" data-i18n="ast.zoom">Zoom</label><input id="ast-zoom" type="range" min="100" max="800" step="25" value="100"><output id="ast-zoom-value" for="ast-zoom">100%</output><button id="ast-fit" class="quiet" data-i18n="ast.fit">Fit all</button></div>
       <div id="node-color-key" class="node-color-key" role="group" data-i18n-aria="ast.legend" data-i18n-title="ast.colorHint">

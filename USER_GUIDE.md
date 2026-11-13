@@ -82,8 +82,8 @@ you change views or screen size.
 **Parse only** uses a separate lightweight lexer/parser, without semantic analysis.
 
 The **Compilation trace** panel shows compiler stages, Visitor calls and their
-events. It contains playback, search and filters; templates and file operations
-are in **Files**. Compilation always analyzes the current editor contents.
+events. It contains search and filters; playback is above the AST. Templates and
+file operations are in **Files**. Compilation always analyzes the current editor contents.
 
 The **Standard library** checkbox controls whether Crystal loads its standard
 `prelude`. Clearing it uses `--prelude empty` and shows **IR only**. This can make
@@ -142,10 +142,10 @@ without a new selection keeps the reading position. Trace events and stage
 headings open their operation details, while playback and stepping stay in place.
 The active observation tab stays visible as views change.
 
-The Play/Pause button sits to the left of the seek bar in Trace. Drag the bar
+The Play/Pause button sits to the left of the seek bar above the AST. Drag the bar
 to move through the recording, or select an event in the list. The speed menu
-offers Slow, Normal and Fast on both desktop and mobile. The filter button
-shares the playback row on both layouts and opens search, event kind, and Clear.
+offers Slow, Normal and Fast on both desktop and mobile. The filter button in
+Compilation trace opens search, event kind, and Clear.
 Choosing Activity reveals its subtype filter and the next-activity action.
 An active node condition can be removed separately in the same popup. Closing this
 popup gives the space back to the event list. A highlighted

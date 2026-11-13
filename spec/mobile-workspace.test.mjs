@@ -119,8 +119,9 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
     ['prelude-toggle', ['prelude']],
     ['status-message', ['notice']],
     ['header-options', ['language']],
+    ['side-head', ['side-tabs', 'history-tools', 'toggle-trace']],
     ['graph-head', ['view-tabs', 'compare-view', 'maximize-graph']],
-    ['playback', ['play', 'scrubber', 'position', 'playback-options', 'history-tools']],
+    ['playback', ['play', 'scrubber', 'position', 'playback-options', 'playback-settings']],
   ])
     for (const id of children) element(parent).append(element(id));
   element('runtime-inputs').open = false;

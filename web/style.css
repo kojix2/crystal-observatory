@@ -524,7 +524,7 @@ input[type=checkbox],input[type=range] { accent-color:var(--accent); }
 body.resizing { user-select:none; }
 .timeline { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; overflow:hidden; }
 /* Controls size to their text; the event list owns the remaining height. */
-.history-list { display:grid; grid-template-rows:auto minmax(0,1fr) auto; flex:1; min-width:0; min-height:0; }
+.history-list { display:grid; grid-template-rows:minmax(0,1fr) auto; flex:1; min-width:0; min-height:0; }
 .trace-empty #events { display:none; }
 .trace-empty .history-list { grid-template-rows:minmax(0,1fr); }
 .trace-empty .history-list>:not(#trace-content) { display:none; }
@@ -533,7 +533,8 @@ body.resizing { user-select:none; }
 .trace-empty #inspector-panel { display:flex; align-items:center; justify-content:center; padding:24px; background:var(--soft); }
 .trace-empty #inspector-panel>:not(#inspector-empty) { display:none; }
 .trace-empty #inspector-empty { display:block; max-width:26ch; text-align:center; color:var(--muted); }
-.playback { display:flex; align-items:center; gap:6px; padding:3px 5px; min-width:0; }
+.side-head:has(#side-tab-files[aria-selected="true"]) #history-tools,.trace-empty #history-tools { display:none; }
+.playback { display:flex; align-items:center; gap:6px; min-width:0; padding:5px 8px; border-bottom:1px solid var(--line); background:var(--paper); }
 .playback .icon-button { flex-basis:30px; width:30px; height:30px; }
 #position { font:var(--text-small) var(--mono); white-space:nowrap; color:var(--muted); }
 #scrubber { flex:1; width:0; min-width:0; height:24px; margin:0; }
@@ -733,7 +734,7 @@ dialog .close:hover { color:var(--ink); }
   .mobile #source-view .run-view:has(#console:empty) { min-height:0; }
   .mobile .source-foot { min-height:28px; flex-wrap:wrap; gap:4px; }
   .mobile .source-foot #restore { padding:4px; }
-  .mobile .history-list { grid-template-rows:50px minmax(0,1fr) auto; overflow:hidden; }
+  .mobile .history-list { grid-template-rows:minmax(0,1fr) auto; overflow:hidden; }
   .mobile .history-controls input,.mobile .history-controls select,.mobile .history-controls button { min-height:44px; }
   .mobile .playback-settings label { min-height:44px; }
   .mobile.trace-empty .history-list { grid-template-rows:minmax(0,1fr); }
