@@ -256,7 +256,7 @@ test('stage disclosure preserves selection, nested state, localized names and fi
     list.model.seek(current);
     list.follow();
     assert.equal(list.activeGroup, phase.start);
-    assert(element('events').innerHTML.includes(`Current: #${current}`));
+    assert(element('events').innerHTML.includes(`data-index="${phase.start}" aria-current="step"`));
     const toggleTarget = {
       closest: (selector) =>
         selector === '[data-group]' ? { dataset: { group: String(phase.start) } } : null,
@@ -305,7 +305,10 @@ test('opening, closing, filtering and localizing keep playback position and expa
     list.follow();
     const collapsedRows = list.rows.length;
     assert.equal(element('page-state').textContent, '1 / 1');
-    assert(element('events').innerHTML.includes(`Current: #${current}`));
+    const phase = list.historyGroups.find(
+      (group) => group.start <= current && current <= group.end,
+    );
+    assert(element('events').innerHTML.includes(`data-index="${phase.start}" aria-current="step"`));
     assert(!element('events').innerHTML.includes(`data-index="${current}"`));
 
     const button = { dataset: { group: String(cleanupGroup.start) } },
@@ -438,7 +441,7 @@ test('paging follows visible rows and a collapsed group tracks its hidden curren
     assert(element('events').innerHTML.includes(`data-index="${current}"`));
     list.toggle(group.start);
     assert.equal(list.model.index, current);
-    assert(element('events').innerHTML.includes(`Current: #${current}`));
+    assert(element('events').innerHTML.includes(`data-index="${group.start}" aria-current="step"`));
     const pages = Math.ceil(list.rows.length / 70);
     assert(pages > 1);
     assert.equal(element('page-state').textContent, `1 / ${pages}`);
@@ -446,7 +449,11 @@ test('paging follows visible rows and a collapsed group tracks its hidden curren
     list.model.seek(last);
     list.follow();
     assert.equal(element('page-state').textContent, `${pages} / ${pages}`);
-    assert(element('events').innerHTML.includes(`Current: #${last}`));
+    assert(
+      element('events').innerHTML.includes(
+        `data-index="${list.groups.at(-1).start}" aria-current="step"`,
+      ),
+    );
   });
 });
 

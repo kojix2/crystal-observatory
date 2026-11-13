@@ -509,8 +509,8 @@ input[type=checkbox],input[type=range] { accent-color:var(--accent); }
 .splitter::after { content:""; position:absolute; width:2px; height:28px; left:2px; top:calc(50% - 14px); border-radius:1px; background:#b8b8c4; }
 body.resizing { user-select:none; }
 .timeline { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; overflow:hidden; }
-/* Controls size to their text; the event table owns the remaining height. */
-.history-list { display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; flex:1; min-width:0; min-height:0; }
+/* Controls size to their text; the event list owns the remaining height. */
+.history-list { display:grid; grid-template-rows:auto minmax(0,1fr) auto; flex:1; min-width:0; min-height:0; }
 .trace-empty #events { display:none; }
 .trace-empty .history-list { grid-template-rows:minmax(0,1fr); }
 .trace-empty .history-list>:not(#trace-content) { display:none; }
@@ -528,7 +528,6 @@ body.resizing { user-select:none; }
 @supports (top:anchor(bottom)) {
   .playback-settings { position-anchor:--playback-options; top:anchor(bottom); right:anchor(right); position-try-fallbacks:flip-block,flip-inline; }
 }
-.phase-status { padding:0 7px; font:var(--text-small)/1.5 var(--mono); color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #history-tools { position:relative; anchor-name:--history-tools; }
 #history-tools.filtered { background:var(--selection); color:var(--type); box-shadow:inset 0 0 0 1px var(--type); }
 #history-tools.filtered::after { content:""; position:absolute; width:5px; height:5px; top:3px; right:3px; border-radius:50%; background:var(--type); }
@@ -732,7 +731,6 @@ dialog .close:hover { color:var(--ink); }
   .mobile .playback { gap:4px; }
   .mobile .playback .icon-button { flex-basis:44px; }
   .mobile #position { padding-right:4px; }
-  .mobile .phase-status { display:none; }
   .mobile .event-children { margin-left:12px; }
   .mobile .event-group-toggle { flex-basis:44px; min-width:44px; }
   .mobile .event-leaf .event-select { padding-left:52px; }

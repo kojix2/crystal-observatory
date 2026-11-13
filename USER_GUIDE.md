@@ -198,7 +198,8 @@ Compilation trace initially shows one row per completed compiler stage, grouping
 end and intervening events. Open a stage with its arrow to see Visitor groups,
 then open a Visitor to see individual events. Filtering keeps the enclosing stage
 and matching event counts; declaration-only filtering shows operations directly.
-Playback marks the current event inside a collapsed group without opening it.
+Playback highlights the selected event or its collapsed parent without opening it;
+the position beside the slider shows progress through the recording.
 Stages missing an end event stay visible individually, including compiler errors.
 **Next activity** uses the current search, node and activity filters. Search for
 `#7`, for example, to match node 7 exactly. Manually changing Compilation trace pages stops

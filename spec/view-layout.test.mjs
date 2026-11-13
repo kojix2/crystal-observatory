@@ -82,7 +82,6 @@ test('History selection reveals its AST node when following, preserving an exist
     view.collapsed = new Set([1, 99]);
     view.events = { follow() {} };
     view.stop = () => {};
-    view.renderPhase = () => {};
     view.renderSelection = () => {};
     view.renderObservation = (options) => {
       view.observationOptions = options;

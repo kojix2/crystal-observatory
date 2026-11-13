@@ -2,7 +2,6 @@ import { t } from '../i18n/index.js';
 import { text } from './language.js';
 import { $, notify, download } from './dom.js';
 import { setIcon } from './icons.js';
-import { eventLabel, shortVisitor } from './event-labels.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
 import { bindGraphNavigation, zoomGraphAt } from './graph-navigation.js';
@@ -130,20 +129,12 @@ export class TraceView {
   // node/snapshot, reset filters or move playback when switching languages.
   localize() {
     this.renderComparisonControls();
-    this.renderPhase();
     this.events.filter(this.events.nodeFilter, { preservePosition: true });
     this.events.localizeActivities();
     if (this.trace) renderTokens(this.trace, (node) => this.editor.highlight(node));
     this.renderSelection({ reveal: false });
     this.revealActiveTab();
   }
-  renderPhase() {
-    const event = this.model?.event;
-    $('phase-status').textContent = event
-      ? `${event.phase} / ${shortVisitor(event.visitor)} / ${eventLabel(event.kind)}`
-      : t('state.waiting');
-  }
-
   stop() {
     clearInterval(this.playTimer);
     this.playTimer = null;
@@ -189,7 +180,6 @@ export class TraceView {
     }
     $('scrubber').value = Math.max(0, this.model.index);
     $('position').textContent = `${this.model.index + 1} / ${this.trace.events.length}`;
-    this.renderPhase();
     this.events.follow();
     if (this.layout.has('ir')) this.ir.follow(event?.llvm_function, event?.llvm_block);
     this.renderSelection();

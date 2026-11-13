@@ -820,15 +820,6 @@ export const messages = {
     de: '{count} von {total} Ereignissen passen',
     ru: 'Совпадений: {count} из {total} событий',
   },
-  'event.group.current': {
-    ja: '現在位置: #{index}',
-    en: 'Current: #{index}',
-    es: 'Actual: #{index}',
-    'zh-CN': '当前位置：#{index}',
-    fr: 'Position actuelle : nº {index}',
-    de: 'Aktuell: #{index}',
-    ru: 'Текущее: № {index}',
-  },
   'trace.filters': {
     ja: '絞り込み',
     en: 'Filters',

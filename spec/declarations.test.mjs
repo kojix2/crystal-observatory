@@ -455,7 +455,6 @@ test('declaration events stay in view in either comparison pane', () => {
       view.layout = new ViewLayout(primary);
       view.layout.compare(primary === 'source' ? 'declarations' : 'source');
       view.events = { follow() {} };
-      view.renderPhase = () => {};
       view.renderSelection = () => {};
       scrolled = false;
       view.seek(5);

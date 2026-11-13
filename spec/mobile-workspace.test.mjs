@@ -287,7 +287,6 @@ test('explicit event selection opens Details even without a followable AST node'
       workspace: { showPane: (name) => destinations.push(name) },
       stop() {},
       seek() {},
-      renderPhase() {},
       renderSelection() {},
     });
     view.selectEvent(0);
