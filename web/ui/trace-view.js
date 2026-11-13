@@ -4,6 +4,7 @@ import { $, notify, download } from './dom.js';
 import { setIcon } from './icons.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
+import { visitation, nextVisit } from '../core/visitation.js';
 import { bindGraphNavigation, zoomGraphAt } from './graph-navigation.js';
 import { renderInspector } from './inspector.js';
 import { setupNodeTabs } from './node-tabs.js';
@@ -176,6 +177,15 @@ export class TraceView {
     }
     if ($('follow').checked) {
       this.snapshot = this.model.snapshotAt();
+      const focus = visitation(this.model).focus;
+      if (focus) {
+        const snapshot = this.model.snapshotForNode(focus.node_id, this.snapshot);
+        if (snapshot >= 0) {
+          this.snapshot = snapshot;
+          if (this.collapsed.size)
+            revealASTNode(this.trace.snapshots[snapshot], focus.node_id, this.collapsed);
+        }
+      }
       $('snapshot').value = this.snapshot;
     }
     $('scrubber').value = Math.max(0, this.model.index);
@@ -194,6 +204,10 @@ export class TraceView {
   }
   selectEvent(index) {
     this.stop();
+    if (this.trace?.events[index]?.kind === 'phase_enter') {
+      const first = nextVisit({ trace: this.trace, event: this.trace.events[index], index });
+      if (first >= 0) index = first;
+    }
     this.seek(index);
     const node = this.model?.event?.node_id;
     if ($('follow').checked && node) {

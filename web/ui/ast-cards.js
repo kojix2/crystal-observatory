@@ -1,6 +1,7 @@
 import { t } from '../i18n/index.js';
 import { esc } from './dom.js';
 import { icon } from './icons.js';
+import { visitDecoration } from './ast-visitation.js';
 
 const typeWidths = new WeakMap();
 const letterWidth = 7.8;
@@ -92,7 +93,10 @@ function recordedTypeWidths(trace) {
   return widths;
 }
 
-export function renderASTCard(row, { trace, state, selected, collapsed, x, y, availableWidth }) {
+export function renderASTCard(
+  row,
+  { trace, state, selected, collapsed, x, y, availableWidth, visit },
+) {
   const { node, reference, edge } = row;
   const { family, type, changed } = state;
   const branchCount =
@@ -120,7 +124,10 @@ export function renderASTCard(row, { trace, state, selected, collapsed, x, y, av
   const desiredWidth = Math.ceil(
     inset + Math.max(kindWidth + valueWidth + markWidth, footerWidth) + 12,
   );
-  const minimumWidth = Math.min(340, Math.max(96, Math.ceil(inset + kindWidth + markWidth + 12)));
+  const minimumWidth = Math.min(
+    340,
+    Math.max(96, Math.ceil(inset + kindWidth + markWidth + 12 + (value ? 10 + letterWidth : 0))),
+  );
   const width = Math.max(minimumWidth, Math.min(340, availableWidth, desiredWidth));
   const height = reserveType || folded ? 44 : 28;
   const headingBudget = Math.floor((width - inset - 12 - markWidth) / letterWidth);
@@ -140,6 +147,9 @@ export function renderASTCard(row, { trace, state, selected, collapsed, x, y, av
   const mark = reference
     ? `<g class="svg-mark" transform="translate(${width - 24} 8)">${icon('reference', { size: 12 })}</g>`
     : '';
-  const html = `<g class="node card-node ${node.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${reference ? 'reference' : ''}" data-node="${node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(tooltip)}</title><rect class="tile" width="${width}" height="${height}" rx="4"/><rect class="accent" width="3" height="${height}" rx="1"/>${fold}<text x="${inset}" y="18" class="svg-card-heading" xml:space="preserve"><tspan class="svg-kind">${esc(kind)}</tspan>${displayedValue ? `<tspan class="svg-card-value" dx="10">${esc(displayedValue)}</tspan>` : ''}</text>${mark}${typeText ? `<text x="${inset}" y="35" class="${type ? 'svg-type' : 'svg-card-pending'}">${esc(fitText(typeText, typeBudget))}</text>` : ''}${countText ? `<text x="${reserveType ? width - 12 : inset}" y="35"${reserveType ? ' text-anchor="end"' : ''} class="svg-card-count">${esc(displayedCount)}</text>` : ''}</g>`;
-  return { html, width, height };
+  const dispatch = visit
+    ? visitDecoration(node.id, visit, { width, height, reference })
+    : { classes: '', attributes: '', shape: '' };
+  const html = `<g class="node card-node ${node.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(tooltip)}</title><rect class="tile" width="${width}" height="${height}" rx="4"/><rect class="accent" width="3" height="${height}" rx="1"/>${fold}<text x="${inset}" y="18" class="svg-card-heading" xml:space="preserve"><tspan class="svg-kind">${esc(kind)}</tspan>${displayedValue ? `<tspan class="svg-card-value" dx="10">${esc(displayedValue)}</tspan>` : ''}</text>${mark}${typeText ? `<text x="${inset}" y="35" class="${type ? 'svg-type' : 'svg-card-pending'}">${esc(fitText(typeText, typeBudget))}</text>` : ''}${countText ? `<text x="${reserveType ? width - 12 : inset}" y="35"${reserveType ? ' text-anchor="end"' : ''} class="svg-card-count">${esc(displayedCount)}</text>` : ''}${dispatch.shape}</g>`;
+  return { html, width, height, right: dispatch.right || 0 };
 }

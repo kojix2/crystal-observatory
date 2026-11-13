@@ -1,6 +1,9 @@
 import { t } from '../i18n/index.js';
 import { $, esc, brief } from './dom.js';
 import { renderASTCard } from './ast-cards.js';
+import { visitation } from '../core/visitation.js';
+import { renderVisitorSpeech } from './visitor-speech.js';
+import { visitDecoration, captureVisitorBall, animateVisitorBall } from './ast-visitation.js';
 import { flattenAST } from '../core/trace-model.js';
 import { renderActivities } from './inspector.js';
 import { astFamily } from '../core/ast-colors.js';
@@ -12,6 +15,7 @@ const nodeHeight = 76;
 const cardGap = 6;
 const cardIndent = 20;
 const cardInset = 12;
+const cardRightInset = 20;
 const dependencyWidth = 260;
 const dependencyStride = 104;
 
@@ -45,6 +49,7 @@ export function renderGraph(
 ) {
   const caption = $(`${view}-caption`);
   const liveTypes = view === 'types' || $('follow').checked;
+  const visit = visitation(model);
   function nodeState(n) {
     const family = astFamily(n.kind);
     const type = liveTypes ? model.types.get(n.id) || '' : n.inferred_type || '';
@@ -120,11 +125,13 @@ export function renderGraph(
       caption.textContent = t('graph.prompt');
       return;
     }
+    const previousBall = captureVisitorBall($('graph'));
     if (astLayout === 'radial') renderRadial(s);
     else if (astLayout === 'mindmap') renderMindmap(s);
     else renderCards(s);
     wireGraph($('graph'));
-    const activeNode = $('graph').querySelector('.node.selected');
+    const activeNode =
+      $('graph').querySelector('.node.visit-current') || $('graph').querySelector('.node.selected');
     if (activeNode && $('follow').checked && reveal) {
       const nodeRect = activeNode.getBoundingClientRect(),
         area = $('graph').getBoundingClientRect();
@@ -133,6 +140,8 @@ export function renderGraph(
       if (nodeRect.left < area.left || nodeRect.right > area.right)
         $('graph').scrollLeft += nodeRect.left - area.left - 16;
     }
+    animateVisitorBall($('graph'), previousBall);
+    renderVisitorSpeech($('graph'), model, visit);
     caption.textContent =
       t('graph.caption', {
         name: s.name,
@@ -147,7 +156,9 @@ export function renderGraph(
           : '');
   }
   function renderMindmap(s) {
-    const { rows, width, height } = layoutMindmapAST(s, collapsed);
+    const layout = layoutMindmapAST(s, collapsed);
+    const { rows, height } = layout;
+    const width = layout.width + 24;
     let edges = '',
       nodes = '';
     for (const row of rows) {
@@ -162,11 +173,12 @@ export function renderGraph(
         label = t('graph.node', { kind: n.kind, type, id: n.id }),
         headingLength = Math.max(1, Math.floor((row.width - 36 - `#${n.id}`.length * 7) / 7.2)),
         codeLength = Math.floor((row.width - 24) / 7.2),
-        typeLength = Math.floor((row.width - (hasKids ? 48 : 24)) / 7.2);
-      nodes += `<g class="node mindmap-node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${row.reference ? 'reference' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${row.x} ${row.y})"><title>${esc(label)}\n${esc(n.label || '')}${row.reference ? `\n${esc(t('ast.reference'))}` : ''}</title><rect class="tile" width="${row.width}" height="${row.height}" rx="8"/><rect class="accent" width="3" height="${row.height - 16}" x="0" y="8" rx="1.5"/><text x="12" y="18" class="svg-kind">${esc(brief(n.kind, headingLength))}</text><text x="${row.width - 12}" y="18" text-anchor="end" class="svg-id">#${n.id}</text><text x="12" y="36" class="svg-code">${esc(brief(n.label, codeLength))}</text><text x="12" y="53" class="svg-type">${esc(brief(type || '—', typeLength))}</text>${hasKids ? `<g class="mindmap-fold" data-fold="${n.id}" tabindex="0" role="button" aria-expanded="${!folded}" aria-label="${esc(t(folded ? 'ast.expandNode' : 'ast.collapseNode', { id: n.id }))}" transform="translate(${row.width - 19} 48)"><circle r="10"/><text text-anchor="middle" y="4">${folded ? '+' : '−'}</text></g>` : ''}</g>`;
+        typeLength = Math.floor((row.width - (hasKids ? 48 : 24)) / 7.2),
+        dispatch = visitDecoration(n.id, visit, row);
+      nodes += `<g class="node mindmap-node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${row.reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${row.x} ${row.y})"><title>${esc(label)}\n${esc(n.label || '')}${row.reference ? `\n${esc(t('ast.reference'))}` : ''}</title><rect class="tile" width="${row.width}" height="${row.height}" rx="8"/><rect class="accent" width="3" height="${row.height - 16}" x="0" y="8" rx="1.5"/><text x="12" y="18" class="svg-kind">${esc(brief(n.kind, headingLength))}</text><text x="${row.width - 12}" y="18" text-anchor="end" class="svg-id">#${n.id}</text><text x="12" y="36" class="svg-code">${esc(brief(n.label, codeLength))}</text><text x="12" y="53" class="svg-type">${esc(brief(type || '—', typeLength))}</text>${hasKids ? `<g class="mindmap-fold" data-fold="${n.id}" tabindex="0" role="button" aria-expanded="${!folded}" aria-label="${esc(t(folded ? 'ast.expandNode' : 'ast.collapseNode', { id: n.id }))}" transform="translate(${row.width - 19} 48)"><circle r="10"/><text text-anchor="middle" y="4">${folded ? '+' : '−'}</text></g>` : ''}${dispatch.shape}</g>`;
     }
     $('graph').innerHTML =
-      `<svg class="ast-svg mindmap-svg" xmlns="http://www.w3.org/2000/svg" width="${width * astZoom}" height="${height * astZoom}" viewBox="0 0 ${width} ${height}" aria-label="${esc(t('ast.layout.mindmap'))}">${edges}${nodes}</svg>`;
+      `<svg class="ast-svg mindmap-svg" xmlns="http://www.w3.org/2000/svg" width="${width * astZoom}" height="${height * astZoom}" viewBox="0 0 ${width} ${height}" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.mindmap'))}">${edges}${nodes}</svg>`;
   }
   function renderRadial(s) {
     if (!radialLayouts.has(s)) radialLayouts.set(s, layoutRadialAST(s));
@@ -183,10 +195,15 @@ export function renderGraph(
       else if (row.radius > 0) edges += `<path class="edge root" d="M500 500 L${row.x} ${row.y}"/>`;
       const { family, type, changed } = nodeState(row.node),
         active = row.node.id === selected,
-        label = t('graph.node', { kind: row.node.kind, type, id: row.node.id });
-      nodes += `<g class="node radial-node ${active ? 'selected' : ''} ${changed ? 'changed' : ''} ${row.reference ? 'reference' : ''}" data-node="${row.node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${row.x} ${row.y})"><title>${esc(label)}\n${esc(row.node.label || '')}${row.reference ? `\n${esc(t('ast.reference'))}` : ''}</title><circle class="radial-hit" r="${7 * unit}"/><circle class="radial-dot" r="${(active ? 4.5 : 2.5) * unit}"/></g>`;
+        label = t('graph.node', { kind: row.node.kind, type, id: row.node.id }),
+        dispatch = visitDecoration(row.node.id, visit, {
+          radius: (active ? 4.5 : 2.5) * unit,
+          unit,
+          reference: row.reference,
+        });
+      nodes += `<g class="node radial-node ${active ? 'selected' : ''} ${changed ? 'changed' : ''} ${row.reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${row.node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${row.x} ${row.y})"><title>${esc(label)}\n${esc(row.node.label || '')}${row.reference ? `\n${esc(t('ast.reference'))}` : ''}</title><circle class="radial-hit" r="${7 * unit}"/><circle class="radial-dot" r="${(active ? 4.5 : 2.5) * unit}"/>${dispatch.shape}</g>`;
     }
-    graph.innerHTML = `<svg class="ast-svg radial-svg" xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}" viewBox="0 0 1000 1000" aria-label="${esc(t('ast.layout.radial'))}">${edges}${nodes}</svg>`;
+    graph.innerHTML = `<svg class="ast-svg radial-svg" xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}" viewBox="0 0 1000 1000" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.radial'))}">${edges}${nodes}</svg>`;
   }
   function renderCards(s) {
     const rows = flattenAST(s, collapsed);
@@ -202,12 +219,13 @@ export function renderGraph(
         y = nextY + (annotated ? 16 : 0),
         card = renderASTCard(r, {
           trace: model.trace,
+          visit,
           state: nodeState(r.node),
           selected,
           collapsed,
           x,
           y,
-          availableWidth: $('graph').clientWidth - x - cardInset,
+          availableWidth: $('graph').clientWidth - x - cardRightInset,
         });
       cards.push({ y, height: card.height });
       if (r.parent >= 0) {
@@ -226,11 +244,11 @@ export function renderGraph(
         }
       }
       nodes += card.html;
-      w = Math.max(w, x + card.width + cardInset);
+      w = Math.max(w, x + card.width + Math.max(cardRightInset, card.right));
       nextY = y + card.height + cardGap;
     }
     $('graph').innerHTML =
-      `<svg class="ast-svg cards-svg" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${Math.max(cardInset * 2, nextY - cardGap + cardInset)}" aria-label="${esc(t('ast'))}">${edges}${nodes}</svg>`;
+      `<svg class="ast-svg cards-svg" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${Math.max(cardInset * 2, nextY - cardGap + cardInset)}" data-snapshot="${snapshot}" aria-label="${esc(t('ast'))}">${edges}${nodes}</svg>`;
   }
   function renderTypes() {
     const edges = [...model.edges.values()].filter(([a, b]) => a === selected || b === selected);

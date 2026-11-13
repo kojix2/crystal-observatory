@@ -245,6 +245,30 @@ playback. Folded cards show the number of direct branches. Hover a card for its
 ID, unabridged code label and type, or select it for the full recorded code. Use
 its **+ / −** button (or focus the card and press **+ / −**) to fold a branch.
 
+A flat colored circle at a node’s upper-right corner represents its recorded
+Visitor. Its single letter identifies the Visitor, such as M for MainVisitor,
+N for Normalizer, T for TopLevelVisitor, G for TypeGuessVisitor and D for
+TypeDeclarationVisitor. The large filled circle marks the current visit; smaller
+outlined circles remain at callers while nested visits run. When different
+Visitors share a node, Cards
+show their balls together. Hover a ball for its Visitor name and visit state.
+Visitors use larger circles so their letters remain readable. For significant
+recorded operations, a short speech bubble appears beside the active Visitor:
+type changes, call resolution, AST rewrites or expansion, specialization,
+narrowing, cleanup, and LLVM instruction generation. Ordinary visits are silent.
+Speech can linger briefly within the same dispatch frame; it clears on a new
+visit and never describes a future observation. Bubbles prefer empty space
+beside the Visitor and avoid covering the current node.
+Playback moves the ball between recorded visit targets, with brief motion that
+respects the system’s reduced-motion preference. These are recorded dispatches,
+which can differ from AST parent/child edges. Selection and type-change colors
+remain independent of the Visitor balls.
+With **Follow trace** enabled, playback reveals the target’s folded ancestors
+and uses a recorded snapshot containing it when one is available. Selecting a
+stage heading enters its first recorded visit, placing the ball on its first
+target. Stages without recorded visits do not display a ball. A pinned snapshot
+only shows balls for nodes actually present in that snapshot.
+
 Mind map arranges compact, labeled nodes in branches extending to the left and right of each
 root. Select a node to inspect its code and type. Use its **+ / −** button (or focus
 the node and press **+ / −**) to expand or collapse a branch. Folds are shared with
@@ -270,7 +294,8 @@ panel, the selected observation (AST, source, IR or output), and node/operation
 details. Drag the column dividers to resize them, or collapse the side panel
 with its header button. Widths and the
 collapsed state are saved in the browser. Select a stage heading in Compilation trace to
-jump to its recorded start; its arrow opens or closes the stage without moving
+jump to its first recorded visit (or its start when no visits were recorded);
+its arrow opens or closes the stage without moving
 playback. The operation inspector puts the observed Visitor, target and result first.
 Code rewrites and macro expansions show a syntax-highlighted unified diff: red
 minus rows are removed source, green plus rows are added source. Activities use

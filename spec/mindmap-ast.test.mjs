@@ -191,7 +191,9 @@ test('mind map renders escaped labels and types, supports selection and keyboard
     listeners.keydown(event('+'));
     assert.equal(folded, 1);
     const layout = layoutMindmapAST(model.trace.snapshots[0], context.collapsed);
-    assert(graph.innerHTML.includes(`width="${layout.width * 2}" height="${layout.height * 2}"`));
+    assert(
+      graph.innerHTML.includes(`width="${(layout.width + 24) * 2}" height="${layout.height * 2}"`),
+    );
     elements.follow.checked = true;
     render();
     assert(graph.innerHTML.includes('CurrentType') && !graph.innerHTML.includes('SnapshotType'));
