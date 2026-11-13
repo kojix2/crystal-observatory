@@ -53,7 +53,8 @@ export class SourceEditor {
       { length: this.value.split('\n').length },
       (_, i) => i + 1,
     ).join('\n');
-    $('dirty').textContent = t(this.dirty ? 'dirty' : this.hasRecord ? 'clean' : 'source.ready');
+    $('dirty').textContent = this.dirty ? t('dirty') : this.hasRecord ? t('clean') : '';
+    $('source-foot').hidden = !this.dirty && !this.hasRecord;
     $('restore').hidden = !this.dirty;
     this.scroll();
   }

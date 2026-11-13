@@ -190,15 +190,6 @@ export const messages = {
     de: 'Keine Ereignisse entsprechen dem aktuellen Filter.',
     ru: 'Нет событий, соответствующих текущему фильтру.',
   },
-  'node.none': {
-    ja: 'コンパイルするか記録を開くと、ここにノードの詳細が表示されます。',
-    en: 'Node details appear here after you compile or open a trace.',
-    es: 'Los detalles del nodo aparecen aquí tras compilar o abrir una traza.',
-    'zh-CN': '编译或打开记录后，节点详情会显示在此处。',
-    fr: 'Les détails du nœud s’affichent ici après une compilation ou l’ouverture d’une trace.',
-    de: 'Knotendetails erscheinen hier nach dem Kompilieren oder Öffnen einer Aufzeichnung.',
-    ru: 'Сведения об узле появятся здесь после компиляции или открытия трассы.',
-  },
   reset: {
     ja: '配置をリセット',
     en: 'Reset layout',
@@ -1071,15 +1062,6 @@ export const messages = {
     fr: 'Erreur',
     de: 'Fehler',
     ru: 'Ошибка',
-  },
-  'explain.empty': {
-    ja: '左のコンパイル工程からイベントを選ぶと、Visitorの役割と今回の操作が表示されます。',
-    en: 'Select an event in the compilation trace to see the visitor’s role and the operation it performed.',
-    es: 'Selecciona un evento en la traza de compilación para ver el papel del visitante y la operación realizada.',
-    'zh-CN': '在编译轨迹中选择事件以查看访问器的职责及其执行的操作。',
-    fr: 'Sélectionnez un événement dans la trace de compilation pour voir le rôle du visiteur et l’opération effectuée.',
-    de: 'Wähle ein Ereignis im Kompilierungsablauf, um die Rolle des Visitors und seine Aktion zu sehen.',
-    ru: 'Выберите событие в трассе компиляции, чтобы увидеть роль посетителя и выполненную операцию.',
   },
   'explain.declaration': {
     ja: '宣言の式自体の型がNilになりました。これはメソッド呼び出しの戻り値の型ではありません。',
@@ -2214,15 +2196,6 @@ export const messages = {
     fr: 'APRÈS',
     de: 'NACHHER',
     ru: 'ПОСЛЕ',
-  },
-  'source.ready': {
-    ja: '解析するコードを編集できます',
-    en: 'Ready to compile',
-    es: 'Listo para compilar',
-    'zh-CN': '准备编译',
-    fr: 'Prêt à compiler',
-    de: 'Bereit zum Kompilieren',
-    ru: 'Готово к компиляции',
   },
   'visitor.TopLevelVisitor': {
     ja: 'クラス・メソッド・マクロなどの宣言を登録します。呼ばれていないメソッド本体まで型推論する工程ではありません。',

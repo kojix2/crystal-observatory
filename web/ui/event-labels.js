@@ -12,7 +12,7 @@ export const eventLabel = (kind) =>
       ? t(`event.${kind}`)
       : kind || '—';
 export function explanation(event, model) {
-  if (!event) return t('explain.empty');
+  if (!event) return '';
   if (event.kind === 'link')
     return t(
       event.link.exitCode === 0 && event.link.outputBytes !== null ? 'link.success' : 'link.failed',

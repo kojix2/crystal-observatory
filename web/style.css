@@ -527,7 +527,6 @@ body.resizing { user-select:none; }
 .trace-empty .history-list { grid-template-rows:minmax(0,1fr); }
 .trace-empty .history-list>:not(#trace-content) { display:none; }
 .trace-empty #node-panel .inspect-scroll>:not(#node-title),.trace-empty #event-panel .inspect-scroll>:not(#explanation) { display:none; }
-.trace-empty #node-title { font:var(--text-body)/1.65 var(--sans); color:var(--muted); }
 .playback { display:flex; align-items:center; gap:3px; padding:3px 5px; min-width:0; }
 .playback .icon-button { flex-basis:30px; width:30px; height:30px; }
 #speed { padding:2px; min-height:30px; font-size:var(--text-small); background:var(--soft); }

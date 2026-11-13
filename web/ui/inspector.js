@@ -34,8 +34,8 @@ export function renderInspector(
     stage = compilerStage(event),
     nodeEvents = node ? model.eventsFor(selected) : [];
   $('node-id').textContent = node ? `#${node.id}` : '—';
-  $('node-title').textContent =
-    node?.kind || t(model.trace.mode === 'empty' ? 'node.none' : 'node.empty');
+  $('node-title').textContent = node?.kind || (model.trace.mode === 'empty' ? '' : t('node.empty'));
+  $('node-title').hidden = !node && model.trace.mode === 'empty';
   $('node-location').textContent = node?.line
     ? `${node.filename || model.trace.filename}:${node.line}:${node.column}`
     : '';
@@ -106,7 +106,7 @@ export function renderInspector(
   $('event-kind').textContent = activity ? activityLabel(event.activity) : eventLabel(event?.kind);
   // The activity's name is in the heading and its value belongs in the result.
   // Keep the complete diagnostic below, with a short first paragraph above it.
-  $('explanation').hidden = activity;
+  $('explanation').hidden = activity || !event;
   $('explanation').textContent = diagnostic
     ? (event.detail || '')
         .split(/\n\s*\n/)[0]
