@@ -34,7 +34,6 @@ function setupTabs(id, key, onChange = () => {}) {
 // Files and the compilation trace share the left column. These tabs never
 // replace the center editor, observation view, selection, or comparison.
 export function setupFileWorkspace(app) {
-  const show = setupTabs('file-tabs', 'fileTab');
   const showSide = setupTabs('side-tabs', 'sideTab', (name) => {
     $('side-panel').dataset.view = name;
     if (name === 'files') app.trace.stop();
@@ -50,10 +49,8 @@ export function setupFileWorkspace(app) {
   $('close-document').onclick = () => {
     app.showInput('');
     showSide('files');
-    show('documents');
     app.trace.workspace?.showPane('history');
   };
-  show('templates');
   showSide('files');
-  return { show, showSide };
+  return { showSide };
 }

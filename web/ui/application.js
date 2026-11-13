@@ -1,4 +1,4 @@
-import { $, esc, notify, download } from './dom.js';
+import { $, notify, download } from './dom.js';
 import { t, onLocaleChange, UIError, errorText } from '../i18n/index.js';
 import { messages } from '../i18n/messages.js';
 import { text } from './language.js';
@@ -260,26 +260,21 @@ export class Application {
     }
     $('template-list').replaceChildren(
       ...this.manifest.map((item, index) => {
-        const card = document.createElement('article');
-        card.className = 'template-card';
-        card.dataset.template = index;
-        card.innerHTML = `<h3>${esc(this.exampleTitle(item))}</h3><pre>${esc(item.source.split('\n').slice(0, 5).join('\n'))}</pre><div class="file-actions"><button type="button" data-template-source>${esc(t('files.useSource'))}</button><button type="button" data-template-trace>${esc(t('files.openTrace'))}</button></div>`;
-        card.querySelector('[data-template-source]').onclick = () => this.loadExample(item, false);
-        card.querySelector('[data-template-trace]').onclick = () => this.loadExample(item, true);
-        return card;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.template = index;
+        button.textContent = this.exampleTitle(item);
+        button.onclick = () => this.loadExample(item);
+        return button;
       }),
     );
     this.updateControls();
   }
-  loadExample(item, recorded) {
-    // The manifest already contains source: input selection must not fetch and
-    // decode a multi-megabyte archived LLVM trace just to fill the editor.
-    if (!recorded) this.showInput(item.source);
-    else
-      this.openRecord(
-        (signal) => fetchTrace(new URL(item.trace, WEB_ROOT), signal),
-        () => t('origin.recorded', { title: this.exampleTitle(item) }),
-      );
+  loadExample(item) {
+    this.openRecord(
+      (signal) => fetchTrace(new URL(item.trace, WEB_ROOT), signal),
+      () => t('origin.recorded', { title: this.exampleTitle(item) }),
+    );
   }
   async loadManifest() {
     try {

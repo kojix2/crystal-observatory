@@ -52,19 +52,13 @@
       </div><button id="toggle-trace" class="quiet icon-button" data-i18n-aria="side.collapse" data-i18n-title="side.collapse" aria-expanded="true" aria-controls="side-panel"><svg data-icon="collapse"></svg></button></div>
       <section id="file-panel" class="file-panel" role="tabpanel" aria-labelledby="side-tab-files">
         <div class="file-inner">
-          <div id="file-tabs" class="tabs file-tabs" role="tablist" data-i18n-aria="files.title">
-            <button id="tab-templates" type="button" role="tab" data-file-tab="templates" aria-selected="true" aria-controls="templates-panel" data-i18n="files.templates">Templates</button>
-            <button id="tab-documents" type="button" role="tab" data-file-tab="documents" aria-selected="false" aria-controls="documents-panel" data-i18n="files.documents" tabindex="-1">File operations</button>
-          </div>
-          <section id="templates-panel" role="tabpanel" aria-labelledby="tab-templates">
-            <p class="file-intro" data-i18n="files.templatesIntro">Start from example source or explore a recorded compilation trace.</p>
+          <section class="file-section"><h3 data-i18n="files.source">Source code</h3><div class="file-actions"><button id="new-source" data-i18n="files.newSource">New source</button><button id="open-source" data-i18n="files.openSource">Open source</button><button id="save-source" data-i18n="files.saveSource">Save source</button><input id="source-file" type="file" accept=".cr,.txt,text/plain" hidden></div></section>
+          <section class="file-section"><h3 data-i18n="files.trace">Compilation trace recording</h3><p class="subtle" data-i18n="files.traceFormats">Trace recordings in JSON or gzip format</p><div class="file-actions"><button id="import" data-i18n="files.openTrace">Open trace</button><button id="export" data-i18n="files.saveTrace" disabled>Save trace</button><input id="file" type="file" accept=".json,.gz,application/json" hidden></div></section>
+          <div class="file-actions"><button id="close-document" class="quiet" data-i18n="files.close">Close current file</button></div>
+          <section class="template-section" aria-labelledby="templates-title">
+            <h3 id="templates-title" data-i18n="files.templates">Templates</h3>
             <p id="template-status" class="empty" data-i18n="files.loading">Loading templates</p>
             <div id="template-list" class="template-list"></div>
-          </section>
-          <section id="documents-panel" role="tabpanel" aria-labelledby="tab-documents" hidden>
-            <section class="file-section"><h3 data-i18n="files.source">Source code</h3><div class="file-actions"><button id="new-source" data-i18n="files.newSource">New source</button><button id="open-source" data-i18n="files.openSource">Open source</button><button id="save-source" data-i18n="files.saveSource">Save source</button><input id="source-file" type="file" accept=".cr,.txt,text/plain" hidden></div></section>
-            <section class="file-section"><h3 data-i18n="files.trace">Compilation trace recording</h3><p class="subtle" data-i18n="files.traceFormats">Trace recordings in JSON or gzip format</p><div class="file-actions"><button id="import" data-i18n="files.openTrace">Open trace</button><button id="export" data-i18n="files.saveTrace" disabled>Save trace</button><input id="file" type="file" accept=".json,.gz,application/json" hidden></div></section>
-            <div class="file-actions"><button id="close-document" class="quiet" data-i18n="files.close">Close current file</button></div>
           </section>
         </div>
       </section>

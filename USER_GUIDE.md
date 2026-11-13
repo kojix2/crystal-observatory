@@ -57,12 +57,11 @@ an existing Observatory source link.
 ## Files and templates
 
 The left side panel has **Files** and **Compilation trace** tabs. It starts in
-**Files**, with **Templates** and **File operations** inside it. The source editor
-and observation views stay visible in the center while using either side tab.
-Each template offers **Use source** to begin editing without compiling, and
-**Open trace** to inspect its bundled compilation recording.
+**Files**, with file actions first and a simple list of template buttons below.
+The source editor and observation views stay visible in the center while using
+either side tab. Each template button opens its bundled recording and source.
 
-**File operations** contains **New source**, **Open source** (`.cr` / UTF-8),
+The file menu contains **New source**, **Open source** (`.cr` / UTF-8),
 **Save source**, and separate **Open trace** / **Save trace** actions for JSON or
 gzip recordings. **Close current file** clears the source, recording and executable
 and selects Files in the side panel. Saving downloads a file to your computer.

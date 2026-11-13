@@ -114,12 +114,10 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .side-tabs { gap:10px; }
 .file-panel { flex:1; min-width:0; min-height:0; overflow:auto; background:var(--paper); }
 .file-inner { padding:12px; }
-.file-tabs { border-bottom:1px solid var(--line); margin-bottom:12px; }
-.file-intro { color:var(--muted); margin-bottom:12px; line-height:1.7; font-size:var(--text-small); }
-.template-list { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
-.template-card { min-width:0; padding:12px; border:1px solid var(--line); border-radius:6px; }
-.template-card h3 { margin:0 0 12px; line-height:1.5; }
-.template-card pre { height:8.25em; overflow:hidden; padding:10px; background:var(--soft); border-radius:3px; font-size:var(--text-small); white-space:pre; }
+.template-section { margin-top:24px; padding-top:16px; border-top:1px solid var(--line); }
+.template-section h3 { margin-bottom:12px; }
+.template-list { display:flex; flex-direction:column; gap:4px; }
+.template-list button { padding:6px 9px; text-align:left; white-space:normal; overflow-wrap:anywhere; }
 .file-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
 .file-actions button { white-space:normal; text-align:left; }
 .file-section { padding:0 0 24px; margin-bottom:24px; border-bottom:1px solid var(--line); }
