@@ -24,7 +24,7 @@ jobs:
           node-version: 24
       - run: npm ci --ignore-scripts
       - run: npm run web:deps
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - name: Check required assets
         run: |
           test -s web/syntax.wasm
