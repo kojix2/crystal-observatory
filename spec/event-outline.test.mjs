@@ -79,7 +79,11 @@ test('every page preserves event order and parent ranges across real recordings 
         actual.push(...operations.map((row) => row.event));
         check(outline);
       }
-      assert.deepEqual(actual, trace.events, name);
+      assert.deepEqual(
+        actual,
+        trace.events.filter((event) => !['phase_enter', 'phase_leave'].includes(event.kind)),
+        name,
+      );
     }
   }
 });

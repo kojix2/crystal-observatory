@@ -106,17 +106,23 @@ export function renderInspector(
   $('visitor-role').textContent = visitorRole(event, model);
   const activity = event?.kind === 'activity';
   const diagnostic = event?.kind === 'error';
-  $('event-kind').textContent = activity ? activityLabel(event.activity) : eventLabel(event?.kind);
+  const boundary = event?.kind === 'phase_enter' || event?.kind === 'phase_leave';
+  $('event-kind').hidden = boundary;
+  $('event-kind').textContent = boundary
+    ? ''
+    : activity
+      ? activityLabel(event.activity)
+      : eventLabel(event?.kind);
   // The activity's name is in the heading and its value belongs in the result.
   // Keep the complete diagnostic below, with a short first paragraph above it.
-  $('explanation').hidden = activity || !event;
+  $('explanation').hidden = activity || boundary || !event;
   $('explanation').textContent = diagnostic
     ? (event.detail || '')
         .split(/\n\s*\n/)[0]
         .split('\n')
         .slice(0, 5)
         .join('\n')
-    : activity
+    : activity || boundary
       ? ''
       : explanation(event, model);
   $('explanation').dataset.diagnostic = String(diagnostic);
@@ -137,7 +143,7 @@ export function renderInspector(
   $('event-phase').textContent = phase ? t('event.phase', { phase }) : '';
   $('event-phase').title = event?.phase || '';
   $('raw-event').hidden =
-    !event?.detail || (diagnostic && event.detail === $('explanation').textContent);
+    boundary || !event?.detail || (diagnostic && event.detail === $('explanation').textContent);
   $('event-detail-label').dataset.i18n = diagnostic ? 'event.diagnostic' : 'event.raw';
   $('event-detail-label').textContent = t($('event-detail-label').dataset.i18n);
   $('event-detail').textContent = event?.detail || '';

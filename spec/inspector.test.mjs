@@ -481,7 +481,13 @@ test('stage handoff follows playback independently of the selected node, includi
         visitor: 'Crystal::TypeGuessVisitor',
         node_id: 1,
       },
-      { index: 2, kind: 'complete', phase: '' },
+      {
+        index: 2,
+        kind: 'phase_leave',
+        phase: 'Semantic (type declarations)',
+        detail: 'Semantic (type declarations)',
+      },
+      { index: 3, kind: 'complete', phase: '' },
     ],
   });
   try {
@@ -489,6 +495,10 @@ test('stage handoff follows playback independently of the selected node, includi
     model.seek(0);
     renderInspector(model, 1, () => {});
     assert.equal(get('visitor-title').textContent, 'Program#define_new_methods');
+    assert.equal(get('event-kind').hidden, true);
+    assert.equal(get('event-kind').textContent, '');
+    assert.equal(get('explanation').hidden, true);
+    assert.equal(get('raw-event').hidden, true);
     assert(get('stage-context').innerHTML.includes(t('pipeline.stage.new')));
     assert.equal(get('compiler-link').children[0].textContent, 'semantic/new.cr');
     model.seek(1);
@@ -496,9 +506,18 @@ test('stage handoff follows playback independently of the selected node, includi
     assert.equal(get('node-id').textContent, '—');
     assert(get('stage-context').innerHTML.includes(t('pipeline.stage.declarations')));
     assert.equal(get('visitor-title').textContent, 'TypeGuessVisitor');
+    assert.equal(get('event-kind').hidden, false);
+    assert.equal(get('explanation').hidden, false);
     assert.equal(model.index, 1);
     model.seek(2);
     renderInspector(model, 1, () => {});
+    assert.equal(get('event-kind').hidden, true);
+    assert.equal(get('explanation').hidden, true);
+    assert.equal(get('raw-event').hidden, true);
+    assert(get('stage-context').innerHTML.includes(t('pipeline.stage.declarations')));
+    model.seek(3);
+    renderInspector(model, 1, () => {});
+    assert.equal(get('event-kind').hidden, false);
     assert.equal(get('stage-context').hidden, true);
   } finally {
     globalThis.document = original;

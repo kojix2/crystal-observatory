@@ -197,11 +197,12 @@ Home and End switch between node tabs without stepping Compilation trace.
 
 Compilation trace initially shows one row per completed compiler stage, grouping its start,
 end and intervening events. Open a stage with its arrow to see Visitor groups,
-then open a Visitor to see individual events. Filtering keeps the enclosing stage;
+then open a Visitor to see individual events. Stage start/end markers remain in the
+recording but are omitted from the list and operation details. Filtering keeps the enclosing stage;
 declaration-only filtering shows operations directly.
 Playback highlights the selected event or its collapsed parent without opening it;
 the position beside the slider shows progress through the recording.
-Stages missing an end event stay visible individually, including compiler errors.
+Events in stages missing an end marker stay visible individually, including compiler errors.
 **Next activity** uses the current search, node and activity filters. Search for
 `#7`, for example, to match node 7 exactly. Manually changing Compilation trace pages stops
 playback and shows the beginning of the page.

@@ -47,7 +47,7 @@ test('top-level calls include callbacks and nested visitors but keep repeated ca
   const rows = eventRows(events, groups, new Set([1]));
   assert.deepEqual(
     rows.filter((row) => row.event).map((row) => row.event.index),
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 11],
+    [1, 2, 3, 4, 5, 6, 7, 8],
   );
   assert.equal(rows.filter((row) => row.group).length, 2);
 });
@@ -74,7 +74,7 @@ test('truncated, mismatched and depth-free ranges remain flat', () => {
   assert.deepEqual(groupEvents(truncated), []);
   assert.deepEqual(
     eventRows(truncated, []),
-    truncated.map((event) => ({ event })),
+    truncated.slice(1).map((event) => ({ event })),
   );
   for (const damage of [
     (events) => {
@@ -109,7 +109,7 @@ test('truncated, mismatched and depth-free ranges remain flat', () => {
   assert.deepEqual(groupEvents(sample().map(({ depth, ...event }) => event)), []);
 });
 
-test('all bundled traces expand back to the original event order with no nested groups', () => {
+test('all bundled traces expand in recorded order without boundary rows or nested groups', () => {
   const root = new URL('../web/traces/', import.meta.url);
   for (const file of readdirSync(root).filter((name) => name.endsWith('.json.gz'))) {
     const trace = JSON.parse(gunzipSync(readFileSync(new URL(file, root)))),
@@ -127,7 +127,7 @@ test('all bundled traces expand back to the original event order with no nested 
       eventRows(trace.events, groups, expanded)
         .filter((row) => row.event)
         .map((row) => row.event),
-      trace.events,
+      trace.events.filter((event) => !['phase_enter', 'phase_leave'].includes(event.kind)),
       file,
     );
     assert.deepEqual(trace, original, file);
@@ -140,7 +140,7 @@ test('all bundled traces expand back to the original event order with no nested 
   assert.equal(cleanup.events[group.end].kind, 'transform_leave');
 });
 
-test('stage boundaries collapse Visitors together and both levels restore every original event', () => {
+test('stage headings retain boundaries and expansion preserves every other recorded event', () => {
   for (const directory of ['../web/traces/', './fixtures/traces/']) {
     const root = new URL(directory, import.meta.url);
     for (const file of readdirSync(root).filter((name) => name.endsWith('.json.gz'))) {
@@ -164,7 +164,7 @@ test('stage boundaries collapse Visitors together and both levels restore every 
         eventRows(trace.events, groups, expanded)
           .filter((row) => row.event)
           .map((row) => row.event),
-        trace.events,
+        trace.events.filter((event) => !['phase_enter', 'phase_leave'].includes(event.kind)),
         file,
       );
       assert.deepEqual(trace, original, file);
@@ -201,9 +201,7 @@ test('stages require matching recorded boundaries and never conceal compiler err
   const failed = load('08_type_error'),
     rows = eventRows(failed.events, groupStages(failed.events));
   assert(rows.some((row) => row.event?.kind === 'error'));
-  assert(
-    rows.some((row) => row.event?.kind === 'phase_enter' && row.event.phase === 'Semantic (main)'),
-  );
+  assert(rows.every((row) => !['phase_enter', 'phase_leave'].includes(row.event?.kind)));
 });
 
 // Keep paging/filtering tests independent of browser setup; this small fixture

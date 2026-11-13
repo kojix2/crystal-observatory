@@ -70,7 +70,8 @@ export function groupStages(events, visitors = groupEvents(events)) {
 }
 
 // Filter original events first, then project them into stage/Visitor rows using
-// ranges built from the full trace. Opening every group restores the exact order.
+// ranges built from the full trace. Stage boundaries supply headings rather than
+// separate event rows; all other events keep their recorded order.
 export function eventRows(filtered, groups, expanded = new Set()) {
   const rows = [];
   let groupIndex = 0;
@@ -83,13 +84,11 @@ export function eventRows(filtered, groups, expanded = new Set()) {
       while (i < filtered.length && filtered[i].index <= group.end) i++;
       rows.push({ group, count: i - start });
       if (expanded.has(group.start)) {
-        if (group.children)
-          for (const row of eventRows(filtered.slice(start, i), group.children, expanded))
-            rows.push(row);
-        else for (let j = start; j < i; j++) rows.push({ event: filtered[j] });
+        for (const row of eventRows(filtered.slice(start, i), group.children || [], expanded))
+          rows.push(row);
       }
     } else {
-      rows.push({ event });
+      if (event.kind !== 'phase_enter' && event.kind !== 'phase_leave') rows.push({ event });
       i++;
     }
   }
