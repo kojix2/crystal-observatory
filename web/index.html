@@ -4,43 +4,26 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
   <title>Crystal Observatory</title>
   <meta name="description" data-i18n-content="app.description" content="Crystal compiler explorer">
-  <meta name="theme-color" content="#111113">
+  <meta name="theme-color" content="#fbfafd">
   <link rel="icon" href="./mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header id="chrome">
-  <div class="command-row">
-    <a class="brand" href="./"><img class="mark" src="./mark.svg" alt="" width="24" height="28"><h1>CRYSTAL <span>OBSERVATORY</span></h1></a>
-    <nav class="commands" data-i18n-aria="commands">
-      <div class="compile-actions">
-        <button id="compile-run" class="primary icon-button" data-i18n-aria="run" data-i18n-title="run.title"><svg data-icon="run"></svg></button>
-        <button id="compile-options-button" class="quiet icon-button" popovertarget="compile-options" data-i18n-aria="compile.options" data-i18n-title="compile.options"><svg data-icon="dropdown"></svg></button>
-      </div>
-      <div id="compile-options" class="compile-menu" popover="auto" data-i18n-aria="compile.options">
-        <button id="compile-only" data-i18n-title="compile.title"><svg data-icon="codegen"></svg><span data-i18n="compile">Compile to IR</span></button>
-        <button id="analyze" data-i18n-title="syntax.title"><svg data-icon="parse"></svg><span data-i18n="syntax">Parse only</span></button>
-      </div>
-      <button id="cancel-job" data-i18n-aria="cancel" disabled><svg data-icon="stop"></svg><span class="desktop-command" data-i18n="cancel">Stop</span></button>
-    </nav>
-    <div class="status-message" role="status"><button id="notice" data-i18n-title="status.detail" aria-haspopup="dialog"></button><svg class="notice-icon" data-icon="info"></svg></div>
-    <button id="more-actions" class="quiet icon-button" popovertarget="header-options" data-i18n-aria="mobile.menu" data-i18n-title="mobile.menu" hidden><svg data-icon="menu"></svg></button>
-    <div id="header-options" class="header-actions">
-      <select id="language" data-i18n-aria="language" data-i18n-title="language"><option value="en">EN</option><option value="ja">JA</option><option value="es">ES</option><option value="zh-CN">中文</option><option value="fr">FR</option><option value="de">DE</option><option value="ru">RU</option></select>
-      <a class="quiet icon-button" href="https://github.com/kojix2/crystal-observatory" target="_blank" rel="noreferrer" data-i18n-title="github" data-i18n-aria="github" title="GitHub repository" aria-label="GitHub repository"><svg data-icon="github"></svg></a>
-      <button id="settingsButton" class="quiet icon-button" data-i18n-title="settings.title" data-i18n-aria="settings.title" aria-haspopup="dialog" aria-controls="settings"><svg data-icon="settings"></svg></button>
-      <button type="button" class="quiet icon-button mobile-only" data-learning-view="api" aria-controls="learning-panel" data-i18n-title="learning.api" data-i18n-aria="learning.api"><svg data-icon="api"></svg></button>
-      <button type="button" class="quiet icon-button mobile-only" data-learning-view="observatory" aria-controls="app" data-i18n-title="learning.observatory" data-i18n-aria="learning.observatory"><svg data-icon="observatory"></svg></button>
-    </div>
-  </div>
-</header>
 <nav id="learning-navigation" class="learning-navigation" data-i18n-aria="learning.navigation">
+  <a class="brand" href="./" aria-label="Crystal Observatory"><img class="mark" src="./mark.svg" alt="" width="24" height="28"><h1 class="sr-only">Crystal Observatory</h1></a>
   <button type="button" data-learning-view="observatory" aria-current="page" aria-controls="app" data-i18n-aria="learning.observatory" data-i18n-title="learning.observatory"><svg data-icon="observatory" data-size="20"></svg></button>
   <div class="learning-navigation-divider" aria-hidden="true"></div>
   <button type="button" data-learning-view="workflow" aria-controls="learning-panel" data-i18n-aria="learning.workflow" data-i18n-title="learning.workflow"><svg data-icon="workflow" data-size="20"></svg></button>
   <button type="button" data-learning-view="nodes" aria-controls="learning-panel" data-i18n-aria="learning.nodes" data-i18n-title="learning.nodes"><svg data-icon="nodes" data-size="20"></svg></button>
   <button type="button" data-learning-view="visitors" aria-controls="learning-panel" data-i18n-aria="learning.visitors" data-i18n-title="learning.visitors"><svg data-icon="visitors" data-size="20"></svg></button>
   <button type="button" data-learning-view="api" aria-controls="learning-panel" data-i18n-aria="learning.api" data-i18n-title="learning.api"><svg data-icon="api" data-size="20"></svg></button>
+  <div id="header-options" class="header-actions">
+    <select id="language" data-i18n-aria="language" data-i18n-title="language"><option value="en">EN</option><option value="ja">JA</option><option value="es">ES</option><option value="zh-CN">中文</option><option value="fr">FR</option><option value="de">DE</option><option value="ru">RU</option></select>
+    <a class="quiet icon-button" href="https://github.com/kojix2/crystal-observatory" target="_blank" rel="noreferrer" data-i18n-title="github" data-i18n-aria="github" title="GitHub repository" aria-label="GitHub repository"><svg data-icon="github"></svg></a>
+    <button id="settingsButton" class="quiet icon-button" data-i18n-title="settings.title" data-i18n-aria="settings.title" aria-haspopup="dialog" aria-controls="settings"><svg data-icon="settings"></svg></button>
+    <button type="button" class="quiet icon-button mobile-only" data-learning-view="api" aria-controls="learning-panel" data-i18n-title="learning.api" data-i18n-aria="learning.api"><svg data-icon="api"></svg></button>
+    <button type="button" class="quiet icon-button mobile-only" data-learning-view="observatory" aria-controls="app" data-i18n-title="learning.observatory" data-i18n-aria="learning.observatory"><svg data-icon="observatory"></svg></button>
+  </div>
 </nav>
 <main id="app" tabindex="-1">
   <div class="workbench-scroll">
@@ -91,14 +74,33 @@
         <button id="tab-declarations" data-view="declarations" role="tab" aria-selected="false" aria-controls="declarations-view" data-i18n="decl.title">State</button>
         <button id="tab-types" data-view="types" role="tab" aria-controls="types-view" aria-selected="false" data-i18n="types">Types</button>
         <button id="tab-ir" data-view="ir" role="tab" aria-controls="ir-view" aria-selected="false">LLVM IR</button>
-        <button id="tab-run" data-view="run" role="tab" aria-controls="run-view" aria-selected="false" data-i18n="execution">Output</button>
       </div><span id="comparison-title" hidden></span><select id="compare-view" data-i18n-aria="comparison.title" data-i18n-title="comparison.title"><option value="" data-i18n="comparison.open">Compare…</option></select><button id="close-comparison" class="quiet icon-button mobile-only" data-i18n-aria="comparison.close" data-i18n-title="comparison.close" hidden><svg data-icon="close"></svg></button><button id="maximize-graph" class="quiet icon-button" data-i18n-aria="maximize" data-i18n-title="maximize" aria-pressed="false"><svg data-icon="maximize"></svg></button></div>
+      <div class="work-status">
+        <button id="cancel-job" data-i18n-aria="cancel" data-i18n-title="cancel" disabled><svg data-icon="stop"></svg><span class="desktop-command" data-i18n="cancel">Stop</span></button>
+        <div class="status-message" role="status"><button id="notice" data-i18n-title="status.detail" aria-haspopup="dialog"></button></div>
+      </div>
       <div id="observation-scroll"><div id="observation-views">
       <div class="source-panel observation-view" data-observation="source" id="source-view" role="tabpanel" aria-labelledby="tab-source"><div class="observation-title" data-i18n="source">Source</div>
-      <div class="source-tools"><label class="prelude-toggle" data-i18n-title="prelude.title"><input id="prelude" type="checkbox" checked><span data-i18n="prelude.label">Standard library</span></label><span id="prelude-hint" class="prelude-hint" data-i18n="prelude.hint" hidden>IR only</span><button id="share-source" class="quiet" data-i18n="share.action" data-i18n-title="share.title" aria-haspopup="dialog" aria-controls="source-share">Share</button></div>
+      <div class="source-tools">
+        <div class="compile-actions">
+          <button id="compile-run" class="primary icon-button" data-i18n-aria="run" data-i18n-title="run.title"><svg data-icon="run"></svg></button>
+          <button id="compile-options-button" class="quiet icon-button" popovertarget="compile-options" data-i18n-aria="compile.options" data-i18n-title="compile.options"><svg data-icon="dropdown"></svg></button>
+        </div>
+        <div id="compile-options" class="compile-menu" popover="auto" data-i18n-aria="compile.options">
+          <button id="compile-only" data-i18n-title="compile.title"><svg data-icon="codegen"></svg><span data-i18n="compile">Compile to IR</span></button>
+          <button id="analyze" data-i18n-title="syntax.title"><svg data-icon="parse"></svg><span data-i18n="syntax">Parse only</span></button>
+        </div>
+        <label class="prelude-toggle" data-i18n-title="prelude.title"><input id="prelude" type="checkbox" checked><span data-i18n="prelude.label">Standard library</span></label><span id="prelude-hint" class="prelude-hint" data-i18n="prelude.hint" hidden>IR only</span><button id="share-source" class="quiet" data-i18n="share.action" data-i18n-title="share.title" aria-haspopup="dialog" aria-controls="source-share">Share</button>
+      </div>
       <div class="source-wrap"><div id="highlight"></div><pre id="source-colors" aria-hidden="true"></pre><div class="line-gutter" aria-hidden="true"><pre id="line-numbers"></pre></div><textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" data-i18n-aria="source.input" wrap="off"></textarea></div>
       <div id="source-foot" class="source-foot" hidden><span id="dirty"></span><span id="source-location"></span><button id="restore" class="link-button" data-i18n="restore" data-i18n-title="restore.title">Restore</button></div>
       <div class="panel-foot" id="source-caption"></div>
+      <section id="run-view" class="run-view" aria-labelledby="output-title">
+        <div class="run-tools"><strong id="output-title" data-i18n="execution">Output</strong><span id="run-state"></span><span class="spacer"></span><button id="rerun" data-i18n="rerun" disabled>Run again</button><button id="download-wasm" data-i18n-title="wasm.download" disabled><svg data-icon="download" data-size="12"></svg><span>.wasm</span></button></div>
+        <details id="runtime-inputs"><summary><svg data-icon="disclosure" data-size="12"></svg><span data-i18n="mobile.inputs">Input &amp; arguments</span></summary><div class="run-inputs"><label><span data-i18n="stdin">Standard input</span><textarea id="stdin" rows="3" spellcheck="false" data-i18n-placeholder="stdin.hint"></textarea></label><label><span data-i18n="args">Arguments (JSON array)</span><input id="runtime-args" value="[]" spellcheck="false" data-i18n-aria="args"><span class="tiny" data-i18n="args.hint">Example: [&quot;hello&quot;, &quot;42&quot;] · 10 s limit</span></label></div>
+        </details>
+        <pre id="console" class="console" data-i18n-aria="output"></pre>
+      </section>
       </div>
       <section id="ast-view" class="observation-view" data-observation="ast" role="tabpanel" aria-labelledby="tab-ast" hidden><div class="observation-title">AST</div>
       <div class="view-tools ast-tools"><select id="ast-layout" data-i18n-aria="ast.layout"><option value="cards" data-i18n="ast.layout.cards">Cards</option><option value="mindmap" data-i18n="ast.layout.mindmap">Mind map</option><option value="radial" data-i18n="ast.layout.radial">Radial tree</option></select><select id="snapshot" data-i18n-aria="snapshot"></select><label data-i18n-title="follow.title"><input id="follow" type="checkbox" checked><span data-i18n="follow">Follow trace</span></label><button id="expand" class="quiet" data-i18n="expand" data-i18n-title="expand.title" hidden>Expand all</button></div>
@@ -129,17 +131,12 @@
       <section id="declarations-view" class="observation-view" data-observation="declarations" role="tabpanel" aria-labelledby="tab-declarations" hidden><div class="observation-title" data-i18n="decl.title">State</div><div id="declarations" class="graph-scroll"></div><div class="panel-foot" id="declarations-caption"></div></section>
       <section id="tokens-view" class="observation-view" data-observation="tokens" role="tabpanel" aria-labelledby="tab-tokens" hidden><div class="observation-title">Tokens</div><div id="token-view" class="graph-scroll"></div><div class="panel-foot" id="tokens-caption"></div></section>
       <div id="ir-view" class="ir-view observation-view" data-observation="ir" role="tabpanel" aria-labelledby="tab-ir" hidden><div class="observation-title">LLVM IR</div><div class="ir-tools"><input id="ir-search" data-i18n-placeholder="ir.search" data-i18n-aria="ir.search"><select id="ir-function" data-i18n-aria="ir.function"></select><button id="download-ir" class="quiet" data-i18n-title="ir.download"><svg data-icon="download" data-size="12"></svg><span>.ll</span></button><span id="ir-prelude" class="tiny" hidden></span></div><pre id="ir-code"></pre><div class="panel-foot" id="ir-caption" hidden></div></div>
-      <div id="run-view" class="run-view observation-view" data-observation="run" role="tabpanel" aria-labelledby="tab-run" hidden><div class="observation-title" data-i18n="execution">Output</div>
-        <div class="run-tools"><span id="run-state"></span><span class="spacer"></span><button id="rerun" data-i18n="rerun" disabled>Run again</button><button id="download-wasm" data-i18n-title="wasm.download" disabled><svg data-icon="download" data-size="12"></svg><span>.wasm</span></button></div>
-        <details id="runtime-inputs" open><summary><svg data-icon="disclosure" data-size="12"></svg><span data-i18n="mobile.inputs">Input &amp; arguments</span></summary><div class="run-inputs"><label><span data-i18n="stdin">Standard input</span><textarea id="stdin" rows="3" spellcheck="false" data-i18n-placeholder="stdin.hint"></textarea></label><label><span data-i18n="args">Arguments (JSON array)</span><input id="runtime-args" value="[]" spellcheck="false" data-i18n-aria="args"><span class="tiny" data-i18n="args.hint">Example: [&quot;hello&quot;, &quot;42&quot;] · 10 s limit</span></label></div>
-        </details>
-        <pre id="console" class="console" data-i18n-aria="output"></pre>
-      </div>
       <div id="comparison-splitter" class="splitter" role="separator" tabindex="0" aria-orientation="vertical" data-i18n-aria="comparison.divider" hidden></div>
       </div></div>
     </article>
     <div class="splitter" id="inspector-splitter" role="separator" tabindex="0" data-i18n-aria="split.inspector" aria-orientation="vertical" aria-controls="graph-panel inspector-panel"></div>
     <aside class="inspector-panel" id="inspector-panel" tabindex="-1">
+      <div id="inspector-empty" class="empty" data-i18n="trace.empty">Compile or parse source to see stages and events.</div>
       <section class="panel detail-panel" id="node-panel" tabindex="-1" data-i18n-aria="node.details">
         <div class="node-content">
           <div class="node-identity">
@@ -211,13 +208,14 @@
 
   </section>
   </div>
-  <nav id="mobile-navigation" data-i18n-aria="mobile.navigation" hidden>
-    <button type="button" data-pane="work" aria-controls="graph-panel" aria-pressed="false"><svg data-icon="parse"></svg><span data-i18n="mobile.work">Work</span></button>
-    <button type="button" data-pane="history" aria-controls="side-panel" aria-pressed="true"><svg data-icon="history"></svg><span data-i18n="files.sidebar">Files &amp; trace</span></button>
-    <button type="button" data-pane="details" aria-controls="inspector-panel" aria-pressed="false"><svg data-icon="info"></svg><span data-i18n="mobile.details">Details</span></button>
-  </nav>
   <footer><span id="engine"></span><span id="meta"></span><span class="spacer"></span><span id="versions"></span><a href="https://github.com/crystal-lang/crystal" target="_blank" rel="noreferrer">Crystal<svg data-icon="external" data-size="10"></svg></a></footer>
 </main>
+<nav id="mobile-navigation" data-i18n-aria="mobile.navigation" hidden>
+  <button type="button" data-pane="work" aria-controls="graph-panel" aria-pressed="false"><svg data-icon="parse"></svg><span data-i18n="mobile.work">Work</span></button>
+  <button type="button" data-pane="history" aria-controls="side-panel" aria-pressed="true"><svg data-icon="history"></svg><span data-i18n="files.sidebar">Files &amp; trace</span></button>
+  <button type="button" data-pane="details" aria-controls="inspector-panel" aria-pressed="false"><svg data-icon="info"></svg><span data-i18n="mobile.details">Details</span></button>
+  <button id="more-actions" type="button" popovertarget="header-options" data-i18n-aria="mobile.menu" data-i18n-title="mobile.menu" hidden><svg data-icon="menu"></svg><span data-i18n="mobile.menu">More actions</span></button>
+</nav>
 
 <main id="learning-panel" class="learning-panel" hidden>
   <div class="learning-inner">

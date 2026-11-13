@@ -1,10 +1,9 @@
-const views = ['source', 'tokens', 'ast', 'declarations', 'types', 'ir', 'run'];
+const views = ['source', 'tokens', 'ast', 'declarations', 'types', 'ir'];
 
 export const comparisonTargets = (view) =>
   views.includes(view) ? views.filter((target) => target !== view) : [];
 export const viewLabel = (view) => ({ ast: 'AST', ir: 'LLVM IR', tokens: 'Tokens' })[view];
-export const viewLabelKey = (view) =>
-  ({ run: 'execution', declarations: 'decl.title' })[view] || view;
+export const viewLabelKey = (view) => ({ declarations: 'decl.title' })[view] || view;
 
 export class ViewLayout {
   constructor(primary = 'source') {

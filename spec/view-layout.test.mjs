@@ -31,7 +31,7 @@ test('navigation to a displayed view preserves a pair; other navigation restores
 });
 
 test('every pair of distinct observation views can be compared in either order', () => {
-  const views = ['source', 'tokens', 'ast', 'declarations', 'types', 'ir', 'run'];
+  const views = ['source', 'tokens', 'ast', 'declarations', 'types', 'ir'];
   for (const primary of views) {
     const layout = new ViewLayout(primary);
     assert.deepEqual(
@@ -90,7 +90,7 @@ test('History selection reveals its AST node when following, preserving an exist
     return view;
   };
   try {
-    for (const primary of ['source', 'tokens', 'ast', 'types', 'run']) {
+    for (const primary of ['source', 'tokens', 'ast', 'types']) {
       const view = createView(primary);
       view.selectEvent(0);
       assert.deepEqual(view.layout.views, ['ast']);

@@ -223,7 +223,8 @@ export class Application {
     } catch {
       return notify(() => t('notice.args'), 'error');
     }
-    this.trace.setView('run');
+    this.trace.setView('source');
+    $('run-view').scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     $('console').textContent = '';
     state('state.running');
     try {

@@ -50,7 +50,7 @@ Share URLs are limited to 16 KiB, decoded source to 256 KiB, and API responses t
 current code, and edits or another operation cancel a pending import.
 
 Open **API & sharing** in the sidebar for examples and parameter descriptions,
-or use `?page=api` to link to that reference. On phones it is in the toolbar menu,
+or use `?page=api` to link to that reference. On phones it is in the bottom menu,
 along with a button to return to Observatory. **Share / open URL** also accepts
 an existing Observatory source link.
 
@@ -60,6 +60,7 @@ The left side panel has **Files** and **Compilation trace** tabs. It starts in
 **Files**, with file actions first and a simple list of template buttons below.
 The source editor and observation views stay visible in the center while using
 either side tab. Each template button opens its bundled recording and source.
+Language, GitHub, and Settings are at the bottom of the left sidebar.
 
 The file menu contains **New source**, **Open source** (`.cr` / UTF-8),
 **Save source**, and separate **Open trace** / **Save trace** actions for JSON or
@@ -71,9 +72,13 @@ also reveals that tab.
 
 ## Compile and inspect
 
-Enter Crystal in **Source** and choose the play icon (**Compile & run**). The arrow
-beside it opens **Compile to IR** and **Parse only**. Choose **Compile to IR** to
-compile without execution. **Output** accepts stdin and a JSON array of arguments.
+Enter Crystal in **Source** and choose the play icon in the Source toolbar
+(**Compile & run**). The arrow beside it opens **Compile to IR** and **Parse only**.
+Choose **Compile to IR** to compile without execution. Source and Output share
+one view: the editor is above the result and its controls. Output accepts stdin
+and a JSON array of arguments.
+**Input & arguments** starts folded in both layouts and keeps its values when
+you change views or screen size.
 **Parse only** uses a separate lightweight lexer/parser, without semantic analysis.
 
 The **Compilation trace** panel shows compiler stages, Visitor calls and their
@@ -110,7 +115,7 @@ Explicitly requiring `"prelude"` is still permitted, but loads the standard
 library again and makes the IR larger.
 
 **Compare…** shows any two different views of the same recording side by side:
-Source, Tokens, AST, State, Types, LLVM IR, or Output. AST snapshots and trace
+Source (with Output), Tokens, AST, State, Types, or LLVM IR. AST snapshots and trace
 playback can refer to different times; Types follows the selected trace event.
 Editing source does not update an existing AST or IR. Escape exits maximization;
 **End comparison** returns to one view.
@@ -121,9 +126,10 @@ At widths up to 960 px, the bottom navigation is **Work**, **Files & trace**,
 and **Details**. The initial pane is **Files & trace**, containing the same Files
 and Compilation trace tabs as the desktop side panel. Opening source or a
 recording reveals Work, which contains the editor and all observation tabs.
-Swipe the tab row to reach more views. Compile & run and Stop remain
-in a single top toolbar. The arrow beside the play icon opens Compile to IR and
-Parse only; the options button opens Compare, language, settings, and GitHub.
+Swipe the tab row to reach more views. Compile & run is in the Source toolbar.
+Stop and status messages sit just below the Work tabs, so they remain visible
+when you switch views. The arrow beside the play icon opens Compile to IR and
+Parse only; the bottom menu opens Compare, language, settings, and GitHub.
 Layout reset is available in Settings. Editing remains available while compilation runs.
 
 Selecting a trace event or stage heading opens Details, with the operation
@@ -146,9 +152,6 @@ popup gives the space back to the event list. A highlighted
 filter button indicates an active filter. Search and filter changes keep the popup
 open so conditions can be combined. The trace list nests operations beneath
 their Visitor and stage; a single-page list hides its unused page controls.
-Output initially folds stdin and
-arguments under **Input & arguments**; expanding it preserves the entered values.
-
 Comparisons stack the two views vertically and scroll within Work. Code and graphs
 can scroll sideways inside their own panels.
 When a keyboard leaves very little vertical space during source editing, the

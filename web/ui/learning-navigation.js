@@ -87,6 +87,8 @@ export function setupLearningNavigation({ onLeave, onReturn }) {
   }
 
   for (const button of buttons) button.onclick = () => show(button.dataset.learningView);
+  for (const button of document.querySelectorAll('#mobile-navigation [data-pane]'))
+    button.addEventListener('click', () => show('observatory'), { capture: true });
   for (const id of ['compile-run', 'compile-only', 'analyze'])
     $(id).addEventListener('click', () => show('observatory'), { capture: true });
   search.oninput = () => {

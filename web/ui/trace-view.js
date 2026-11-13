@@ -24,7 +24,6 @@ const scrollTargets = {
   declarations: 'declarations',
   tokens: 'token-view',
   ir: 'ir-code',
-  run: 'console',
 };
 const label = (view) => viewLabel(view) || t(viewLabelKey(view));
 const AST_LAYOUT_KEY = 'crystal-observatory.ast-layout.v1';

@@ -106,16 +106,24 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
     return button;
   });
   element('mobile-navigation').querySelectorAll = () => buttons;
+  element('mobile-navigation').append(element('more-actions'));
   for (const [parent, children] of [
-    ['commands', ['compile-actions', 'compile-options', 'cancel-job']],
+    ['learning-navigation', ['header-options']],
+    ['work-status', ['cancel-job', 'status-message']],
+    [
+      'source-tools',
+      ['compile-actions', 'compile-options', 'prelude-toggle', 'prelude-hint', 'share-source'],
+    ],
     ['compile-actions', ['compile-run', 'compile-options-button']],
     ['compile-options', ['compile-only', 'analyze']],
+    ['prelude-toggle', ['prelude']],
+    ['status-message', ['notice']],
     ['header-options', ['language']],
     ['graph-head', ['view-tabs', 'compare-view', 'maximize-graph']],
     ['playback', ['play', 'scrubber', 'position', 'playback-options', 'history-tools']],
   ])
     for (const id of children) element(parent).append(element(id));
-  element('runtime-inputs').open = true;
+  element('runtime-inputs').open = false;
   const mediaListeners = [];
   const media = { matches: mobile, addEventListener: (_, fn) => mediaListeners.push(fn) };
   const viewportListeners = [];
@@ -128,6 +136,7 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   const storage = new Map([[storageKey, JSON.stringify(saved)]]);
   install('document', {
     getElementById: element,
+    body: element('body'),
     querySelector: () => null,
     querySelectorAll: () => [],
     addEventListener() {},
@@ -205,10 +214,13 @@ test('mobile starts in the side panel and navigation retains scroll and selectio
 
 test('secondary controls move into popovers and restore desktop order without resetting values', () => {
   workspace({ mobile: false }, ({ element, controller, resize }) => {
-    const order = element('commands').children.map((node) => node.id);
+    const order = element('source-tools').children.map((node) => node.id);
     const playback = element('playback').children.map((node) => node.id);
     element('kind').value = 'type';
+    assert.equal(element('header-options').parentElement.id, 'learning-navigation');
     resize(true);
+    assert.equal(element('header-options').parentElement.id, 'body');
+    assert.equal(element('compare-view').parentElement.id, 'header-options');
     assert.equal(element('compile-only').parentElement.id, 'compile-options');
     assert.equal(element('analyze').parentElement.id, 'compile-options');
     assert.equal(element('runtime-inputs').open, false);
@@ -220,8 +232,9 @@ test('secondary controls move into popovers and restore desktop order without re
     assert.equal(document.activeElement.id, 'node-panel');
     assert.equal(element('node-panel').scrolled, true);
     resize(false);
+    assert.equal(element('header-options').parentElement.id, 'learning-navigation');
     assert.deepEqual(
-      element('commands').children.map((node) => node.id),
+      element('source-tools').children.map((node) => node.id),
       order,
     );
     assert.deepEqual(
@@ -326,7 +339,7 @@ test('observation links reveal Work while declaration stepping keeps the current
   assert.deepEqual(destinations, ['work']);
 });
 
-test('header focus stays reachable when switching between the menu and desktop toolbar', () => {
+test('settings focus stays reachable between the phone menu and desktop sidebar', () => {
   workspace({ mobile: false }, ({ element, resize }) => {
     element('language').parent = element('header-options');
     element('language').focus();

@@ -7,9 +7,11 @@ export function setupMobileWorkspace(onModeChange) {
   const navigation = $('mobile-navigation');
   const options = $('header-options');
   const menuButton = $('more-actions');
-  const inputs = $('runtime-inputs');
-  // Restore the same elements (and their handlers) to their desktop positions.
-  const relocated = [['compare-view', options]].map(([id, destination]) => {
+  // The desktop sidebar becomes the phone menu; comparison joins it on phones.
+  const relocated = [
+    ['header-options', document.body],
+    ['compare-view', options],
+  ].map(([id, destination]) => {
     const node = $(id);
     return { node, destination, parent: node.parentElement, next: node.nextSibling };
   });
@@ -22,13 +24,12 @@ export function setupMobileWorkspace(onModeChange) {
   // Start with the Files tab of the shared Files / compilation trace panel.
   let current = 'history';
   let wasMobile = false;
-  let mobileInputsOpen = false;
   let detailContext = { section: 'event', key: null };
   let displayedDetailContext = detailContext;
 
   function refresh() {
     const mobile = media.matches;
-    const headerFocused =
+    const optionsFocused =
       options.contains(document.activeElement) ||
       document.activeElement === menuButton ||
       relocated.some(
@@ -39,8 +40,6 @@ export function setupMobileWorkspace(onModeChange) {
     navigation.hidden = !mobile;
     menuButton.hidden = !mobile;
     if (mobile !== wasMobile) {
-      if (wasMobile) mobileInputsOpen = inputs.open;
-      inputs.open = mobile ? mobileInputsOpen : true;
       if (mobile) {
         for (const { node, destination } of relocated) destination.append(node);
       } else {
@@ -66,10 +65,10 @@ export function setupMobileWorkspace(onModeChange) {
       (panel) => panel.inert && panel.contains(document.activeElement),
     );
     if (hiddenFocus) buttons.find((button) => button.dataset.pane === current).focus();
+    else if (mobile !== wasMobile && optionsFocused)
+      (mobile ? menuButton : $('language')).focus({ preventScroll: true });
     else if (!mobile && wasMobile && navigation.contains(document.activeElement))
       panes[current].focus({ preventScroll: true });
-    else if (mobile !== wasMobile && headerFocused)
-      (mobile ? menuButton : $('language')).focus({ preventScroll: true });
     wasMobile = mobile;
   }
 
@@ -101,7 +100,8 @@ export function setupMobileWorkspace(onModeChange) {
     if (media.matches && event.target.closest('button, a')) options.hidePopover();
   });
   options.addEventListener('change', (event) => {
-    if (media.matches && event.target.id === 'compare-view') options.hidePopover();
+    if (media.matches && ['compare-view', 'language'].includes(event.target.id))
+      options.hidePopover();
   });
   media.addEventListener('change', onModeChange);
 

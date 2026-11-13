@@ -85,6 +85,8 @@ export function setupSettings() {
   };
   $('settingsButton').onclick = () => $('settings').showModal();
   $('close-settings').onclick = () => $('settings').close();
-  $('settings').addEventListener('close', () => $('settingsButton').focus());
+  $('settings').addEventListener('close', () =>
+    ($('more-actions').hidden ? $('settingsButton') : $('more-actions')).focus(),
+  );
   apply();
 }

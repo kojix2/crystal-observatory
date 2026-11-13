@@ -108,6 +108,25 @@ test('missing compiler outputs and diagnostics cannot be shown as IR success', a
   });
 });
 
+test('running shows output alongside source and keeps its input values', async () => {
+  await fixture(async ({ app, get }) => {
+    app.artifact = { source: '42', prelude: 'empty', wasm: new Uint8Array([1]) };
+    get('runtime-args').value = '["example"]';
+    get('stdin').value = 'input';
+    app.session.run = async (request, onMessage) => {
+      assert.deepEqual(request.args, ['example']);
+      assert.equal(request.stdin, 'input');
+      onMessage({ output: '42\n' });
+      return { exitCode: 0, elapsed: 12 };
+    };
+    await app.execute();
+    assert.equal(app.trace.view, 'source');
+    assert.equal(get('console').textContent, '42\n');
+    assert.equal(get('runtime-args').value, '["example"]');
+    assert.equal(get('stdin').value, 'input');
+  });
+});
+
 test('opening UTF-8 source validates size before replacing the current document', async () => {
   await fixture(async ({ app, get }) => {
     app.session = new WorkSession();
