@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
       - uses: crystal-lang/install-crystal@v1
         with:
           crystal: 1.22.2
@@ -27,7 +27,7 @@ jobs:
           crystal: 1.22.2
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
       - run: sudo apt-get update && sudo apt-get install -y lld-18
       - run: |
           export PATH="/usr/lib/llvm-18/bin:$PATH"
