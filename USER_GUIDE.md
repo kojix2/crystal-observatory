@@ -109,8 +109,8 @@ with one tap without compiling. Opening a recording switches to Work to inspect 
 Work contains the source editor and all observation tabs.
 Swipe the tab row to reach more views. Compile & run and Stop remain
 in a single top toolbar. The arrow beside the play icon opens Compile to IR and
-Parse only; the options button opens Compare, language, settings, help, layout
-reset, and GitHub. Editing remains available while compilation runs.
+Parse only; the options button opens Compare, language, settings, and GitHub.
+Layout reset is available in Settings. Editing remains available while compilation runs.
 
 Selecting a History event or stage heading opens Details, with the operation
 above the node information. Return to History to continue from the same selection,

@@ -59,8 +59,6 @@ export class Application {
       $('file').value = '';
       if (file) this.openRecord(() => decodeTrace(file), file.name);
     };
-    $('guideButton').onclick = () => $('guide').showModal();
-    $('close-guide').onclick = () => $('guide').close();
     $('notice').onclick = () => $('status-dialog').showModal();
     $('close-status').onclick = () => $('status-dialog').close();
     onLocaleChange(() => {

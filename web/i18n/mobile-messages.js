@@ -71,14 +71,4 @@ export const mobileMessages = {
     de: 'Parsen',
     ru: 'Разбор',
   },
-  'mobile.guide': {
-    en: 'Use the existing tabs and bottom navigation to switch screens. Selecting a node updates its Details and source location without leaving AST. A new selection reveals the related information; returning to the same selection preserves your reading position. History filters and jumps open from its toolbar. Extra compile commands and Compare are in the top menu.',
-    ja: '既存のタブと下部ナビで画面を切り替えます。ASTでノードを選ぶと、その詳細とソース位置が更新されます。新しい選択では対応する情報を表示し、同じ選択で往復すると読んでいた位置を保ちます。履歴の絞り込み・移動は履歴ツールバー、IRコンパイル・解析・比較は上部メニューから開きます。',
-    es: 'Cambia de pantalla con las pestañas y la navegación inferior. Elegir un nodo actualiza sus detalles y ubicación sin salir del AST. Una nueva selección muestra la información relacionada; volver a la misma conserva la posición de lectura. La barra del historial abre filtros y saltos. El menú superior contiene más comandos y Comparar.',
-    'zh-CN':
-      '使用现有标签和底部导航切换界面。在 AST 中选择节点会更新其详情和源代码位置，而不离开 AST。新选择会显示相关信息，返回同一选择时保留阅读位置。历史工具栏可打开筛选和跳转，更多编译命令和比较位于顶部菜单中。',
-    fr: 'Utilisez les onglets et la navigation du bas. Sélectionner un nœud actualise ses détails et sa position dans le source sans quitter l’AST. Une nouvelle sélection révèle les informations associées ; revenir à la même conserve la position de lecture. La barre de l’historique ouvre les filtres et les sauts. Les autres commandes et Comparer sont dans le menu du haut.',
-    de: 'Wechsle mit den vorhandenen Tabs und der unteren Navigation. Eine Knotenauswahl aktualisiert Details und Quelltextposition, ohne den AST zu verlassen. Eine neue Auswahl zeigt die zugehörigen Informationen; bei derselben bleibt die Leseposition erhalten. Filter und Sprünge stehen in der Verlaufsleiste, weitere Befehle und Vergleichen im oberen Menü.',
-    ru: 'Используйте существующие вкладки и нижнюю навигацию. Выбор узла обновляет его детали и позицию в коде без выхода из AST. Новый выбор показывает связанную информацию, а возврат к прежнему сохраняет позицию чтения. Фильтры и переходы открываются на панели истории, другие команды и сравнение — в верхнем меню.',
-  },
 };
