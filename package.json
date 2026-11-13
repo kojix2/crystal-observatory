@@ -14,7 +14,7 @@
     "samples": "node --experimental-wasm-exnref scripts/export-samples.mjs"
   },
   "devDependencies": {
-    "eslint": "9.39.1",
+    "eslint": "9.39.5",
     "prettier": "3.6.2"
   },
   "dependencies": {
