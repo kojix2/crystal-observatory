@@ -102,7 +102,9 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   });
   element('mobile-navigation').querySelectorAll = () => buttons;
   for (const [parent, children] of [
-    ['commands', ['compile-run', 'compile-only', 'analyze', 'cancel-job']],
+    ['commands', ['compile-actions', 'compile-options', 'cancel-job']],
+    ['compile-actions', ['compile-run', 'compile-options-button']],
+    ['compile-options', ['compile-only', 'analyze']],
     ['header-options', ['language']],
     ['graph-head', ['view-tabs', 'compare-view', 'maximize-graph']],
     ['timeline-head', ['record-tools']],
@@ -203,7 +205,8 @@ test('secondary controls move into popovers and restore desktop order without re
     const playback = element('playback').children.map((node) => node.id);
     element('kind').value = 'type';
     resize(true);
-    assert.equal(element('compile-only').parentElement.id, 'header-options');
+    assert.equal(element('compile-only').parentElement.id, 'compile-options');
+    assert.equal(element('analyze').parentElement.id, 'compile-options');
     assert.equal(element('speed').parentElement.id, 'history-extra-playback');
     assert.equal(element('runtime-inputs').open, false);
     element('runtime-inputs').open = true;

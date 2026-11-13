@@ -13,9 +13,14 @@
   <div class="command-row">
     <a class="brand" href="./"><img class="mark" src="./mark.svg" alt="" width="24" height="28"><h1>CRYSTAL <span>OBSERVATORY</span></h1></a>
     <nav class="commands" data-i18n-aria="commands">
-      <button id="compile-run" class="primary" data-i18n-aria="run" data-i18n-title="run.title"><svg data-icon="run"></svg><span class="desktop-command" data-i18n="run">Compile &amp; run</span><span class="mobile-command" data-i18n="mobile.run">Run</span></button>
-      <button id="compile-only" data-i18n-aria="compile" data-i18n-title="compile.title"><svg data-icon="codegen"></svg><span class="desktop-command" data-i18n="compile">Compile to IR</span><span class="mobile-command">IR</span></button>
-      <button id="analyze" data-i18n-aria="syntax" class="quiet" data-i18n-title="syntax.title"><svg data-icon="parse"></svg><span class="desktop-command" data-i18n="syntax">Parse only</span><span class="mobile-command" data-i18n="mobile.parse">Parse</span></button>
+      <div class="compile-actions">
+        <button id="compile-run" class="primary icon-button" data-i18n-aria="run" data-i18n-title="run.title"><svg data-icon="run"></svg></button>
+        <button id="compile-options-button" class="quiet icon-button" popovertarget="compile-options" data-i18n-aria="compile.options" data-i18n-title="compile.options"><svg data-icon="dropdown"></svg></button>
+      </div>
+      <div id="compile-options" class="compile-menu" popover="auto" data-i18n-aria="compile.options">
+        <button id="compile-only" data-i18n-title="compile.title"><svg data-icon="codegen"></svg><span data-i18n="compile">Compile to IR</span></button>
+        <button id="analyze" data-i18n-title="syntax.title"><svg data-icon="parse"></svg><span data-i18n="syntax">Parse only</span></button>
+      </div>
       <button id="cancel-job" data-i18n-aria="cancel" disabled><svg data-icon="stop"></svg><span class="desktop-command" data-i18n="cancel">Stop</span></button>
     </nav>
     <div class="status-message" role="status"><button id="notice" data-i18n-title="status.detail" aria-haspopup="dialog"></button><svg class="notice-icon" data-icon="info"></svg></div>

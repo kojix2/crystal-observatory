@@ -31,8 +31,14 @@ export class Application {
     this.session = new WorkSession({ onState: () => this.updateControls() });
     $('prelude').onchange = () => this.updateControls();
     $('compile-run').onclick = () => this.compile(true);
-    $('compile-only').onclick = () => this.compile(false);
-    $('analyze').onclick = () => this.parse();
+    $('compile-only').onclick = () => {
+      $('compile-options').hidePopover();
+      this.compile(false);
+    };
+    $('analyze').onclick = () => {
+      $('compile-options').hidePopover();
+      this.parse();
+    };
     $('cancel-job').onclick = () => {
       const cancelled = this.session.cancel();
       this.sharing?.cancel();

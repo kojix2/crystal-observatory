@@ -116,6 +116,15 @@ export const messages = {
     de: 'Zu IR kompilieren',
     ru: 'Компилировать в IR',
   },
+  'compile.options': {
+    ja: 'コンパイル・解析の操作',
+    en: 'Compile and parse options',
+    es: 'Opciones de compilación y análisis',
+    'zh-CN': '编译和语法分析选项',
+    fr: 'Options de compilation et d’analyse',
+    de: 'Kompilier- und Analyseoptionen',
+    ru: 'Параметры компиляции и разбора',
+  },
   'compile.title': {
     ja: '意味解析・LLVM IR生成・WASMリンク',
     en: 'Analyze, generate LLVM IR and link WASM',

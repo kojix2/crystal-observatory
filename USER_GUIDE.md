@@ -56,7 +56,8 @@ an existing Observatory source link.
 
 ## Compile and inspect
 
-Enter Crystal in **Source** and choose **Compile & run**, or **Compile to IR** to
+Enter Crystal in **Source** and choose the play icon (**Compile & run**). The arrow
+beside it opens **Compile to IR** and **Parse only**. Choose **Compile to IR** to
 compile without execution. **Output** accepts stdin and a JSON array of arguments.
 **Parse only** uses a separate lightweight lexer/parser, without semantic analysis.
 
@@ -107,8 +108,9 @@ and **Details**. The initial screen is History, where bundled recordings open
 with one tap without compiling. Opening a recording switches to Work to inspect it.
 Work contains the source editor and all observation tabs.
 Swipe the tab row to reach more views. Compile & run and Stop remain
-in a single top toolbar; its options button opens Compile to IR, Parse only,
-Compare, language, settings, help, layout reset, and GitHub. Editing remains available while compilation runs.
+in a single top toolbar. The arrow beside the play icon opens Compile to IR and
+Parse only; the options button opens Compare, language, settings, help, layout
+reset, and GitHub. Editing remains available while compilation runs.
 
 Selecting a History event or stage heading opens Details, with the operation
 above the node information. Return to History to continue from the same selection,

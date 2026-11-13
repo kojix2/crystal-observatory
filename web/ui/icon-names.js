@@ -14,6 +14,7 @@ export const lucideNames = {
   last: 'chevron-last',
   collapse: 'chevron-left',
   disclosure: 'chevron-right',
+  dropdown: 'chevron-down',
   reset: 'rotate-ccw',
   help: 'circle-question-mark',
   settings: 'settings',

@@ -11,8 +11,6 @@ export function setupMobileWorkspace(onModeChange) {
   const inputs = $('runtime-inputs');
   // Restore the same elements (and their handlers) to their desktop positions.
   const relocated = [
-    ['compile-only', options],
-    ['analyze', options],
     ['compare-view', options],
     ['record-tools', historyControls],
     ['first', $('history-extra-playback')],
