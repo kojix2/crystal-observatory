@@ -167,7 +167,7 @@ export class TraceView {
         if (this.model.index >= this.trace.events.length - 1) this.stop();
         else this.seek(this.model.index + 1);
       },
-      Number($('speed').value),
+      Number(document.querySelector('input[name="playback-speed"]:checked').value),
     );
   }
   seek(index) {
@@ -561,24 +561,13 @@ export class TraceView {
       if (event.target.value) this.beginComparison(event.target.value);
       else this.endComparison();
     };
-    for (const [id, index] of [
-      ['first', () => 0],
-      ['prev', () => this.model.index - 1],
-      ['next', () => this.model.index + 1],
-      ['last', () => this.trace.events.length - 1],
-    ])
-      $(id).onclick = () => {
-        if (this.model) {
-          this.stop();
-          this.seek(index());
-        }
-      };
     $('play').onclick = () => this.togglePlay();
-    $('speed').onchange = () => {
+    $('playback-settings').onchange = () => {
       if (this.playTimer) {
         this.stop();
         this.togglePlay();
       }
+      $('playback-settings').hidePopover();
     };
     $('scrubber').oninput = () => {
       this.stop();

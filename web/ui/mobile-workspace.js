@@ -10,12 +10,7 @@ export function setupMobileWorkspace(onModeChange) {
   const historyControls = $('history-controls');
   const inputs = $('runtime-inputs');
   // Restore the same elements (and their handlers) to their desktop positions.
-  const relocated = [
-    ['compare-view', options],
-    ['first', $('history-extra-playback')],
-    ['last', $('history-extra-playback')],
-    ['speed', $('history-extra-playback')],
-  ].map(([id, destination]) => {
+  const relocated = [['compare-view', options]].map(([id, destination]) => {
     const node = $(id);
     return { node, destination, parent: node.parentElement, next: node.nextSibling };
   });

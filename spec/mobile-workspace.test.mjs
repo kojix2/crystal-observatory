@@ -20,6 +20,11 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
         'compiler-map',
         'toggle-workflow',
         'workflow-unavailable',
+        'first',
+        'prev',
+        'next',
+        'last',
+        'history-extra-playback',
       ].includes(id),
       `Removed element accessed: ${id}`,
     );
@@ -107,7 +112,7 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
     ['compile-options', ['compile-only', 'analyze']],
     ['header-options', ['language']],
     ['graph-head', ['view-tabs', 'compare-view', 'maximize-graph']],
-    ['playback', ['first', 'prev', 'play', 'next', 'last', 'speed', 'position', 'history-tools']],
+    ['playback', ['play', 'scrubber', 'position', 'playback-options', 'history-tools']],
   ])
     for (const id of children) element(parent).append(element(id));
   element('runtime-inputs').open = true;
@@ -206,7 +211,6 @@ test('secondary controls move into popovers and restore desktop order without re
     resize(true);
     assert.equal(element('compile-only').parentElement.id, 'compile-options');
     assert.equal(element('analyze').parentElement.id, 'compile-options');
-    assert.equal(element('speed').parentElement.id, 'history-extra-playback');
     assert.equal(element('runtime-inputs').open, false);
     element('runtime-inputs').open = true;
     element('inspector-panel').scrollTop = 330;
