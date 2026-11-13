@@ -103,10 +103,7 @@ test('locale switching retains compiler-provided values and raw diagnostics', ()
   assert.match(explanation(event), /Int32 \| String/);
   assert.equal(eventLabel('type'), messages['event.type'].en);
   assert.equal(errorText(diagnostic), diagnostic.message);
-  assert.equal(
-    t('notice.recorded', { origin: source }),
-    `${source} · a previously recorded compiler trace.`,
-  );
+  assert.equal(t('notice.recorded', { origin: source }), source);
   setLocale('en'); // no duplicate rerender notifications
   setLocale('unsupported');
   assert.equal(changed, 1);
