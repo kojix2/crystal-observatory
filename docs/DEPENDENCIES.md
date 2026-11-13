@@ -18,3 +18,12 @@ When replacing compiler assets, update their receipts and regenerate recordings
 from that same compiler. Tests against older checked-in assets do not verify the
 replacement. Keep generated npm dependencies unmodified; maintain local runtime
 adaptations separately.
+
+The host Crystal used by CI is independent of the shipped WASM engines. Do not
+change their displayed versions to match a host upgrade. The UI reads the selected
+recording's compiler and LLVM metadata; a new editor has no engine version to
+report. Engine builds embed the restored source tree's VERSION, so later
+dependency updates also update exported recordings without editing UI strings.
+Implementation links use the recording's stable release tag, or an exact source
+revision if one is recorded. An unknown development revision is not replaced with
+the current master branch.

@@ -14,6 +14,7 @@ import { IRView } from './ir-view.js';
 import { renderDeclarations } from './declarations.js';
 import { stateObservation } from '../core/compiler-state.js';
 import { ViewLayout, comparisonTargets, viewLabel, viewLabelKey } from '../core/view-layout.js';
+import { compilerVersionSummary } from '../core/compiler-version.js';
 
 const scrollTargets = {
   source: 'source',
@@ -99,8 +100,7 @@ export class TraceView {
           : 'engine.syntax';
     text('engine', () => t(engine));
     $('engine').classList.toggle('syntax', trace.mode !== 'full');
-    $('versions').textContent =
-      `Engine ${trace.compiler_version} · ${trace.llvm_version ? `LLVM ${trace.llvm_version} · ` : ''}${trace.mode === 'full' && trace.prelude ? `--prelude ${trace.prelude} · ` : ''}schema ${trace.schema_version}`;
+    $('versions').textContent = compilerVersionSummary(trace);
     this.ir.load(trace.llvm_ir || '', trace.mode === 'full' ? trace.prelude : null);
     renderTokens(trace, (node) => this.editor.highlight(node));
     this.events.load(model);

@@ -44,7 +44,7 @@ export async function fetchTrace(url, signal) {
 export function emptyTrace(source) {
   return {
     schema_version: 1,
-    compiler_version: '1.22.0 (WASI/EH)',
+    compiler_version: '',
     mode: 'empty',
     source,
     filename: 'main.cr',

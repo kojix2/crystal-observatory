@@ -16,6 +16,7 @@ import {
 } from './event-labels.js';
 import { activityVisitors, coverageFor } from '../core/activities.js';
 import { compilerStage } from '../core/compiler-stages.js';
+import { compilerSourceURL } from '../core/compiler-version.js';
 import { renderStageContext } from './stage-context.js';
 
 // Node selection can move independently of playback. The lower inspector follows
@@ -448,13 +449,15 @@ function renderLinks(trace, event) {
   files.delete(null);
   $('compiler-link').replaceChildren();
   for (const file of files) {
-    const link = document.createElement('a');
-    const browserVersion = trace.compiler_version.includes('WASI');
-    link.href = `https://github.com/crystal-lang/crystal/blob/${browserVersion ? '1.22.0' : 'master'}/src/compiler/crystal/${file}`;
-    link.target = '_blank';
-    link.rel = 'noreferrer';
+    const url = compilerSourceURL(trace, file),
+      link = document.createElement(url ? 'a' : 'code');
+    if (url) {
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noreferrer';
+    }
     link.textContent = file;
-    link.insertAdjacentHTML('beforeend', icon('external', { size: 10 }));
+    if (url) link.insertAdjacentHTML('beforeend', icon('external', { size: 10 }));
     $('compiler-link').append(link);
   }
   if (!files.size)

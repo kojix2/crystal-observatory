@@ -14,6 +14,6 @@ compiler.prelude = prelude
 # WASI has no host process API. This port also requires the single-thread runtime.
 compiler.flags.concat ["without_mt", "use_pcre2"]
 bundle = Observatory::Compilation.run(File.read("/main.cr"), "/main.cr", compiler,
-  compiler_version: "1.22.0 + browser-crystal WASI/EH patches", object_path: "/out.o.wasm")
+  compiler_version: {{ read_file("#{__DIR__}/../vendor/crystal-browser-src/VERSION").strip + " + browser-crystal WASI/EH patches" }}, object_path: "/out.o.wasm")
 File.write("/trace.json", bundle.to_json)
 exit(bundle.errors.empty? ? 0 : 1)

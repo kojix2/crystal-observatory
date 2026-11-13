@@ -34,6 +34,14 @@ async function execute(result, stdin = '', args = []) {
   return run.stdout;
 }
 
+test('packaged compiler metadata matches its packaged source version', async () => {
+  const { trace } = await compile('42', 'empty');
+  const version = assets.stdlib.VERSION.trim();
+  assert.equal(trace.compiler_version.match(/^\d+\.\d+\.\d+(?:-[\w.-]+)?/)[0], version);
+  assert.equal(typeof trace.host_compiler_version, 'string');
+  assert(trace.llvm_version.length > 0);
+});
+
 test('activity instrumentation preserves initialization and unused-block behavior', async () => {
   for (const [name, output] of [
     ['10_initializers', '20\n'],

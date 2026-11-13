@@ -211,6 +211,11 @@ operation and result. Individual operations retain their event numbers. Use a di
 button to expand a branch, or select its name to inspect that point in the recording.
 When a branch spans pages, its parent headings are repeated to preserve context.
 
+The footer reports the compiler and LLVM versions from the selected recording.
+Bundled recordings, syntax analysis and new compilations can use different
+versions. An unused editor omits version information; the host Crystal version
+does not determine the browser engine version.
+
 The **Tokens** table supports column resizing. Drag a header divider or use
 Left/Right with it focused; Shift moves in larger steps. Double-click or Home
 restores the defaults. Widths survive language changes and recording reloads;

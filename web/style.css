@@ -450,7 +450,7 @@ h1 span { font-size:var(--text-small); font-weight:400; letter-spacing:.7px; col
 .stack-frame { display:block; max-width:100%; text-align:left; white-space:normal; border:0; font: var(--text-small)/1.6 var(--mono); padding: 5px 8px; margin: 3px 0; background: var(--soft); border-left: 2px solid transparent; border-radius:0 3px 3px 0; cursor: pointer; overflow-wrap: anywhere; }
 .stack-frame:last-child { background: var(--selection); border-color: var(--muted); }
 #compiler-link { font-size:var(--text-small); }
-#compiler-link a { display:block; margin-block:4px; overflow-wrap:anywhere; }
+#compiler-link a,#compiler-link code { display:block; margin-block:4px; overflow-wrap:anywhere; }
 /* Use the same visitor color in history, details and the visit stack. */
 [data-visitor="TopLevelVisitor"] { --visitor-ink:var(--visitor-top-level); }
 [data-visitor="MainVisitor"],[data-visitor="Call"] { --visitor-ink:var(--visitor-main); }
