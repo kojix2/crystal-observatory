@@ -150,6 +150,7 @@ export class TraceView {
     if (this.playTimer) return this.stop();
     if (!this.trace?.events.length) return;
     if (this.model.index >= this.trace.events.length - 1) this.seek(0);
+    this.onPlaybackStart?.();
     setIcon($('play'), 'pause');
     $('play').dataset.i18nAria = 'pause';
     $('play').dataset.i18nTitle = 'pause';

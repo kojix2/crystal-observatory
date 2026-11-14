@@ -146,6 +146,9 @@ The Play/Pause button sits to the left of the seek bar above the AST. Drag the b
 to move through the recording, or select an event in the list. The speed menu
 offers Slow, Normal and Fast on both desktop and mobile. The filter button in
 Compilation trace opens search, event kind, and Clear.
+Starting playback selects Compilation trace in the side panel. On phones, it
+does not switch panes; the trace is ready when you open Files & trace. A
+collapsed desktop side panel stays collapsed.
 Choosing Activity reveals its subtype filter and the next-activity action.
 An active node condition can be removed separately in the same popup. Closing this
 popup gives the space back to the event list. A highlighted

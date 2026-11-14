@@ -52,5 +52,6 @@ export function setupFileWorkspace(app) {
     app.trace.workspace?.showPane('history');
   };
   showSide('files');
+  app.trace.onPlaybackStart = () => showSide('trace');
   return { showSide };
 }
