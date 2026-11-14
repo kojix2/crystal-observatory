@@ -10,6 +10,7 @@ import {
   shortVisitor,
   explanation,
   visitorKey,
+  visitorLetter,
   visitorRole,
   activitySummary,
   activityLabel,
@@ -103,6 +104,10 @@ export function renderInspector(
     ? shortVisitor(event.visitor) || stage?.driver.split(' → ')[0] || t('event.noVisitor')
     : stage?.driver || '—';
   $('visitor-title').dataset.visitor = visitorKey(event?.visitor);
+  const badgeVisitor = event?.visitor && activityVisitors.includes(visitorKey(event.visitor));
+  $('visitor-badge').hidden = !badgeVisitor;
+  $('visitor-badge').dataset.visitor = badgeVisitor ? visitorKey(event.visitor) : '';
+  $('visitor-badge-letter').textContent = badgeVisitor ? visitorLetter(event.visitor) : '';
   $('visitor-role').textContent = visitorRole(event, model);
   const activity = event?.kind === 'activity';
   const diagnostic = event?.kind === 'error';

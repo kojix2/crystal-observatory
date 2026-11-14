@@ -306,6 +306,7 @@ collapsed state are saved in the browser. Select a stage heading in Compilation 
 jump to its first recorded visit (or its start when no visits were recorded);
 its arrow opens or closes the stage without moving
 playback. The operation inspector puts the observed Visitor, target and result first.
+Its Visitor badge uses the same letter and color as the marker on the AST.
 Code rewrites and macro expansions show a syntax-highlighted unified diff: red
 minus rows are removed source, green plus rows are added source. Activities use
 this display only for code transformations with recorded before/after source.

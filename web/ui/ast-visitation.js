@@ -1,19 +1,6 @@
 import { t } from '../i18n/index.js';
 import { esc } from './dom.js';
-import { shortVisitor, visitorKey } from './event-labels.js';
-
-const visitorLetters = new Map([
-  ['TypeGuessVisitor', 'G'],
-  ['TypeDeclarationVisitor', 'D'],
-  ['ToSVisitor', 'S'],
-]);
-
-function visitorLetter(visitor) {
-  const key = visitorKey(visitor);
-  const mark = visitorLetters.get(key);
-  const name = key.split('::').at(-1) || '?';
-  return mark || Array.from(Array.from(name)[0].toUpperCase())[0];
-}
+import { shortVisitor, visitorKey, visitorLetter } from './event-labels.js';
 
 export function visitDecoration(id, visit, { width, radius, unit = 1, reference = false }) {
   if (reference) return { classes: '', attributes: '', shape: '' };

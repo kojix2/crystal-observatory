@@ -86,6 +86,9 @@ test('operation results preserve recorded values, activity limits and complete d
       (event) => (opened = event),
     );
     assert.equal(get('explanation').hidden, true);
+    assert.equal(get('visitor-badge').hidden, false);
+    assert.equal(get('visitor-badge').dataset.visitor, 'CodeGenVisitor');
+    assert.equal(get('visitor-badge-letter').textContent, 'C');
     assert.equal(get('event-before').hidden, true);
     assert.equal(get('change').hidden, false);
     assert.equal(get('event-diff').hidden, true);
@@ -104,6 +107,7 @@ test('operation results preserve recorded values, activity limits and complete d
     assert.equal(get('activity-ir-note').hidden, true);
     model.seek(2);
     renderInspector(model, 0, () => {});
+    assert.equal(get('visitor-badge').hidden, true);
     assert.equal(get('change').hidden, false);
     assert.equal(get('event-before').hidden, false);
     assert.equal(get('event-result-label').textContent, t('after'));
@@ -495,6 +499,7 @@ test('stage handoff follows playback independently of the selected node, includi
     model.seek(0);
     renderInspector(model, 1, () => {});
     assert.equal(get('visitor-title').textContent, 'Program#define_new_methods');
+    assert.equal(get('visitor-badge').hidden, true);
     assert.equal(get('event-kind').hidden, true);
     assert.equal(get('event-kind').textContent, '');
     assert.equal(get('explanation').hidden, true);
@@ -506,6 +511,9 @@ test('stage handoff follows playback independently of the selected node, includi
     assert.equal(get('node-id').textContent, '—');
     assert(get('stage-context').innerHTML.includes(t('pipeline.stage.declarations')));
     assert.equal(get('visitor-title').textContent, 'TypeGuessVisitor');
+    assert.equal(get('visitor-badge').hidden, false);
+    assert.equal(get('visitor-badge').dataset.visitor, 'TypeGuessVisitor');
+    assert.equal(get('visitor-badge-letter').textContent, 'G');
     assert.equal(get('event-kind').hidden, false);
     assert.equal(get('explanation').hidden, false);
     assert.equal(model.index, 1);

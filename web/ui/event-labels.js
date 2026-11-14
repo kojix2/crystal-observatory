@@ -69,6 +69,16 @@ export const sourceFiles = {
 };
 
 export const visitorKey = (name) => shortVisitor(name).split('#')[0];
+const visitorLetters = new Map([
+  ['TypeGuessVisitor', 'G'],
+  ['TypeDeclarationVisitor', 'D'],
+  ['ToSVisitor', 'S'],
+]);
+export function visitorLetter(visitor) {
+  const key = visitorKey(visitor);
+  const name = key.split('::').at(-1) || '?';
+  return visitorLetters.get(key) || Array.from(name)[0].toUpperCase();
+}
 export function activityLabel(activity) {
   return messages[`activity.${activity}`] ? t(`activity.${activity}`) : activity;
 }
