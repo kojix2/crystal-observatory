@@ -120,6 +120,7 @@ test('cards put kind and value together, keep literal spaces, and give declarati
     assert(rows[2].heading.includes('&quot;a  b&quot;'));
     assert(rows[3].heading.includes('twice(x)') && !rows[3].heading.includes('def twice'));
     assert(!rows[3].html.includes('class="svg-type"'));
+    assert(!rows[3].html.includes('Nil'));
     assert.deepEqual(
       rows.map(({ height }) => height),
       [28, 44, 44, 28, 28],

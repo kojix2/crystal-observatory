@@ -7,31 +7,38 @@ const padding = 24;
 
 // Size whole subtrees first, then place them without recursion. Each occurrence
 // keeps flattenAST's parent, edge kind and reference flag, including cyclic ASTs.
-export function layoutMindmapAST(snapshot, collapsed = new Set()) {
-  const rows = flattenAST(snapshot, collapsed).map((row) => ({
-    ...row,
-    width: Math.max(
-      160,
-      Math.min(
-        248,
-        46 + Math.max(row.node.kind.length, Math.min(28, (row.node.label || '').length)) * 7.2,
+export function layoutMindmapAST(snapshot, collapsed = new Set(), measure) {
+  const rows = flattenAST(snapshot, collapsed).map((row) => {
+    const size = measure?.(row) || {
+      width: Math.max(
+        160,
+        Math.min(
+          248,
+          46 + Math.max(row.node.kind.length, Math.min(28, (row.node.label || '').length)) * 7.2,
+        ),
       ),
-    ),
-    height: mindmapNodeHeight,
-    side: 0,
-    x: 0,
-    y: 0,
-  }));
+      height: mindmapNodeHeight,
+    };
+    return {
+      ...row,
+      width: size.width,
+      height: size.height,
+      edgeGap: size.edgeGap,
+      side: 0,
+      x: 0,
+      y: 0,
+    };
+  });
   const children = rows.map(() => []),
     roots = [],
-    spans = rows.map(() => mindmapNodeHeight);
+    spans = rows.map((row) => row.height);
   rows.forEach((row, i) => {
     if (row.parent < 0) roots.push(i);
     else children[row.parent].push(i);
   });
   const span = (indices) => indices.reduce((sum, i) => sum + spans[i] + gap, -gap);
   for (let i = rows.length - 1; i >= 0; i--)
-    if (children[i].length) spans[i] = Math.max(mindmapNodeHeight, span(children[i]));
+    if (children[i].length) spans[i] = Math.max(rows[i].height, span(children[i]));
 
   let top = padding;
   for (const root of roots) {
@@ -42,17 +49,18 @@ export function layoutMindmapAST(snapshot, collapsed = new Set()) {
       sides[side].push(child);
       weights[side] += spans[child] + gap;
     }
-    const height = Math.max(mindmapNodeHeight, ...weights.map((weight) => weight - gap));
+    const height = Math.max(rows[root].height, ...weights.map((weight) => weight - gap));
     rows[root].x = -rows[root].width / 2;
-    rows[root].y = top + (height - mindmapNodeHeight) / 2;
+    rows[root].y = top + (height - rows[root].height) / 2;
     const pending = [];
     const placeChildren = (indices, parent, side, start) => {
       let cursor = start;
       for (const index of indices) {
         const row = rows[index];
         row.side = side;
-        row.x = side > 0 ? parent.x + parent.width + branchGap : parent.x - branchGap - row.width;
-        row.y = cursor + (spans[index] - mindmapNodeHeight) / 2;
+        const spacing = row.edgeGap || (row.edge === 'child' ? branchGap : branchGap + 64);
+        row.x = side > 0 ? parent.x + parent.width + spacing : parent.x - spacing - row.width;
+        row.y = cursor + (spans[index] - row.height) / 2;
         pending.push(index);
         cursor += spans[index] + gap;
       }
@@ -68,7 +76,7 @@ export function layoutMindmapAST(snapshot, collapsed = new Set()) {
     while (pending.length) {
       const index = pending.pop(),
         row = rows[index];
-      placeChildren(children[index], row, row.side, row.y + (mindmapNodeHeight - spans[index]) / 2);
+      placeChildren(children[index], row, row.side, row.y + (row.height - spans[index]) / 2);
     }
     top += height + gap * 2;
   }

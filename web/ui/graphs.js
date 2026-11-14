@@ -1,6 +1,6 @@
 import { t } from '../i18n/index.js';
 import { $, esc, brief } from './dom.js';
-import { renderASTCard } from './ast-cards.js';
+import { measureASTCard, renderASTCard } from './ast-cards.js';
 import { visitation } from '../core/visitation.js';
 import { renderVisitorSpeech } from './visitor-speech.js';
 import { visitDecoration, captureVisitorBall, animateVisitorBall } from './ast-visitation.js';
@@ -133,12 +133,13 @@ export function renderGraph(
     const activeNode =
       $('graph').querySelector('.node.visit-current') || $('graph').querySelector('.node.selected');
     if (activeNode && $('follow').checked && reveal) {
-      const nodeRect = activeNode.getBoundingClientRect(),
+      const focus = activeNode.querySelector?.('.visitor-ball-current') || activeNode,
+        focusRect = focus.getBoundingClientRect(),
         area = $('graph').getBoundingClientRect();
-      if (nodeRect.top < area.top || nodeRect.bottom > area.bottom)
-        $('graph').scrollTop += nodeRect.top - area.top - area.height * 0.38;
-      if (nodeRect.left < area.left || nodeRect.right > area.right)
-        $('graph').scrollLeft += nodeRect.left - area.left - 16;
+      if (focusRect.top < area.top || focusRect.bottom > area.bottom)
+        $('graph').scrollTop += focusRect.top - area.top - area.height * 0.38;
+      if (focusRect.left < area.left || focusRect.right > area.right)
+        $('graph').scrollLeft += focusRect.left - area.left - 16;
     }
     animateVisitorBall($('graph'), previousBall);
     renderVisitorSpeech($('graph'), model, visit);
@@ -156,26 +157,57 @@ export function renderGraph(
           : '');
   }
   function renderMindmap(s) {
-    const layout = layoutMindmapAST(s, collapsed);
+    const presentations = [];
+    const edgeLabels = {
+      expanded: t('ast.edge.expanded'),
+      hook: t('ast.edge.hook'),
+      target: t('ast.edge.target'),
+    };
+    const layout = layoutMindmapAST(s, collapsed, (row) => {
+      const metrics = measureASTCard(row, {
+        trace: model.trace,
+        state: nodeState(row.node),
+        collapsed,
+        availableWidth: 280,
+      });
+      presentations.push(metrics);
+      const label = edgeLabels[row.edge];
+      return {
+        ...metrics,
+        edgeGap: label
+          ? Math.max(
+              120,
+              [...label].reduce((width, char) => width + (char.codePointAt(0) > 0xff ? 14 : 8), 20),
+            )
+          : undefined,
+      };
+    });
     const { rows, height } = layout;
-    const width = layout.width + 24;
+    // Leave room for the largest visitor-ball cluster beyond the rightmost card.
+    const width = layout.width + 56;
     let edges = '',
       nodes = '';
-    for (const row of rows) {
-      if (row.parent >= 0)
+    for (const [index, row] of rows.entries()) {
+      if (row.parent >= 0) {
         edges += `<path class="edge ${row.edge}" d="${mindmapBranch(rows[row.parent], row)}"/>`;
-      const n = row.node,
-        { family, type, changed } = nodeState(n),
-        folded = collapsed.has(n.id),
-        hasKids =
-          !row.reference &&
-          (n.children?.length || n.targets?.length || n.hook_expansions?.length || n.expanded),
-        label = t('graph.node', { kind: n.kind, type, id: n.id }),
-        headingLength = Math.max(1, Math.floor((row.width - 36 - `#${n.id}`.length * 7) / 7.2)),
-        codeLength = Math.floor((row.width - 24) / 7.2),
-        typeLength = Math.floor((row.width - (hasKids ? 48 : 24)) / 7.2),
-        dispatch = visitDecoration(n.id, visit, row);
-      nodes += `<g class="node mindmap-node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${row.reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${row.x} ${row.y})"><title>${esc(label)}\n${esc(n.label || '')}${row.reference ? `\n${esc(t('ast.reference'))}` : ''}</title><rect class="tile" width="${row.width}" height="${row.height}" rx="8"/><rect class="accent" width="3" height="${row.height - 16}" x="0" y="8" rx="1.5"/><text x="12" y="18" class="svg-kind">${esc(brief(n.kind, headingLength))}</text><text x="${row.width - 12}" y="18" text-anchor="end" class="svg-id">#${n.id}</text><text x="12" y="36" class="svg-code">${esc(brief(n.label, codeLength))}</text><text x="12" y="53" class="svg-type">${esc(brief(type || '—', typeLength))}</text>${hasKids ? `<g class="mindmap-fold" data-fold="${n.id}" tabindex="0" role="button" aria-expanded="${!folded}" aria-label="${esc(t(folded ? 'ast.expandNode' : 'ast.collapseNode', { id: n.id }))}" transform="translate(${row.width - 19} 48)"><circle r="10"/><text text-anchor="middle" y="4">${folded ? '+' : '−'}</text></g>` : ''}${dispatch.shape}</g>`;
+        if (edgeLabels[row.edge]) {
+          const parent = rows[row.parent],
+            from = row.side > 0 ? parent.x + parent.width : parent.x,
+            to = row.side > 0 ? row.x : row.x + row.width;
+          edges += `<text class="mindmap-edge-label" x="${(from + to) / 2}" y="${row.y + row.height / 2 - 7}" text-anchor="middle">${esc(edgeLabels[row.edge])}</text>`;
+        }
+      }
+      nodes += renderASTCard(row, {
+        trace: model.trace,
+        state: nodeState(row.node),
+        selected,
+        collapsed,
+        x: row.x,
+        y: row.y,
+        metrics: presentations[index],
+        visit,
+        layout: 'mindmap',
+      }).html;
     }
     $('graph').innerHTML =
       `<svg class="ast-svg mindmap-svg" xmlns="http://www.w3.org/2000/svg" width="${width * astZoom}" height="${height * astZoom}" viewBox="0 0 ${width} ${height}" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.mindmap'))}">${edges}${nodes}</svg>`;

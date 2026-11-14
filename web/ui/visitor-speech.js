@@ -66,6 +66,13 @@ export function renderVisitorSpeech(graph, model, visit) {
   const circle = ball.querySelector('.visitor-ball-body');
   const radius = Number(circle.getAttribute('r')) * Math.hypot(matrix.a, matrix.b);
   const anchor = { x: matrix.e, y: matrix.f, radius };
+  if (
+    anchor.x < viewport.left ||
+    anchor.x > viewport.right ||
+    anchor.y < viewport.top ||
+    anchor.y > viewport.bottom
+  )
+    return;
   const targetElement = ball.closest('.node').querySelector('.tile, .radial-dot');
   const target = targetElement.getBoundingClientRect();
   const bubble = document.createElement('div');
@@ -80,6 +87,9 @@ export function renderVisitorSpeech(graph, model, visit) {
   bubble.style.top = '0px';
   graph.append(bubble);
   const size = bubble.getBoundingClientRect();
+  // Absolute auto width shrinks to one character when left is moved into a
+  // horizontally scrolled graph. Keep the width used by speechPlacement.
+  bubble.style.width = `${size.width}px`;
   const obstacles = [...graph.querySelectorAll('.node .tile, .node .radial-dot')]
     .map((element) => element.getBoundingClientRect())
     .filter((rect) => overlap(rect, viewport));

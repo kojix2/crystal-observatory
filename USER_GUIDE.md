@@ -247,6 +247,9 @@ Card widths follow their content, with a maximum width, and remain stable during
 playback. Folded cards show the number of direct branches. Hover a card for its
 ID, unabridged code label and type, or select it for the full recorded code. Use
 its **+ / −** button (or focus the card and press **+ / −**) to fold a branch.
+The mind map uses the same node labels, type rules, reference markers, and folded
+branch counts. Its boxes follow their content, and labels on special branches
+identify expanded AST, hook expansions, and resolved method targets.
 
 A flat colored circle at a node’s upper-right corner represents its recorded
 Visitor. Its single letter identifies the Visitor, such as M for MainVisitor,

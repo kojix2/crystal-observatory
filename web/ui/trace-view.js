@@ -4,6 +4,7 @@ import { $, notify, download } from './dom.js';
 import { setIcon } from './icons.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
+import { renderVisitorSpeech } from './visitor-speech.js';
 import { visitation, nextVisit } from '../core/visitation.js';
 import { bindGraphNavigation, zoomGraphAt } from './graph-navigation.js';
 import { renderInspector } from './inspector.js';
@@ -422,6 +423,7 @@ export class TraceView {
         () => this.renderView('ast', false),
         point,
       );
+      this.refreshVisitorSpeech();
       return;
     }
     this.renderObservation();
@@ -433,6 +435,26 @@ export class TraceView {
       this.astLayout === 'radial' && this.astZoom === 1
         ? 0
         : (y * this.astZoom) / previous - graph.clientHeight / 2;
+    this.refreshVisitorSpeech();
+  }
+  refreshVisitorSpeech() {
+    const graph = $('graph');
+    graph.querySelector?.('.visitor-speech')?.remove();
+    if (this.model) renderVisitorSpeech(graph, this.model, visitation(this.model));
+  }
+  syncVisitorSpeechVisibility() {
+    const graph = $('graph'),
+      ball = graph.querySelector('.visitor-ball-current'),
+      matrix = ball?.getScreenCTM();
+    if (!matrix) return;
+    const area = graph.getBoundingClientRect(),
+      visible =
+        matrix.e >= area.left &&
+        matrix.e <= area.left + graph.clientWidth &&
+        matrix.f >= area.top &&
+        matrix.f <= area.top + graph.clientHeight;
+    if (!visible) graph.querySelector('.visitor-speech')?.remove();
+    else if (!graph.querySelector('.visitor-speech')) this.refreshVisitorSpeech();
   }
   zoomTypes(zoom, point) {
     const graph = $('types'),
@@ -621,11 +643,17 @@ export class TraceView {
           : 1,
       );
       graph.scrollLeft = graph.scrollTop = 0;
+      this.refreshVisitorSpeech();
     };
     bindGraphNavigation($('graph'), {
       enabled: () => this.astLayout === 'mindmap',
       selector: '.mindmap-svg',
       zoom: (factor, point) => this.zoomAST((this.astZoom || 1) * factor, point),
+    });
+    let speechFrame;
+    $('graph').addEventListener('scroll', () => {
+      cancelAnimationFrame(speechFrame);
+      speechFrame = requestAnimationFrame(() => this.syncVisitorSpeechVisibility());
     });
     bindGraphNavigation($('types'), {
       selector: '.dep-svg',

@@ -220,6 +220,38 @@ test('all AST layouts mark the Visitor target and callers independently of selec
     }
   }));
 
+test('follow keeps the Visitor ball visible when a zoomed node is wider than the viewport', () =>
+  withDOM((get) => {
+    const graph = get('graph');
+    const ball = {
+      getBoundingClientRect: () => ({ left: 900, right: 950, top: 120, bottom: 150 }),
+    };
+    const active = {
+      getBoundingClientRect: () => ({ left: 100, right: 950, top: 100, bottom: 200 }),
+      querySelector: (selector) => (selector === '.visitor-ball-current' ? ball : null),
+    };
+    graph.clientWidth = 400;
+    graph.clientHeight = 300;
+    graph.scrollLeft = 0;
+    graph.scrollTop = 0;
+    graph.getBoundingClientRect = () => ({ left: 0, right: 400, top: 0, bottom: 300, height: 300 });
+    graph.querySelector = (selector) => (selector === '.node.visit-current' ? active : null);
+    renderGraph(
+      {
+        model: new TraceModel(trace()).seek(6),
+        selected: 0,
+        snapshot: 0,
+        view: 'ast',
+        collapsed: new Set(),
+        astLayout: 'mindmap',
+        astZoom: 4,
+      },
+      () => {},
+      () => {},
+    );
+    assert.equal(graph.scrollLeft, 884);
+  }));
+
 test('playback reveals the visiting node while preserving event selection, comparisons and pinned snapshots', () =>
   withDOM((get) => {
     const view = Object.create(TraceView.prototype);
@@ -482,9 +514,59 @@ test('speech is attached to the Visitor as escaped text and positioned in scroll
     assert.equal(bubbles[0].innerHTML, undefined);
     assert.equal(bubbles[0].style.left, '203px');
     assert.equal(bubbles[0].style.top, '114px');
+    assert.equal(bubbles[0].style.width, '210px');
     assert.equal(bubbles[0].style.visibility, '');
   } finally {
     globalThis.document = original;
     setLocale('en');
+  }
+});
+
+test('speech is hidden when its Visitor ball is outside the graph viewport', () => {
+  const original = globalThis.document;
+  const ball = {
+    getScreenCTM: () => ({ a: 1, b: 0, e: 600, f: 120 }),
+    querySelector: () => ({ getAttribute: () => '13' }),
+  };
+  const graph = {
+    clientWidth: 500,
+    clientHeight: 300,
+    getBoundingClientRect: () => ({ left: 0, top: 0 }),
+    querySelector: () => ball,
+  };
+  globalThis.document = {
+    createElement: () => assert.fail('No bubble should be created for an offscreen Visitor'),
+  };
+  try {
+    const model = new TraceModel(speechTrace()).seek(6);
+    renderVisitorSpeech(graph, model, visitation(model));
+  } finally {
+    globalThis.document = original;
+  }
+});
+
+test('scrolling hides and restores speech as its Visitor ball crosses the viewport', () => {
+  const original = globalThis.document;
+  let x = 500,
+    bubble = { remove: () => (bubble = null) },
+    restored = 0;
+  const graph = {
+    clientWidth: 400,
+    clientHeight: 300,
+    getBoundingClientRect: () => ({ left: 0, top: 0 }),
+    querySelector: (selector) =>
+      selector === '.visitor-ball-current' ? { getScreenCTM: () => ({ e: x, f: 150 }) } : bubble,
+  };
+  globalThis.document = { getElementById: () => graph };
+  try {
+    const view = Object.create(TraceView.prototype);
+    view.refreshVisitorSpeech = () => restored++;
+    view.syncVisitorSpeechVisibility();
+    assert.equal(bubble, null);
+    x = 200;
+    view.syncVisitorSpeechVisibility();
+    assert.equal(restored, 1);
+  } finally {
+    globalThis.document = original;
   }
 });

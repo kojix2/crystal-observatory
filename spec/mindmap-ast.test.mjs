@@ -6,6 +6,7 @@ import { layoutMindmapAST, mindmapBranch } from '../web/core/mindmap-ast.js';
 import { flattenAST } from '../web/core/trace-model.js';
 import { renderGraph } from '../web/ui/graphs.js';
 import { TraceView } from '../web/ui/trace-view.js';
+import { setLocale } from '../web/i18n/index.js';
 
 const node = (id, children = [], extra = {}) => ({
   id,
@@ -190,15 +191,127 @@ test('mind map renders escaped labels and types, supports selection and keyboard
     folded = null;
     listeners.keydown(event('+'));
     assert.equal(folded, 1);
-    const layout = layoutMindmapAST(model.trace.snapshots[0], context.collapsed);
-    assert(
-      graph.innerHTML.includes(`width="${(layout.width + 24) * 2}" height="${layout.height * 2}"`),
-    );
+    const [, width, height, viewWidth, viewHeight] =
+      /<svg[^>]+width="([\d.]+)" height="([\d.]+)" viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(
+        graph.innerHTML,
+      );
+    assert.equal(Number(width), Number(viewWidth) * 2);
+    assert.equal(Number(height), Number(viewHeight) * 2);
     elements.follow.checked = true;
     render();
     assert(graph.innerHTML.includes('CurrentType') && !graph.innerHTML.includes('SnapshotType'));
   } finally {
     globalThis.document = original;
+  }
+});
+
+test('mind map uses card semantics and keeps measured positions stable through type playback', () => {
+  const original = globalThis.document,
+    graph = {
+      clientWidth: 700,
+      clientHeight: 500,
+      querySelector: () => null,
+      querySelectorAll: () => [],
+    },
+    nodes = [
+      node(1, [2, 3, 4, 5, 7], {
+        kind: 'Call',
+        label: 'run(1)',
+        expanded: 8,
+        hook_expansions: [9],
+        targets: [6],
+      }),
+      node(2, [], { kind: 'Expressions', label: '\nredundant subtree' }),
+      node(3, [], { kind: 'StringLiteral', label: '"a  b"', inferred_type: 'String' }),
+      node(4, [], { kind: 'Def', label: 'def twice(x)', inferred_type: 'Nil' }),
+      node(5, [], { kind: 'NumberLiteral', label: '1', inferred_type: 'Int32' }),
+      node(6, [1], { kind: 'Def', label: 'def resolved(x)', inferred_type: 'Int32' }),
+      node(7, [], { kind: 'Var', label: 'value' }),
+      node(8, [], { kind: 'Var', label: 'expanded' }),
+      node(9, [], { kind: 'Var', label: 'hook' }),
+    ],
+    trace = {
+      nodes,
+      events: [{ kind: 'type', node_id: 7, before: '', after: 'Int32 | String' }],
+      snapshots: [{ name: 'Snapshot', roots: [1], nodes }],
+    },
+    model = {
+      trace,
+      types: new Map(nodes.filter((n) => n.inferred_type).map((n) => [n.id, n.inferred_type])),
+      activities: new Map(),
+    };
+  globalThis.document = {
+    getElementById: (id) => ({ graph, follow: { checked: true }, 'ast-caption': {} })[id],
+  };
+  const render = () => {
+    renderGraph(
+      {
+        model,
+        selected: 0,
+        snapshot: 0,
+        view: 'ast',
+        collapsed: new Set(),
+        astLayout: 'mindmap',
+        reveal: false,
+      },
+      () => {},
+      () => {},
+    );
+    return graph.innerHTML
+      .split('<g class="node mindmap-node ')
+      .slice(1)
+      .map((html) => {
+        const id = Number(/data-node="(\d+)"/.exec(html)[1]),
+          [, x, y] = /transform="translate\(([\d.]+) ([\d.]+)\)"/.exec(html),
+          [, width, height] = /class="tile" width="([\d.]+)" height="([\d.]+)"/.exec(html);
+        return {
+          id,
+          x: Number(x),
+          y: Number(y),
+          width: Number(width),
+          height: Number(height),
+          html,
+        };
+      });
+  };
+  try {
+    setLocale('en');
+    const rows = render(),
+      byId = (id) => rows.find((row) => row.id === id),
+      heading = (id) => /class="svg-card-heading"[^>]*>(.*?)<\/text>/.exec(byId(id).html)[1],
+      geometry = (items) => items.map(({ x, y, width, height }) => [x, y, width, height]);
+    assert(!heading(2).includes('redundant subtree'));
+    assert(heading(3).includes('&quot;a  b&quot;'));
+    assert(heading(4).includes('twice(x)') && !heading(4).includes('def twice'));
+    assert.equal(byId(4).height, 28);
+    assert(!byId(4).html.includes('class="svg-type"'));
+    assert(!byId(4).html.includes('Nil'));
+    assert(byId(6).html.includes('class="svg-type">Int32</text>'));
+    assert(byId(7).html.includes('Unobserved'));
+    assert(!byId(7).html.includes('Int32 | String'));
+    assert.equal(rows.filter((row) => row.id === 1).length, 2);
+    assert(rows.find((row) => row.id === 1 && row.html.includes('reference')));
+    assert(graph.innerHTML.includes('Expanded AST'));
+    assert(graph.innerHTML.includes('Hook expansion'));
+    assert(graph.innerHTML.includes('Resolved method'));
+    assert(!graph.innerHTML.includes('class="svg-id"'));
+    for (let i = 0; i < rows.length; i++)
+      for (const other of rows.slice(i + 1)) {
+        const row = rows[i];
+        assert(
+          row.x + row.width <= other.x ||
+            other.x + other.width <= row.x ||
+            row.y + row.height <= other.y ||
+            other.y + other.height <= row.y,
+        );
+      }
+    model.types.set(7, 'Int32 | String');
+    const later = render();
+    assert.deepEqual(geometry(rows), geometry(later));
+    assert(later.find((row) => row.id === 7).html.includes('Int32 | String'));
+  } finally {
+    globalThis.document = original;
+    setLocale('en');
   }
 });
 

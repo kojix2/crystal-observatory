@@ -93,12 +93,9 @@ function recordedTypeWidths(trace) {
   return widths;
 }
 
-export function renderASTCard(
-  row,
-  { trace, state, selected, collapsed, x, y, availableWidth, visit },
-) {
+export function measureASTCard(row, { trace, state, collapsed, availableWidth }) {
   const { node, reference, edge } = row;
-  const { family, type, changed } = state;
+  const { family, type } = state;
   const branchCount =
     (node.children?.length || 0) +
     (node.targets?.length || 0) +
@@ -139,8 +136,48 @@ export function renderASTCard(
   const typeBudget = Math.floor(
     (width - inset - 12 - countWidth - (countText ? 12 : 0)) / letterWidth,
   );
-  const label = `${t('graph.node', { kind: node.kind, type: typeText || type, id: node.id })}${node.label ? ` · ${node.label}` : ''}${folded ? ` · ${countText}` : ''}${reference ? ` · ${t('ast.reference')}` : ''}`;
+  const label = `${t('graph.node', { kind: node.kind, type: showType ? typeText || type : '', id: node.id })}${node.label ? ` · ${node.label}` : ''}${folded ? ` · ${countText}` : ''}${reference ? ` · ${t('ast.reference')}` : ''}`;
   const tooltip = `${label}\n${t(`ast.family.${family}`)}`;
+  return {
+    width,
+    height,
+    inset,
+    kind,
+    displayedValue,
+    displayedCount,
+    typeText,
+    typeBudget,
+    reserveType,
+    countText,
+    hasKids,
+    folded,
+    label,
+    tooltip,
+  };
+}
+
+export function renderASTCard(
+  row,
+  { trace, state, selected, collapsed, x, y, availableWidth, visit, metrics, layout = 'cards' },
+) {
+  const { node, reference } = row;
+  const { family, type, changed } = state;
+  const {
+    width,
+    height,
+    inset,
+    kind,
+    displayedValue,
+    displayedCount,
+    typeText,
+    typeBudget,
+    reserveType,
+    countText,
+    hasKids,
+    folded,
+    label,
+    tooltip,
+  } = metrics || measureASTCard(row, { trace, state, collapsed, availableWidth });
   const fold = hasKids
     ? `<g class="card-fold" data-fold="${node.id}" tabindex="0" role="button" aria-expanded="${!folded}" aria-label="${esc(t(folded ? 'ast.expandNode' : 'ast.collapseNode', { id: node.id }))}" transform="translate(17 14)"><rect x="-10" y="-10" width="20" height="20" rx="3"/><text text-anchor="middle" y="4">${folded ? '+' : '−'}</text></g>`
     : '';
@@ -150,6 +187,7 @@ export function renderASTCard(
   const dispatch = visit
     ? visitDecoration(node.id, visit, { width, height, reference })
     : { classes: '', attributes: '', shape: '' };
-  const html = `<g class="node card-node ${node.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(tooltip)}</title><rect class="tile" width="${width}" height="${height}" rx="4"/><rect class="accent" width="3" height="${height}" rx="1"/>${fold}<text x="${inset}" y="18" class="svg-card-heading" xml:space="preserve"><tspan class="svg-kind">${esc(kind)}</tspan>${displayedValue ? `<tspan class="svg-card-value" dx="10">${esc(displayedValue)}</tspan>` : ''}</text>${mark}${typeText ? `<text x="${inset}" y="35" class="${type ? 'svg-type' : 'svg-card-pending'}">${esc(fitText(typeText, typeBudget))}</text>` : ''}${countText ? `<text x="${reserveType ? width - 12 : inset}" y="35"${reserveType ? ' text-anchor="end"' : ''} class="svg-card-count">${esc(displayedCount)}</text>` : ''}${dispatch.shape}</g>`;
+  const nodeClass = layout === 'mindmap' ? 'mindmap-node card-node' : 'card-node';
+  const html = `<g class="node ${nodeClass} ${node.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(tooltip)}</title><rect class="tile" width="${width}" height="${height}" rx="4"/><rect class="accent" width="3" height="${height}" rx="1"/>${fold}<text x="${inset}" y="18" class="svg-card-heading" xml:space="preserve"><tspan class="svg-kind">${esc(kind)}</tspan>${displayedValue ? `<tspan class="svg-card-value" dx="10">${esc(displayedValue)}</tspan>` : ''}</text>${mark}${typeText ? `<text x="${inset}" y="35" class="${type ? 'svg-type' : 'svg-card-pending'}">${esc(fitText(typeText, typeBudget))}</text>` : ''}${countText ? `<text x="${reserveType ? width - 12 : inset}" y="35"${reserveType ? ' text-anchor="end"' : ''} class="svg-card-count">${esc(displayedCount)}</text>` : ''}${dispatch.shape}</g>`;
   return { html, width, height, right: dispatch.right || 0 };
 }
