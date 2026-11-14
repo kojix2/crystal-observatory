@@ -151,14 +151,12 @@ test('comparison widths preserve readable panes, valid ratios, and the outer col
   assert.deepEqual(widths, minimums);
   for (const direction of [-10000, 10000]) {
     const weights = moveDivider(widths, 0, direction, minimums);
-    assert.deepEqual(
-      paneWidths(
-        minimums.reduce((sum, value) => sum + value, 0),
-        weights,
-        minimums,
-      ),
+    const resized = paneWidths(
+      minimums.reduce((sum, value) => sum + value, 0),
+      weights,
       minimums,
     );
+    resized.forEach((width, i) => assert(Math.abs(width - minimums[i]) < 1e-8));
   }
 });
 

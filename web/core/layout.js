@@ -1,5 +1,5 @@
-export const DEFAULT_PANES = [34, 39, 27];
-export const MIN_PANES = [310, 360, 270];
+export const DEFAULT_PANES = [26, 45, 29];
+export const MIN_PANES = [260, 360, 270];
 export const PANE_GAP = 6;
 const COLLAPSED_WIDTH = 32;
 const sum = (values) => values.reduce((total, value) => total + value, 0);

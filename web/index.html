@@ -21,6 +21,7 @@
     <select id="language" data-i18n-aria="language" data-i18n-title="language"><option value="en">EN</option><option value="ja">JA</option><option value="es">ES</option><option value="zh-CN">中文</option><option value="fr">FR</option><option value="de">DE</option><option value="ru">RU</option></select>
     <a class="quiet icon-button" href="https://github.com/kojix2/crystal-observatory" target="_blank" rel="noreferrer" data-i18n-title="github" data-i18n-aria="github" title="GitHub repository" aria-label="GitHub repository"><svg data-icon="github"></svg></a>
     <button id="settingsButton" class="quiet icon-button" data-i18n-title="settings.title" data-i18n-aria="settings.title" aria-haspopup="dialog" aria-controls="settings"><svg data-icon="settings"></svg></button>
+    <button id="hide-navigation" type="button" class="quiet icon-button" data-i18n-title="learning.navigation.hide" data-i18n-aria="learning.navigation.hide" aria-controls="learning-navigation"><svg data-icon="collapse"></svg></button>
     <button type="button" class="quiet icon-button mobile-only" data-learning-view="api" aria-controls="learning-panel" data-i18n-title="learning.api" data-i18n-aria="learning.api"><svg data-icon="api"></svg></button>
     <button type="button" class="quiet icon-button mobile-only" data-learning-view="observatory" aria-controls="app" data-i18n-title="learning.observatory" data-i18n-aria="learning.observatory"><svg data-icon="observatory"></svg></button>
   </div>
@@ -64,7 +65,7 @@
     </section>
     <div class="splitter" id="timeline-splitter" role="separator" tabindex="0" data-i18n-aria="split.trace" aria-orientation="vertical" aria-controls="side-panel graph-panel"></div>
     <article class="panel graph-panel" id="graph-panel" tabindex="-1">
-      <div class="panel-head"><div class="tabs" id="view-tabs" role="tablist" data-i18n-aria="views">
+      <div class="panel-head"><button id="show-navigation-app" type="button" class="quiet icon-button" data-i18n-title="learning.navigation.show" data-i18n-aria="learning.navigation.show" aria-controls="learning-navigation"><svg data-icon="collapse"></svg></button><div class="tabs" id="view-tabs" role="tablist" data-i18n-aria="views">
         <button class="active" id="tab-source" data-view="source" role="tab" aria-selected="true" aria-controls="source-view" data-i18n="source">Source</button>
         <button id="tab-tokens" data-view="tokens" role="tab" aria-controls="tokens-view" aria-selected="false">Tokens</button>
         <button id="tab-ast" data-view="ast" role="tab" aria-selected="false" aria-controls="ast-view">AST</button>
@@ -218,6 +219,7 @@
 </nav>
 
 <main id="learning-panel" class="learning-panel" hidden>
+  <button id="show-navigation-learning" type="button" class="quiet icon-button" data-i18n-title="learning.navigation.show" data-i18n-aria="learning.navigation.show" aria-controls="learning-navigation"><svg data-icon="collapse"></svg></button>
   <div class="learning-inner">
     <header class="learning-heading"><h2 id="learning-title" tabindex="-1"></h2><p id="learning-intro"></p></header>
     <div id="learning-search-tools" class="learning-search-tools" hidden><input id="learning-search" type="search" data-i18n-placeholder="learning.search" data-i18n-aria="learning.search"><span id="learning-count" class="subtle" aria-live="polite"></span></div>

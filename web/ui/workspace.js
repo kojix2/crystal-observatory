@@ -33,6 +33,7 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
   });
   // Retain the saved proportions of History, observations and Details.
   const key = 'crystal-observatory.workspace.v5';
+  const oldDefault = [34, 39, 27];
   const comparisonKey = 'crystal-observatory.comparison.v1';
   let weights = [...DEFAULT_PANES],
     detailRatio = 0.42,
@@ -44,7 +45,10 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
       saved ||
       JSON.parse(localStorage.getItem('crystal-observatory.workspace.v4')) ||
       JSON.parse(localStorage.getItem('crystal-observatory.workspace.v3'));
-    weights = paneWeights(saved?.weights);
+    const storedWeights = paneWeights(saved?.weights);
+    weights = storedWeights.every((value, i) => Math.abs(value - oldDefault[i]) < 0.01)
+      ? [...DEFAULT_PANES]
+      : storedWeights;
     if (Number.isFinite(details?.detailRatio) && details.detailRatio > 0 && details.detailRatio < 1)
       detailRatio = details.detailRatio;
     app.classList.toggle('trace-collapsed', saved?.collapsed === true);

@@ -61,6 +61,9 @@ The left side panel has **Files** and **Compilation trace** tabs. It starts in
 The source editor and observation views stay visible in the center while using
 either side tab. Each template button opens its bundled recording and source.
 Language, GitHub, and Settings are at the bottom of the left sidebar.
+The button below Settings hides the icon sidebar. Restore it from the button
+before the observation tabs, or from the upper-left corner of a learning page.
+This choice is saved in the browser.
 
 The file menu contains **New source**, **Open source** (`.cr` / UTF-8),
 **Save source**, and separate **Open trace** / **Save trace** actions for JSON or
@@ -189,7 +192,8 @@ preceding entries. Missing observation metadata is distinguished from an empty
 history prefix. Older and syntax-only traces remain usable.
 
 Node details keeps the node kind, expression type and source location above
-**Overview**, **Activities** and **IR** tabs. Code initially shows three lines;
+**Overview**, **Activities** and **IR** tabs. The kind uses a small card with
+the same family color as the AST. Code initially shows three lines;
 **Show all … lines** expands the full recorded node text, including generated code.
 **Open in Source** reveals its location in the source editor when that file is loaded.
 Overview shows declarations, type changes, expansion and resolved calls recorded
@@ -300,7 +304,8 @@ playback, the snapshot and branch folds; the chosen layout is saved in the brows
 
 The desktop workspace uses three columns: the **Files / Compilation trace** side
 panel, the selected observation (AST, source, IR or output), and node/operation
-details. Drag the column dividers to resize them, or collapse the side panel
+details. The Files / Compilation trace panel starts narrower. Drag the column
+dividers to resize them, or collapse the side panel
 with its header button. Widths and the
 collapsed state are saved in the browser. Select a stage heading in Compilation trace to
 jump to its first recorded visit (or its start when no visits were recorded);

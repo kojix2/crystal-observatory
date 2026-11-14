@@ -2,6 +2,7 @@ import { t } from '../i18n/index.js';
 import { $ } from './dom.js';
 import { icon, summaryLabel } from './icons.js';
 import { renderCrystal } from '../core/crystal-highlight.js';
+import { astFamily } from '../core/ast-colors.js';
 import { renderLLVM } from '../core/llvm-highlight.js';
 import { sourceChange, crystalDiffHTML } from '../core/code-diff.js';
 import {
@@ -37,8 +38,17 @@ export function renderInspector(
     nodeEvents = node ? model.eventsFor(selected) : [];
   $('node-id').textContent = node ? `#${node.id}` : '—';
   $('node-id').hidden = !node;
-  $('node-title').textContent = node?.kind || (model.trace.mode === 'empty' ? '' : t('node.empty'));
-  $('node-title').hidden = !node && model.trace.mode === 'empty';
+  const nodeTitle = $('node-title');
+  nodeTitle.textContent = node?.kind || (model.trace.mode === 'empty' ? '' : t('node.empty'));
+  nodeTitle.hidden = !node && model.trace.mode === 'empty';
+  if (node) {
+    const family = astFamily(node.kind);
+    nodeTitle.dataset.nodeFamily = family;
+    nodeTitle.title = t(`ast.family.${family}`);
+  } else {
+    delete nodeTitle.dataset.nodeFamily;
+    nodeTitle.title = '';
+  }
   $('node-location').textContent = node?.line
     ? `${node.filename || model.trace.filename}:${node.line}:${node.column}`
     : '';

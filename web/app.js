@@ -6,10 +6,12 @@ import { mountIcons } from './ui/icons.js';
 import { resetTokenColumns } from './ui/tokens.js';
 import { setupLearningNavigation } from './ui/learning-navigation.js';
 import { setupFileWorkspace } from './ui/file-workspace.js';
+import { setupNavigationRail } from './ui/navigation-rail.js';
 
 mountIcons();
 setupSettings();
 setupLanguage();
+const rail = setupNavigationRail();
 const app = new Application();
 app.trace.workspace = setupWorkspace(
   () => {
@@ -19,6 +21,7 @@ app.trace.workspace = setupWorkspace(
   },
   {
     onReset: () => {
+      rail.show();
       app.trace.endComparison();
       resetTokenColumns();
     },
