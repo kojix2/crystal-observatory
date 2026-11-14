@@ -38,6 +38,8 @@ export function renderInspector(
     nodeEvents = node ? model.eventsFor(selected) : [];
   $('node-id').textContent = node ? `#${node.id}` : '—';
   $('node-id').hidden = !node;
+  $('node-id').title = node ? t('count.events', { count: nodeEvents.length.toLocaleString() }) : '';
+  $('node-id').ariaLabel = node ? `${$('node-id').textContent}, ${$('node-id').title}` : '';
   const nodeTitle = $('node-title');
   nodeTitle.textContent = node?.kind || (model.trace.mode === 'empty' ? '' : t('node.empty'));
   nodeTitle.hidden = !node && model.trace.mode === 'empty';
@@ -52,14 +54,12 @@ export function renderInspector(
   $('node-location').textContent = node?.line
     ? `${node.filename || model.trace.filename}:${node.line}:${node.column}`
     : '';
-  $('node-summary').textContent = node
-    ? t('count.events', { count: nodeEvents.length.toLocaleString() })
-    : '';
-  $('node-facts').hidden = !node;
+  $('node-facts').hidden = !node?.line;
   $('node-source').hidden = !node;
   $('node-type-badge').hidden = !node;
   $('node-type').textContent = model.types.get(selected) || t('unknown');
   $('node-type-at').textContent = model.index >= 0 ? t('node.typeAt', { index: model.index }) : '';
+  $('node-type').title = $('node-type-at').textContent;
   const lines = (node?.text || '—').split('\n');
   const renderCode = () => {
     const expanded = $('node-expand-code').ariaExpanded === 'true';
@@ -78,6 +78,7 @@ export function renderInspector(
   };
   $('node-open-source').disabled =
     !node?.line || Boolean(node.filename && node.filename !== model.trace.filename);
+  $('node-open-source').hidden = $('node-open-source').disabled;
   $('node-open-source').title = $('node-open-source').disabled ? t('node.sourceUnavailable') : '';
   $('node-open-source').onclick = () => onSource(node);
   $('node-location').title = $('node-location').textContent;

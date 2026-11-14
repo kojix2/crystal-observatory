@@ -192,8 +192,9 @@ preceding entries. Missing observation metadata is distinguished from an empty
 history prefix. Older and syntax-only traces remain usable.
 
 Node details keeps the node kind, expression type and source location above
-**Overview**, **Activities** and **IR** tabs. The kind uses a small card with
-the same family color as the AST. Code initially shows three lines;
+**Overview**, **Activities** and **IR** tabs. A small square beside the kind
+uses the same family color as the AST. Hover the node ID for its event count
+or the type for its recording position. Code initially shows three lines;
 **Show all … lines** expands the full recorded node text, including generated code.
 **Open in Source** reveals its location in the source editor when that file is loaded.
 Overview shows declarations, type changes, expansion and resolved calls recorded
