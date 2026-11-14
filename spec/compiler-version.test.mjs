@@ -21,14 +21,11 @@ test('the footer follows recorded compiler and LLVM versions independently of th
   };
   assert.equal(
     compilerVersionSummary(trace),
-    'Crystal 1.22.2 + browser-crystal WASI/EH patches · LLVM 20.1.8 · --prelude empty · schema 1',
+    'Crystal 1.22.2 + browser-crystal WASI/EH patches · LLVM 20.1.8 · --prelude empty',
   );
   trace.compiler_version = '2.3.4';
   trace.llvm_version = '24.0.1';
-  assert.equal(
-    compilerVersionSummary(trace),
-    'Crystal 2.3.4 · LLVM 24.0.1 · --prelude empty · schema 1',
-  );
+  assert.equal(compilerVersionSummary(trace), 'Crystal 2.3.4 · LLVM 24.0.1 · --prelude empty');
 });
 
 test('syntax recordings retain their development version and omit unavailable LLVM metadata', () => {
@@ -40,7 +37,7 @@ test('syntax recordings retain their development version and omit unavailable LL
       host_compiler_version: '1.22.2',
       llvm_version: '',
     }),
-    'Crystal 1.23.0-dev · schema 1',
+    'Crystal 1.23.0-dev',
   );
   assert.equal(compilerVersionSummary({ mode: 'syntax', schema_version: 1 }), '');
 });

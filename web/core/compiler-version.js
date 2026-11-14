@@ -8,7 +8,6 @@ export function compilerVersionSummary(trace) {
   if (typeof trace.llvm_version === 'string' && trace.llvm_version)
     parts.push(`LLVM ${trace.llvm_version}`);
   if (trace.mode === 'full' && trace.prelude) parts.push(`--prelude ${trace.prelude}`);
-  if (parts.length) parts.push(`schema ${trace.schema_version}`);
   return parts.join(' · ');
 }
 
