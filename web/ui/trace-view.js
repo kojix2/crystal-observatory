@@ -89,7 +89,8 @@ export class TraceView {
     $('follow').checked = true;
     $('snapshot').replaceChildren(...trace.snapshots.map((item, i) => new Option(item.name, i)));
     $('scrubber').max = Math.max(0, trace.events.length - 1);
-    for (const id of ['play', 'scrubber', 'playback-options']) $(id).disabled = !trace.events.length;
+    for (const id of ['play', 'scrubber', 'playback-options'])
+      $(id).disabled = !trace.events.length;
     text('meta', () =>
       t('count.trace', { events: trace.events.length.toLocaleString(), nodes: trace.nodes.length }),
     );

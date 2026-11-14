@@ -238,9 +238,7 @@ kbd+kbd { margin-left:2px; }
 .visitor-ball { cursor:help; }
 .visitor-ball-body { fill:var(--visitor-ink,var(--ink)); stroke:var(--paper); stroke-width:1.5; vector-effect:non-scaling-stroke; }
 .visitor-ball-letter { fill:var(--paper); font-weight:700; text-anchor:middle; pointer-events:none; }
-.visitor-badge { display:inline-flex; width:26px; height:26px; flex:none; align-self:flex-start; }
-.visitor-badge svg { width:26px; height:26px; overflow:visible; }
-.visitor-badge text { font-family:var(--mono); }
+.visitor-badge { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; flex:none; align-self:flex-start; border:1.5px solid var(--paper); border-radius:50%; background:var(--visitor-ink,var(--ink)); color:var(--paper); font:700 15px/1 var(--mono); }
 .visitor-ball-waiting .visitor-ball-body { fill:var(--paper); stroke:var(--visitor-ink,var(--ink)); stroke-width:1; }
 .visitor-ball-waiting .visitor-ball-letter { fill:var(--visitor-ink,var(--ink)); }
 .visit-leave .visitor-ball-current { opacity:.8; }
