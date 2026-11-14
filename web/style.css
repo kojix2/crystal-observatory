@@ -110,6 +110,8 @@ kbd+kbd { margin-left:2px; }
 .navigation-hidden .learning-inner { padding-left:48px; }
 .learning-navigation button { position:relative; display:flex; align-items:center; justify-content:center; flex:0 0 44px; width:44px; height:44px; padding:0; border:0; border-radius:5px; background:transparent; color:var(--muted); }
 .learning-navigation button:hover { color:var(--ink); background:var(--soft-2); }
+.learning-navigation .icon-button { flex-basis:44px; width:44px; height:44px; }
+.learning-navigation .mobile-only { display:none; }
 .learning-navigation [aria-current="page"] { color:var(--type); background:var(--selection); }
 .learning-navigation [aria-current="page"]::before { content:""; position:absolute; left:-5px; top:10px; bottom:10px; width:3px; border-radius:0 2px 2px 0; background:var(--type); }
 .learning-navigation-divider { flex:0 0 1px; width:24px; margin:2px 0; background:var(--line); }
