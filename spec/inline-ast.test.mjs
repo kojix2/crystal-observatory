@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { layoutInlineAST, inlineBranch } from '../web/core/inline-ast.js';
 import { flattenAST, TraceModel } from '../web/core/trace-model.js';
 import { renderGraph } from '../web/ui/graphs.js';
+import { measureASTCard, renderASTCard } from '../web/ui/ast-cards.js';
 import { setLocale } from '../web/i18n/index.js';
 
 const node = (id, children = [], extra = {}) => ({
@@ -181,6 +182,91 @@ test('cross-line connections stay clear of cards and enter sibling cards equally
         'siblings connect from below, including after wrapping',
       );
   }
+});
+
+test('compact expression markers preserve children, type observations, and folding', () => {
+  const snapshot = {
+    roots: [1],
+    nodes: [node(1, [2, 3], { kind: 'Expressions', inferred_type: 'Int32' }), node(2), node(3)],
+  };
+  const trace = { nodes: snapshot.nodes, snapshots: [snapshot], events: [] };
+  const collapsed = new Set();
+  const state = { family: 'structure', type: '' };
+  const measure = (row) =>
+    measureASTCard(row, { trace, state, collapsed, availableWidth: 250, layout: 'inline' });
+  const layout = layoutInlineAST(snapshot, collapsed, measure, 600);
+  assert.deepEqual(topology(layout.rows), topology(flattenAST(snapshot)));
+  assert.equal(layout.rows[0].width, 64);
+  assert.equal(layout.rows[0].height, 24);
+  const marker = renderASTCard(layout.rows[0], {
+    trace,
+    state,
+    collapsed,
+    metrics: layout.rows[0].metrics,
+    layout: 'inline',
+    x: 0,
+    y: 0,
+  }).html;
+  assert(marker.includes('inline-structure'));
+  assert(marker.includes('Expressions'));
+  assert(marker.includes('aria-expanded="true"'));
+  assert(!marker.includes('Int32'));
+  assert(!marker.includes('class="svg-type"'));
+  state.type = 'Int32';
+  assert.equal(measure(layout.rows[0]).width, 64);
+  collapsed.add(1);
+  const folded = layoutInlineAST(snapshot, collapsed, measure, 600);
+  assert.equal(folded.rows.length, 1);
+  assert.equal(folded.rows[0].metrics.compactCount, '2');
+});
+
+test('nested block frames preserve topology and contain body links without long wires', () => {
+  const at = (line, column = 1) => ({ filename: 'sample.cr', line, column });
+  const snapshot = {
+    roots: [1],
+    nodes: [
+      node(1, [2], at(1)),
+      node(2, [3, 4], { ...at(1), kind: 'Block' }),
+      node(3, [], { ...at(1), kind: 'Var' }),
+      node(4, [5, 9], { ...at(2, 3), kind: 'Expressions' }),
+      node(5, [6], at(2, 3)),
+      node(6, [7, 8], { ...at(2, 3), kind: 'Block' }),
+      node(7, [], { ...at(2, 3), kind: 'Var' }),
+      node(8, [], { ...at(3, 5), kind: 'StringInterpolation' }),
+      node(9, [], at(4, 3)),
+    ],
+  };
+  const original = structuredClone(snapshot);
+  const trace = { nodes: snapshot.nodes, snapshots: [snapshot], events: [] };
+  const measure = (row, availableWidth) =>
+    measureASTCard(row, {
+      trace,
+      state: { family: 'structure', type: '' },
+      collapsed: new Set(),
+      availableWidth,
+      layout: 'inline',
+    });
+  for (const width of [950, 600, 320]) {
+    const layout = layoutInlineAST(snapshot, new Set(), measure, width, { filename: 'sample.cr' });
+    assert.deepEqual(topology(layout.rows), topology(flattenAST(snapshot)));
+    assert.equal(layout.scopes.length, 2);
+    assert.equal(layout.width, width);
+    for (const [index, row] of layout.rows.entries()) {
+      if (row.scope < 0) continue;
+      const frame = layout.scopes.find((frame) => frame.index === row.scope);
+      assert(frame.x < row.x && frame.y < row.y);
+      assert(frame.x + frame.width > row.x + row.width);
+      assert(frame.y + frame.height > row.y + row.height);
+      if (row.scopeEdge) assert.equal(inlineBranch(layout.rows, index), null);
+    }
+    const outer = layout.scopes[0],
+      inner = layout.scopes[1];
+    assert(outer.x < inner.x && outer.y < inner.y);
+    assert(outer.x + outer.width > inner.x + inner.width);
+    assert(outer.y + outer.height > inner.y + inner.height);
+    assert(layout.scopes.every((frame) => frame.x + frame.width <= layout.width));
+  }
+  assert.deepEqual(snapshot, original);
 });
 
 test('foreign and structural nodes do not create enormous source-line gaps', () => {
@@ -366,6 +452,12 @@ test('inline rendering preserves card details, edge styles, selection, and foldi
     assert(graph.innerHTML.includes('Int32'));
     assert(graph.innerHTML.includes('aria-expanded="true"'));
     assert(graph.innerHTML.includes('node inline-node card-node selected'));
+    assert(graph.innerHTML.includes('data-focus="true"'));
+    const wires = [
+      ...graph.innerHTML.matchAll(/data-edge-index="(\d+)" data-related="(true|false)"/g),
+    ];
+    assert.equal(wires.find(([, index]) => index === '1')[2], 'true');
+    assert(wires.some(([, , related]) => related === 'false'));
     listeners.get('2/click')({ target: { dataset: {} } });
     assert.deepEqual(selected, [2]);
     const event = { key: '-', target: { dataset: {} }, preventDefault() {}, stopPropagation() {} };

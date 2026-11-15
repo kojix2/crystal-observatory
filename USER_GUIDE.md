@@ -263,6 +263,12 @@ use dashed lanes in the same gutter. Overlapping branches get separate lanes,
 and the gutter and space below cards grow when more lanes are needed. Sibling
 cards on one source line share bottom connections even when wrapped. A thin
 background gap at crossings distinguishes passing wires from shared connectors.
+Expressions appear as small **≡** markers; their children remain visible, and the
+marker supports the same selection, tooltip and folding controls as a card.
+Blocks start their own indented section inside a frame. The frame shows the
+relationship to the body, replacing its long connecting wire. Selecting a node
+emphasizes its parent path and direct child links while other wires become faint.
+Click the background or press **Escape** to show all wires at full contrast.
 The same folding, selection and playback controls work in both card layouts.
 The mind map uses the same node labels, type rules, reference markers, and folded
 branch counts. Its boxes follow their content, and labels on special branches

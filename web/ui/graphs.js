@@ -79,6 +79,13 @@ export function renderGraph(
     return `<g class="node ${n.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''}" data-node="${n.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(t(`ast.family.${family}`))}</title><rect class="tile" width="${width}" height="${nodeHeight}" rx="2"/><rect class="accent" width="3" height="${nodeHeight}" rx="1"/><text x="13" y="20" class="svg-kind">${esc(brief(n.kind, headingLength))}</text>${activities.length ? `<circle class="svg-dot" cx="${markX - 3}" cy="15.5" r="2.5"/>` : ''}<text x="${width - 12}" y="20" text-anchor="end" class="svg-id">#${n.id}</text><text x="13" y="43" class="svg-code">${esc(brief(n.label, codeLength))}</text><text x="13" y="65" class="svg-type">${esc(brief(type || '—', codeLength))}</text></g>`;
   }
   function wireGraph(container) {
+    const inline = container.querySelector('.inline-svg');
+    inline?.addEventListener('click', (event) => {
+      if (!event.target.closest('[data-node]')) inline.dataset.focus = 'false';
+    });
+    inline?.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') inline.dataset.focus = 'false';
+    });
     container.querySelectorAll('[data-node]').forEach((el) => {
       const activate = (ev) => {
         if (ev.target.dataset.fold) return;
@@ -169,11 +176,41 @@ export function renderGraph(
             state: nodeState(row.node),
             collapsed,
             availableWidth: limit,
+            layout: 'inline',
           }),
         graph.clientWidth || 600,
         { filename: model.trace.filename, source: model.trace.source },
       );
     const branches = new Map();
+    const related = new Set(),
+      focusedScopes = new Set(),
+      children = layout.rows.map(() => []);
+    layout.rows.forEach((row, index) => {
+      if (row.parent >= 0) children[row.parent].push(index);
+    });
+    let hasFocus = false;
+    layout.rows.forEach((row, index) => {
+      if (row.node.id !== selected) return;
+      hasFocus = true;
+      for (let i = index; i >= 0; i = layout.rows[i].parent) related.add(i);
+      const pending = [...children[index]];
+      while (pending.length) {
+        const i = pending.pop();
+        related.add(i);
+        if (layout.rows[i].node.kind === 'Expressions') pending.push(...children[i]);
+      }
+      for (let scope = row.scope; scope >= 0; scope = layout.rows[scope].outerScope)
+        focusedScopes.add(scope);
+    });
+    const scopes = layout.scopes
+      .map((frame) => {
+        const contained = layout.rows
+          .map((row, index) => (row.scopeEdge && row.parent === frame.index ? index : -1))
+          .filter((index) => index >= 0)
+          .join(' ');
+        return `<rect class="inline-block-frame" data-block-node="${frame.node}" data-scope-index="${frame.index}" data-contained-edges="${contained}" data-related="${focusedScopes.has(frame.index)}" x="${frame.x}" y="${frame.y}" width="${frame.width}" height="${frame.height}" rx="6" aria-hidden="true"/>`;
+      })
+      .join('');
     let nodes = '',
       width = layout.width;
     const headings = layout.headings
@@ -194,14 +231,15 @@ export function renderGraph(
       })
       .join('');
     for (const [index, row] of layout.rows.entries()) {
-      if (row.parent >= 0) {
+      if (row.parent >= 0 && !row.scopeEdge) {
         const label = row.edge === 'child' ? '' : t(`ast.edge.${row.edge}`);
         const key = `${row.parent}:${row.edge}`;
-        if (!branches.has(key)) branches.set(key, { halos: '', paths: '' });
+        if (!branches.has(key)) branches.set(key, { halos: '', paths: '', related: false });
         const branch = branches.get(key),
           path = inlineBranch(layout.rows, index);
+        branch.related ||= related.has(index);
         branch.halos += `<path class="inline-edge-halo" d="${path}" aria-hidden="true"/>`;
-        branch.paths += `<path class="edge ${row.edge}" d="${path}" data-edge-index="${index}"${label ? ` aria-label="${esc(label)}"` : ''}>${label ? `<title>${esc(label)}</title>` : ''}</path>`;
+        branch.paths += `<path class="edge ${row.edge}" d="${path}" data-edge-index="${index}" data-related="${related.has(index)}"${label ? ` aria-label="${esc(label)}"` : ''}>${label ? `<title>${esc(label)}</title>` : ''}</path>`;
       }
       const card = renderASTCard(row, {
         trace: model.trace,
@@ -220,9 +258,10 @@ export function renderGraph(
     // Draw each branch's halo first, preserving its sibling junctions while
     // separating crossings with unrelated branches drawn underneath it.
     const edges = [...branches.values()]
+      .sort((a, b) => Number(a.related) - Number(b.related))
       .map(({ halos, paths }) => `<g>${halos}${paths}</g>`)
       .join('');
-    graph.innerHTML = `<svg class="ast-svg inline-svg" xmlns="http://www.w3.org/2000/svg" width="${width}" height="${layout.height}" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.inline'))}">${edges}${headings}${nodes}</svg>`;
+    graph.innerHTML = `<svg class="ast-svg inline-svg" xmlns="http://www.w3.org/2000/svg" width="${width}" height="${layout.height}" data-focus="${hasFocus}" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.inline'))}">${scopes}${edges}${headings}${nodes}</svg>`;
   }
   function renderMindmap(s) {
     const presentations = [];

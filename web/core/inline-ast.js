@@ -31,9 +31,14 @@ function routeRows(rows) {
   for (const [index, row] of rows.entries()) {
     if (row.parent < 0) continue;
     const parent = rows[row.parent];
+    row.scopeEdge =
+      parent.node.kind === 'Block' &&
+      !parent.reference &&
+      row.edge === 'child' &&
+      (row.key !== parent.key || row.node.kind === 'Expressions');
     row.directLink =
       parent.lineIndex === row.lineIndex && index === row.parent + 1 && row.siblingCount === 1;
-    if (parent.lineIndex === row.lineIndex && !row.directLink)
+    if (!row.scopeEdge && parent.lineIndex === row.lineIndex && !row.directLink)
       localBranches.add(`${row.parent}:${row.edge}:${row.key}`);
   }
   const bus = (line, key, start, end) => {
@@ -46,7 +51,7 @@ function routeRows(rows) {
     return range;
   };
   for (const row of rows) {
-    if (row.parent < 0 || row.directLink) continue;
+    if (row.parent < 0 || row.directLink || row.scopeEdge) continue;
     const parent = rows[row.parent],
       key = `${row.parent}:${row.edge}`,
       fromX = parent.x + parent.width / 2 + (bottomPorts[row.edge] || 0),
@@ -74,6 +79,49 @@ function routeRows(rows) {
     gaps.set(line, Math.max(0, count - 3) * trackGap);
   }
   return { gutter: gutter + Math.max(0, tracks - 3) * trackGap, gaps };
+}
+
+function scopeFrames(rows) {
+  const frames = new Map();
+  rows.forEach((row, index) => {
+    if (row.scope === index)
+      frames.set(index, {
+        index,
+        node: row.node.id,
+        parent: row.outerScope,
+        left: Infinity,
+        top: Infinity,
+        right: 0,
+        bottom: 0,
+      });
+    const frame = frames.get(row.scope);
+    if (frame) {
+      frame.left = Math.min(frame.left, row.x);
+      frame.top = Math.min(frame.top, row.lineTop);
+      frame.right = Math.max(frame.right, row.x + row.width);
+      frame.bottom = Math.max(frame.bottom, row.lineBottom);
+    }
+  });
+  for (const frame of [...frames.values()].reverse()) {
+    frame.left -= 8;
+    frame.top -= 8;
+    frame.right += 8;
+    frame.bottom += 8;
+    const parent = frames.get(frame.parent);
+    if (parent) {
+      parent.left = Math.min(parent.left, frame.left);
+      parent.top = Math.min(parent.top, frame.top);
+      parent.right = Math.max(parent.right, frame.right);
+      parent.bottom = Math.max(parent.bottom, frame.bottom);
+    }
+  }
+  return [...frames.values()].map(({ left, top, right, bottom, ...frame }) => ({
+    ...frame,
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  }));
 }
 
 function position(row, filename) {
@@ -106,6 +154,23 @@ export function layoutInlineAST(
   const limit = Math.max(96, Math.min(1100, availableWidth - 72));
   const maxIndent = Math.min(96, Math.floor(limit / 5));
   const flat = flattenAST(snapshot, collapsed);
+  const ends = flat.map((_, i) => i);
+  flat.forEach((row, index) => {
+    const parent = flat[row.parent];
+    row.scope = parent?.scope ?? -1;
+    row.scopeDepth = parent?.scopeDepth || 0;
+    row.closingScopes = 0;
+    if (row.node.kind === 'Block' && !row.reference) {
+      row.outerScope = row.scope;
+      row.scope = index;
+      row.scopeDepth++;
+    }
+  });
+  for (let i = flat.length - 1; i >= 0; i--)
+    if (flat[i].parent >= 0) ends[flat[i].parent] = Math.max(ends[flat[i].parent], ends[i]);
+  flat.forEach((row, index) => {
+    if (row.scope === index) flat[ends[index]].closingScopes++;
+  });
   let gutterWidth = gutter;
   for (;;) {
     const cardLimit = Math.max(96, limit - gutterWidth - maxIndent);
@@ -144,8 +209,13 @@ export function layoutInlineAST(
       if (previous?.filename === group.filename && group.source && previous.line > 0)
         y += Math.min(2, Math.max(0, group.line - previous.line - 1)) * 10;
       const first = rows[group.indices[0]];
-      const indent = Math.min(maxIndent, (first.column - 1) * 8);
-      const startX = inset + gutterWidth + indent;
+      const startFor = (row) => {
+        const header = row.node.kind === 'Block' && !row.reference;
+        const depth = row.scopeDepth - (header ? 1 : 0);
+        const indent = Math.min(maxIndent, Math.max((first.column - 1) * 8, depth * 16));
+        return inset + gutterWidth + indent + (header ? 8 : 0);
+      };
+      let startX = startFor(first);
       const code = group.source ? sourceLines[group.line - 1] || '' : '';
       headings.push({
         y: y + 12,
@@ -172,13 +242,20 @@ export function layoutInlineAST(
           rows[i].firstInLine = i === current[0];
         }
         lines.push(current);
-        y += height + rowGap;
+        const closing = rows[current.at(-1)].closingScopes;
+        y += height + rowGap + Math.max(0, closing - 3) * 8;
         current = [];
         used = 0;
       };
       for (const index of group.indices) {
         const row = rows[index];
-        if (current.length && startX + used + cardGap + row.width > inset + limit) finish();
+        if (
+          current.length &&
+          (rows[current[0]].scope !== row.scope ||
+            startX + used + cardGap + row.width > inset + limit)
+        )
+          finish();
+        if (!current.length) startX = startFor(row);
         row.x = startX + used + (current.length ? cardGap : 0);
         used += row.width + (current.length ? cardGap : 0);
         current.push(index);
@@ -213,11 +290,20 @@ export function layoutInlineAST(
     }
     for (const heading of headings) heading.y += shifts[heading.lineIndex] || 0;
     const contentRight = Math.max(0, ...rows.map((row) => row.x + row.width));
+    const scopes = scopeFrames(rows);
     return {
       rows,
+      scopes,
       headings,
-      width: Math.max(availableWidth, contentRight + rightInset),
-      height: rows.length ? y + shift : inset * 2,
+      width: Math.max(
+        availableWidth,
+        contentRight + rightInset,
+        ...scopes.map((frame) => frame.x + frame.width + inset),
+      ),
+      height: Math.max(
+        rows.length ? y + shift : inset * 2,
+        ...scopes.map((frame) => frame.y + frame.height + inset),
+      ),
       labelRight: contentRight + 16,
       sourceX: inset + gutterWidth,
     };
@@ -231,6 +317,7 @@ export function layoutInlineAST(
 export function inlineBranch(rows, index) {
   const child = rows[index],
     parent = rows[child.parent];
+  if (child.scopeEdge) return null;
   if (child.directLink)
     return `M${parent.x + parent.width} ${parent.y + parent.height / 2} H${child.x}`;
   const fromX = parent.x + parent.width / 2 + (bottomPorts[child.edge] || 0),

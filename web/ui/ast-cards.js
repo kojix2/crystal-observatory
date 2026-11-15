@@ -93,7 +93,7 @@ function recordedTypeWidths(trace) {
   return widths;
 }
 
-export function measureASTCard(row, { trace, state, collapsed, availableWidth }) {
+export function measureASTCard(row, { trace, state, collapsed, availableWidth, layout }) {
   const { node, reference, edge } = row;
   const { family, type } = state;
   const branchCount =
@@ -125,7 +125,9 @@ export function measureASTCard(row, { trace, state, collapsed, availableWidth })
     340,
     Math.max(96, Math.ceil(inset + kindWidth + markWidth + 12 + (value ? 10 + letterWidth : 0))),
   );
-  const width = Math.max(minimumWidth, Math.min(340, availableWidth, desiredWidth));
+  const minimum =
+    layout === 'inline' ? Math.min(minimumWidth, Math.max(96, availableWidth)) : minimumWidth;
+  const width = Math.max(minimum, Math.min(340, availableWidth, desiredWidth));
   const height = reserveType || folded ? 44 : 28;
   const headingBudget = Math.floor((width - inset - 12 - markWidth) / letterWidth);
   const kind = fitText(node.kind, headingBudget);
@@ -138,9 +140,10 @@ export function measureASTCard(row, { trace, state, collapsed, availableWidth })
   );
   const label = `${t('graph.node', { kind: node.kind, type: showType ? typeText || type : '', id: node.id })}${node.label ? ` · ${node.label}` : ''}${folded ? ` · ${countText}` : ''}${reference ? ` · ${t('ast.reference')}` : ''}`;
   const tooltip = `${label}\n${t(`ast.family.${family}`)}`;
+  const compact = layout === 'inline' && node.kind === 'Expressions';
   return {
-    width,
-    height,
+    width: compact ? (folded ? 60 + String(branchCount).length * letterWidth : 64) : width,
+    height: compact ? 24 : height,
     inset,
     kind,
     displayedValue,
@@ -153,6 +156,8 @@ export function measureASTCard(row, { trace, state, collapsed, availableWidth })
     folded,
     label,
     tooltip,
+    compact,
+    compactCount: compact && folded ? String(branchCount) : '',
   };
 }
 
@@ -177,9 +182,11 @@ export function renderASTCard(
     folded,
     label,
     tooltip,
-  } = metrics || measureASTCard(row, { trace, state, collapsed, availableWidth });
+    compact,
+    compactCount,
+  } = metrics || measureASTCard(row, { trace, state, collapsed, availableWidth, layout });
   const fold = hasKids
-    ? `<g class="card-fold" data-fold="${node.id}" tabindex="0" role="button" aria-expanded="${!folded}" aria-label="${esc(t(folded ? 'ast.expandNode' : 'ast.collapseNode', { id: node.id }))}" transform="translate(17 14)"><rect x="-10" y="-10" width="20" height="20" rx="3"/><text text-anchor="middle" y="4">${folded ? '+' : '−'}</text></g>`
+    ? `<g class="card-fold" data-fold="${node.id}" tabindex="0" role="button" aria-expanded="${!folded}" aria-label="${esc(t(folded ? 'ast.expandNode' : 'ast.collapseNode', { id: node.id }))}" transform="translate(17 ${compact ? 12 : 14})"><rect x="-10" y="-10" width="20" height="20" rx="3"/><text text-anchor="middle" y="4">${folded ? '+' : '−'}</text></g>`
     : '';
   const mark = reference
     ? `<g class="svg-mark" transform="translate(${width - 24} 8)">${icon('reference', { size: 12 })}</g>`
@@ -191,8 +198,12 @@ export function renderASTCard(
     layout === 'mindmap'
       ? 'mindmap-node card-node'
       : layout === 'inline'
-        ? 'inline-node card-node'
+        ? `inline-node card-node${compact ? ' inline-structure' : ''}`
         : 'card-node';
+  if (compact) {
+    const html = `<g class="node ${nodeClass} ${node.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(tooltip)}</title><rect class="tile" width="${width}" height="${height}" rx="6"/>${fold}<text x="${inset}" y="17" class="inline-structure-symbol">≡</text>${compactCount ? `<text class="inline-structure-count" x="${width - 8}" y="16" text-anchor="end">${compactCount}</text>` : ''}${mark}${dispatch.shape}</g>`;
+    return { html, width, height, right: dispatch.right || 0 };
+  }
   const html = `<g class="node ${nodeClass} ${node.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(tooltip)}</title><rect class="tile" width="${width}" height="${height}" rx="4"/><rect class="accent" width="3" height="${height}" rx="1"/>${fold}<text x="${inset}" y="18" class="svg-card-heading" xml:space="preserve"><tspan class="svg-kind">${esc(kind)}</tspan>${displayedValue ? `<tspan class="svg-card-value" dx="10">${esc(displayedValue)}</tspan>` : ''}</text>${mark}${typeText ? `<text x="${inset}" y="35" class="${type ? 'svg-type' : 'svg-card-pending'}">${esc(fitText(typeText, typeBudget))}</text>` : ''}${countText ? `<text x="${reserveType ? width - 12 : inset}" y="35"${reserveType ? ' text-anchor="end"' : ''} class="svg-card-count">${esc(displayedCount)}</text>` : ''}${dispatch.shape}</g>`;
   return { html, width, height, right: dispatch.right || 0 };
 }
