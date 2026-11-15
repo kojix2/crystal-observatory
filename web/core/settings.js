@@ -73,9 +73,20 @@ export const colorGroups = [
 
 export const colorSettings = colorGroups.flatMap((group) => group.colors);
 export const isColor = (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
+export const fontSettings = {
+  editorFontSize: { default: 12, min: 10, max: 24, variable: '--editor-font-size' },
+  irFontSize: { default: 10, min: 8, max: 22, variable: '--ir-font-size' },
+};
+
+export function isFontSize(value, { min, max }) {
+  return Number.isInteger(value) && value >= min && value <= max;
+}
 
 export function normalizeSettings(value) {
   const result = { colors: {}, astColors: value?.astColors !== false };
+  for (const [key, config] of Object.entries(fontSettings)) {
+    result[key] = isFontSize(value?.[key], config) ? value[key] : config.default;
+  }
   for (const { id } of colorSettings) {
     const color = value?.colors?.[id];
     if (isColor(color)) result.colors[id] = color.toLowerCase();

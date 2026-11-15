@@ -13,6 +13,7 @@ export class SourceEditor {
       onChange();
     };
     $('source').onscroll = () => this.scroll();
+    document.addEventListener('source-font-size-change', () => this.scroll());
     $('source').onkeydown = (event) => {
       if (event.key !== 'Tab') return;
       event.preventDefault();

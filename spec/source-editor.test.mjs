@@ -6,6 +6,8 @@ test('a selection made in another view reveals its source line once, preserving 
   const previousDocument = globalThis.document,
     previousWindow = globalThis.window;
   const elements = new Map();
+  const listeners = new Map();
+  let lineHeight = 24;
   const element = (id) => {
     if (!elements.has(id))
       elements.set(id, {
@@ -17,8 +19,14 @@ test('a selection made in another view reveals its source line once, preserving 
       });
     return elements.get(id);
   };
-  globalThis.document = { getElementById: element };
-  globalThis.window = { getComputedStyle: () => ({ lineHeight: '24px', paddingTop: '14px' }) };
+  globalThis.document = {
+    getElementById: element,
+    addEventListener: (type, listener) => listeners.set(type, listener),
+    dispatchEvent: (event) => listeners.get(event.type)?.(event),
+  };
+  globalThis.window = {
+    getComputedStyle: () => ({ lineHeight: `${lineHeight}px`, paddingTop: '14px' }),
+  };
   try {
     const editor = new SourceEditor(() => {});
     editor.setRecord(Array.from({ length: 100 }, (_, i) => String(i)).join('\n'));
@@ -36,6 +44,9 @@ test('a selection made in another view reveals its source line once, preserving 
     editor.highlight({ id: 7, line: 80, column: 1 });
     editor.scroll();
     assert.equal(source.scrollTop, 1000);
+    lineHeight = 30;
+    document.dispatchEvent(new Event('source-font-size-change'));
+    assert.equal(element('highlight').style.top, '1384px');
     source.value += '\nputs "editing"';
     editor.highlight({ id: 8, line: 95, column: 1 });
     assert.equal(source.scrollTop, 1000);

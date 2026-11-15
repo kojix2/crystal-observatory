@@ -1,4 +1,11 @@
-import { colorGroups, colorSettings, isColor, normalizeSettings } from '../core/settings.js';
+import {
+  colorGroups,
+  colorSettings,
+  fontSettings,
+  isColor,
+  isFontSize,
+  normalizeSettings,
+} from '../core/settings.js';
 import { $, esc } from './dom.js';
 import { summaryLabel } from './icons.js';
 import { text } from './language.js';
@@ -46,6 +53,10 @@ export function setupSettings() {
   const apply = () => {
     root.dataset.astColors = String(settings.astColors);
     $('ast-node-colors').checked = settings.astColors;
+    for (const [key, { variable }] of Object.entries(fontSettings)) {
+      root.style.setProperty(variable, `${settings[key]}pt`);
+      $(key).value = settings[key];
+    }
     for (const { id, variable } of colorSettings) {
       const value = settings.colors[id] || defaults[id];
       if (settings.colors[id]) root.style.setProperty(variable, value);
@@ -54,6 +65,19 @@ export function setupSettings() {
       $(`color-value-${id}`).value = value.toUpperCase();
     }
   };
+  for (const [key, config] of Object.entries(fontSettings)) {
+    $(key).addEventListener('input', (event) => {
+      const size = Number(event.target.value);
+      if (!isFontSize(size, config) || event.target.value === '') return;
+      settings[key] = size;
+      root.style.setProperty(config.variable, `${size}pt`);
+      if (key === 'editorFontSize') document.dispatchEvent(new Event('source-font-size-change'));
+      persist();
+    });
+    $(key).addEventListener('change', () => {
+      $(key).value = settings[key];
+    });
+  }
   const persist = () => {
     let saved = true;
     try {
