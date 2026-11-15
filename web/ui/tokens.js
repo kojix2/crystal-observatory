@@ -79,13 +79,6 @@ export function renderTokens(trace, highlightSource, openSource) {
     : [];
   const shown = all.slice(0, TOKEN_DISPLAY_LIMIT);
   const sourceLines = trace.source.split(/\r\n|\r|\n/);
-  $('token-total').textContent = all.length.toLocaleString();
-  $('token-kinds').textContent = new Set(all.map((token) => token.kind)).size.toLocaleString();
-  $('token-modes').textContent = new Set(all.map((token) => token.mode)).size.toLocaleString();
-  $('token-intro').textContent = t(
-    trace.mode === 'full' ? 'token.intro.full' : 'token.intro.syntax',
-  );
-  $('tokens-view').dataset.tokenMode = trace.mode;
 
   if (!shown.length) {
     container.innerHTML = `<p class="token-empty">${esc(t('token.empty'))}</p>`;

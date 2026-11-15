@@ -235,12 +235,10 @@ Bundled recordings, syntax analysis and new compilations can use different
 versions. An unused editor omits version information; the host Crystal version
 does not determine the browser engine version.
 
-The **Tokens** view places the lexer inside the Parse stage, between source and
-the AST. It shows the recorded token, kind and lexer mode, with tokens grouped
-under their source line. Select a row to inspect its source text, numeric kind
-or delimiter state when recorded, then open that location in Source. A syntax-only
-recording marks semantic analysis and later output as unavailable. The table
-supports column resizing. Drag a header divider or use
+The **Tokens** view shows the recorded token, kind and lexer mode, with tokens
+grouped under their source line. Select a row to inspect its source text,
+numeric kind or delimiter state when recorded, then open that location in Source.
+The table supports column resizing. Drag a header divider or use
 Left/Right with it focused; Shift moves in larger steps. Double-click or Home
 restores the defaults. Widths survive language changes and recording reloads;
 **Reset layout** resets them too.
