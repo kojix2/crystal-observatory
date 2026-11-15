@@ -75,8 +75,9 @@ also reveals that tab.
 
 ## Compile and inspect
 
-Enter Crystal in **Source** and choose the play icon in the Source toolbar
-(**Compile & run**). The arrow beside it opens **Compile to IR** and **Parse only**.
+Enter Crystal in **Source** and choose the play icon in the Output area below
+the editor (**Compile & run**). The arrow beside it opens **Compile to IR** and
+**Parse only**.
 Choose **Compile to IR** to compile without execution. Source and Output share
 one view: the editor is above the result and its controls. Output accepts stdin
 and a JSON array of arguments.
@@ -85,7 +86,7 @@ you change views or screen size.
 **Parse only** uses a separate lightweight lexer/parser, without semantic analysis.
 
 The **Compilation trace** panel shows compiler stages, Visitor calls and their
-events. It contains search and filters; playback is above the AST. Templates and
+events. It contains search and filters; playback is below the AST. Templates and
 file operations are in **Files**. Compilation always analyzes the current editor contents.
 
 The **Standard library** checkbox controls whether Crystal loads its standard
@@ -129,10 +130,11 @@ At widths up to 960 px, the bottom navigation is **Work**, **Files & trace**,
 and **Details**. The initial pane is **Files & trace**, containing the same Files
 and Compilation trace tabs as the desktop side panel. Opening source or a
 recording reveals Work, which contains the editor and all observation tabs.
-Swipe the tab row to reach more views. Compile & run is in the Source toolbar.
-Stop and status messages sit just below the Work tabs, so they remain visible
-when you switch views. The arrow beside the play icon opens Compile to IR and
-Parse only; the bottom menu opens Compare, language, settings, and GitHub.
+Swipe the tab row to reach more views. Compile & run and the Standard library
+setting are in the Output area below Source. Stop and status messages sit in
+the shared bar at the bottom of the Work panel, so they remain visible when
+you switch views. The arrow beside the play icon opens Compile to IR and Parse
+only; the bottom menu opens Compare, language, settings, and GitHub.
 Layout reset is available in Settings. Editing remains available while compilation runs.
 
 Selecting a trace event or stage heading opens Details, with the operation
@@ -145,7 +147,7 @@ without a new selection keeps the reading position. Trace events and stage
 headings open their operation details, while playback and stepping stay in place.
 The active observation tab stays visible as views change.
 
-The Play/Pause button sits to the left of the seek bar above the AST. Drag the bar
+The Play/Pause button sits to the left of the seek bar below the AST. Drag the bar
 to move through the recording, or select an event in the list. The speed menu
 offers Slow, Normal and Fast on both desktop and mobile. The filter button in
 Compilation trace opens search, event kind, and Clear.

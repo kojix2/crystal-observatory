@@ -109,11 +109,9 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   element('mobile-navigation').append(element('more-actions'));
   for (const [parent, children] of [
     ['learning-navigation', ['header-options']],
-    ['work-status', ['cancel-job', 'status-message']],
-    [
-      'source-tools',
-      ['compile-actions', 'compile-options', 'prelude-toggle', 'prelude-hint', 'share-source'],
-    ],
+    ['work-status', ['status-label', 'status-message', 'cancel-job']],
+    ['source-tools', ['share-source']],
+    ['run-compile-tools', ['compile-actions', 'compile-options', 'prelude-toggle', 'prelude-hint']],
     ['compile-actions', ['compile-run', 'compile-options-button']],
     ['compile-options', ['compile-only', 'analyze']],
     ['prelude-toggle', ['prelude']],
@@ -253,12 +251,15 @@ test('mobile starts in the side panel and navigation retains scroll and selectio
 test('secondary controls move into popovers and restore desktop order without resetting values', () => {
   workspace({ mobile: false }, ({ element, controller, resize }) => {
     const order = element('source-tools').children.map((node) => node.id);
+    const runControls = element('run-compile-tools').children.map((node) => node.id);
     const playback = element('playback').children.map((node) => node.id);
     element('kind').value = 'type';
     assert.equal(element('header-options').parentElement.id, 'learning-navigation');
     resize(true);
     assert.equal(element('header-options').parentElement.id, 'body');
     assert.equal(element('compare-view').parentElement.id, 'header-options');
+    assert.equal(element('compile-run').parentElement.parentElement.id, 'run-compile-tools');
+    assert.equal(element('prelude').parentElement.parentElement.id, 'run-compile-tools');
     assert.equal(element('compile-only').parentElement.id, 'compile-options');
     assert.equal(element('analyze').parentElement.id, 'compile-options');
     assert.equal(element('runtime-inputs').open, false);
@@ -274,6 +275,10 @@ test('secondary controls move into popovers and restore desktop order without re
     assert.deepEqual(
       element('source-tools').children.map((node) => node.id),
       order,
+    );
+    assert.deepEqual(
+      element('run-compile-tools').children.map((node) => node.id),
+      runControls,
     );
     assert.deepEqual(
       element('playback').children.map((node) => node.id),

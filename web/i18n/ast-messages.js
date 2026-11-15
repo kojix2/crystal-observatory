@@ -336,24 +336,6 @@ export const astMessages = {
   ...Object.fromEntries(
     Object.entries(families).map(([id, message]) => [`settings.color.ast-${id}`, message]),
   ),
-  'ast.legend': entry(
-    'ASTノードの種類',
-    'AST node families',
-    'Familias de nodos AST',
-    'AST 节点类别',
-    'Familles de nœuds AST',
-    'AST-Knotenfamilien',
-    'Категории узлов AST',
-  ),
-  'ast.colorHint': entry(
-    '色はノードの種類、濃い輪郭は選択、紫は型・意味の変化を示します。',
-    'Colors show syntax families; a dark outline marks selection; purple marks type or semantic changes.',
-    'Los colores indican familias sintácticas; el contorno oscuro indica la selección y el morado los cambios de tipo o semánticos.',
-    '颜色表示语法类别，深色轮廓表示选中，紫色表示类型或语义变化。',
-    'Les couleurs indiquent les familles syntaxiques, le contour foncé la sélection et le violet les changements de type ou de sémantique.',
-    'Farben zeigen Syntaxfamilien, dunkle Umrisse die Auswahl und Violett Typ- oder Semantikänderungen.',
-    'Цвета обозначают категории синтаксиса, тёмная рамка — выбор, фиолетовый — изменения типа или семантики.',
-  ),
   'settings.group.ast': entry(
     'ASTノードの色',
     'AST node colors',
