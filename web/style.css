@@ -274,9 +274,8 @@ kbd+kbd { margin-left:2px; }
 .ast-svg.mindmap-svg { min-width:0; margin:12px auto; cursor:grab; }
 .inline-svg .edge { stroke-width:1.4; }
 .inline-edge-halo { fill:none; stroke:var(--graph-bg); stroke-width:4.4; pointer-events:none; }
-.inline-svg[data-focus="true"] .edge[data-related="false"] { opacity:.2; }
-.inline-svg[data-focus="true"] .edge[data-related="true"] { stroke-width:2; }
-.inline-svg[data-focus="true"] .edge.child[data-related="true"] { stroke:color-mix(in srgb,var(--ink) 70%,var(--edge)); }
+.inline-svg[data-focus="true"] .edge[data-related="true"] { stroke-width:1.7; }
+.inline-svg[data-focus="true"] .edge.child[data-related="true"] { stroke:color-mix(in srgb,var(--ink) 20%,var(--edge)); }
 .inline-structure .tile { fill:var(--graph-bg); stroke:var(--line); }
 .inline-structure-symbol { fill:var(--muted); font-size:17px; }
 .inline-structure-count { fill:var(--muted); font-size:11px; }
