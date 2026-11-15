@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { TraceModel } from '../web/core/trace-model.js';
 import { visitation, nextVisit, visitorAction } from '../web/core/visitation.js';
 import { visitorSpeech, speechPlacement, renderVisitorSpeech } from '../web/ui/visitor-speech.js';
+import { currentSpeechCue } from '../web/ui/speech-sound.js';
 import { captureVisitorBall, animateVisitorBall } from '../web/ui/ast-visitation.js';
 import { renderGraph } from '../web/ui/graphs.js';
 import { TraceView } from '../web/ui/trace-view.js';
@@ -395,6 +396,19 @@ test('Visitors speak about observed changes, name other affected nodes, and clea
   } finally {
     setLocale('en');
   }
+});
+
+test('speech sound cues start with a visible new bubble and do not repeat while it lingers', () => {
+  const model = new TraceModel(speechTrace());
+  model.seek(6);
+  assert.equal(currentSpeechCue(model, false), undefined);
+  assert.deepEqual(currentSpeechCue(model, true), {
+    text: 'Node #3 is Int32 now!',
+  });
+  model.seek(7);
+  assert.equal(currentSpeechCue(model, true), undefined);
+  model.seek(8);
+  assert.equal(currentSpeechCue(model, true), undefined);
 });
 
 test('only significant operations speak, and unsupported or unchanging observations stay silent', () => {

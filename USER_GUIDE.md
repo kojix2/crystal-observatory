@@ -294,6 +294,9 @@ narrowing, cleanup, and LLVM instruction generation. Ordinary visits are silent.
 Speech can linger briefly within the same dispatch frame; it clears on a new
 visit and never describes a future observation. Bubbles prefer empty space
 beside the Visitor and avoid covering the current node.
+During autoplay, a short synthesized sound can accompany each new visible bubble.
+It is off by default. Turn on **Speech bubble sounds** in Settings or Playback
+options. The choice is saved in the browser; manual seeking stays silent.
 Playback moves the ball between recorded visit targets, with brief motion that
 respects the system’s reduced-motion preference. These are recorded dispatches,
 which can differ from AST parent/child edges. Selection and type-change colors

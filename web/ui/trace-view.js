@@ -5,6 +5,7 @@ import { setIcon } from './icons.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
 import { renderVisitorSpeech } from './visitor-speech.js';
+import { currentSpeechCue, SpeechSound } from './speech-sound.js';
 import { visitation, nextVisit } from '../core/visitation.js';
 import { bindGraphNavigation, zoomGraphAt } from './graph-navigation.js';
 import { renderInspector } from './inspector.js';
@@ -28,6 +29,7 @@ const scrollTargets = {
 };
 const label = (view) => viewLabel(view) || t(viewLabelKey(view));
 const AST_LAYOUT_KEY = 'crystal-observatory.ast-layout.v1';
+const SPEECH_SOUND_KEY = 'crystal-observatory.speech-sound.v1';
 
 // Selection/playback is a presentation concern. This class never starts Workers.
 export class TraceView {
@@ -45,12 +47,17 @@ export class TraceView {
     this.astLayout = 'inline';
     this.astZoom = 1;
     this.typesZoom = 1;
+    this.speechSound = new SpeechSound();
+    this.soundEnabled = false;
     try {
       const saved = localStorage.getItem(AST_LAYOUT_KEY);
       if (['inline', 'cards', 'mindmap', 'radial'].includes(saved)) this.astLayout = saved;
+      this.soundEnabled = localStorage.getItem(SPEECH_SOUND_KEY) === 'on';
     } catch {
       /* Optional preference. */
     }
+    $('speech-sound').checked = this.soundEnabled;
+    $('settings-speech-sound').checked = this.soundEnabled;
     this.events = new EventList(
       (index) => this.selectEvent(index),
       () => this.stop(),
@@ -158,17 +165,33 @@ export class TraceView {
   stop() {
     clearInterval(this.playTimer);
     this.playTimer = null;
+    this.speechSound?.stop();
     setIcon($('play'), 'play');
     $('play').dataset.i18nAria = 'play';
     $('play').dataset.i18nTitle = 'play';
     $('play').setAttribute('aria-label', t('play'));
     $('play').title = t('play');
   }
+  setSpeechSoundEnabled(enabled) {
+    this.soundEnabled = enabled;
+    $('speech-sound').checked = enabled;
+    $('settings-speech-sound').checked = enabled;
+    let saved = true;
+    try {
+      localStorage.setItem(SPEECH_SOUND_KEY, enabled ? 'on' : 'off');
+    } catch {
+      saved = false;
+    }
+    if (enabled && this.playTimer) this.speechSound.activate();
+    else if (!enabled) this.speechSound.stop();
+    return saved;
+  }
   togglePlay() {
     if (this.playTimer) return this.stop();
     if (!this.trace?.events.length) return;
     if (this.model.index >= this.trace.events.length - 1) this.seek(0);
     this.onPlaybackStart?.();
+    if (this.soundEnabled) this.speechSound.activate();
     setIcon($('play'), 'pause');
     $('play').dataset.i18nAria = 'pause';
     $('play').dataset.i18nTitle = 'pause';
@@ -177,7 +200,16 @@ export class TraceView {
     this.playTimer = setInterval(
       () => {
         if (this.model.index >= this.trace.events.length - 1) this.stop();
-        else this.seek(this.model.index + 1);
+        else {
+          this.seek(this.model.index + 1);
+          if (this.soundEnabled && this.layout.has('ast')) {
+            const cue = currentSpeechCue(
+              this.model,
+              Boolean($('graph').querySelector('.visitor-speech')),
+            );
+            if (cue) this.speechSound.play(cue);
+          }
+        }
       },
       Number(document.querySelector('input[name="playback-speed"]:checked').value),
     );
@@ -611,12 +643,18 @@ export class TraceView {
       else this.endComparison();
     };
     $('play').onclick = () => this.togglePlay();
-    $('playback-settings').onchange = () => {
-      if (this.playTimer) {
+    $('playback-settings').onchange = (event) => {
+      if (event.target.id === 'speech-sound') {
+        this.setSpeechSoundEnabled(event.target.checked);
+      } else if (this.playTimer) {
         this.stop();
         this.togglePlay();
       }
       $('playback-settings').hidePopover();
+    };
+    $('settings-speech-sound').onchange = (event) => {
+      const saved = this.setSpeechSoundEnabled(event.target.checked);
+      text('settings-status', () => t(saved ? 'settings.saved' : 'settings.unsaved'));
     };
     $('scrubber').oninput = () => {
       this.stop();

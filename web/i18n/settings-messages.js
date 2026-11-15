@@ -20,6 +20,15 @@ export const settingsMessages = {
     'Изменения применяются сразу и сохраняются в этом браузере.',
   ),
   'settings.colors': entry('配色', 'Colors', 'Colores', '配色', 'Couleurs', 'Farben', 'Цвета'),
+  'settings.playback': entry(
+    '再生',
+    'Playback',
+    'Reproducción',
+    '播放',
+    'Lecture',
+    'Wiedergabe',
+    'Воспроизведение',
+  ),
   'settings.fonts': entry(
     'フォントサイズ',
     'Font sizes',
