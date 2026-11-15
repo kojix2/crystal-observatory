@@ -42,12 +42,12 @@ export class TraceView {
     this.scrollPositions = new Map();
     this.pendingReveals = new Set();
     this.collapsed = new Set();
-    this.astLayout = 'cards';
+    this.astLayout = 'inline';
     this.astZoom = 1;
     this.typesZoom = 1;
     try {
       const saved = localStorage.getItem(AST_LAYOUT_KEY);
-      if (['radial', 'mindmap', 'inline'].includes(saved)) this.astLayout = saved;
+      if (['inline', 'cards', 'mindmap', 'radial'].includes(saved)) this.astLayout = saved;
     } catch {
       /* Optional preference. */
     }
@@ -363,7 +363,7 @@ export class TraceView {
     } else if (view === 'ast' || view === 'types') {
       if (view === 'ast') {
         const radial = this.astLayout === 'radial';
-        $('ast-layout').value = this.astLayout || 'cards';
+        $('ast-layout').value = this.astLayout || 'inline';
         $('ast-radial-controls').hidden = !['radial', 'mindmap'].includes(this.astLayout);
         $('ast-zoom-label').hidden = !radial;
         $('ast-zoom').hidden = !radial;
@@ -613,7 +613,7 @@ export class TraceView {
     $('ast-layout').value = this.astLayout;
     $('ast-layout').onchange = () => {
       const layout = $('ast-layout').value;
-      this.astLayout = ['radial', 'mindmap', 'inline'].includes(layout) ? layout : 'cards';
+      this.astLayout = ['cards', 'mindmap', 'radial'].includes(layout) ? layout : 'inline';
       this.astZoom = 1;
       this.scrollPositions.delete('ast');
       $('graph').scrollLeft = $('graph').scrollTop = 0;

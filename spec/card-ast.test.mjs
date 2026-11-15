@@ -77,6 +77,7 @@ function withCards(trace, run) {
     selected: 0,
     snapshot: 0,
     view: 'ast',
+    astLayout: 'cards',
     collapsed: new Set(),
     reveal: false,
   };

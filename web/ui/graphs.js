@@ -40,7 +40,7 @@ export function renderGraph(
     view,
     collapsed,
     reveal = true,
-    astLayout = 'cards',
+    astLayout = 'inline',
     astZoom = 1,
     typesZoom = 1,
   },
@@ -129,8 +129,8 @@ export function renderGraph(
     const previousBall = captureVisitorBall($('graph'));
     if (astLayout === 'radial') renderRadial(s);
     else if (astLayout === 'mindmap') renderMindmap(s);
-    else if (astLayout === 'inline') renderInline(s);
-    else renderCards(s);
+    else if (astLayout === 'cards') renderCards(s);
+    else renderInline(s);
     wireGraph($('graph'));
     const activeNode =
       $('graph').querySelector('.node.visit-current') || $('graph').querySelector('.node.selected');
@@ -160,28 +160,24 @@ export function renderGraph(
   }
   function renderInline(s) {
     const graph = $('graph'),
-      presentations = [],
       layout = layoutInlineAST(
         s,
         collapsed,
-        (row, limit) => {
-          const metrics = measureASTCard(row, {
+        (row, limit) =>
+          measureASTCard(row, {
             trace: model.trace,
             state: nodeState(row.node),
             collapsed,
             availableWidth: limit,
-          });
-          presentations.push(metrics);
-          return metrics;
-        },
+          }),
         graph.clientWidth || 600,
         { filename: model.trace.filename, source: model.trace.source },
       );
-    let edges = '',
-      nodes = '';
+    const branches = new Map();
+    let nodes = '';
     const headings = layout.headings
       .map(({ x, y, label, code }) => {
-        const budget = Math.max(0, Math.floor((layout.labelRight - 66) / 7.8));
+        const budget = Math.max(0, Math.floor((layout.labelRight - layout.sourceX - 20) / 7.8));
         let shown = '',
           columns = 0;
         for (const char of code.replaceAll('\t', '  ')) {
@@ -193,13 +189,18 @@ export function renderGraph(
           shown += char;
           columns += width;
         }
-        return `<text class="inline-source-line" x="${x}" y="${y}">${esc(label)}</text>${shown ? `<text class="inline-source-code" x="46" y="${y}" xml:space="preserve">${esc(shown)}</text>` : ''}`;
+        return `<text class="inline-source-line" x="${x}" y="${y}">${esc(label)}</text>${shown ? `<text class="inline-source-code" x="${layout.sourceX}" y="${y}" xml:space="preserve">${esc(shown)}</text>` : ''}`;
       })
       .join('');
     for (const [index, row] of layout.rows.entries()) {
       if (row.parent >= 0) {
         const label = row.edge === 'child' ? '' : t(`ast.edge.${row.edge}`);
-        edges += `<path class="edge ${row.edge}" d="${inlineBranch(layout.rows, index)}"${label ? ` aria-label="${esc(label)}"` : ''}>${label ? `<title>${esc(label)}</title>` : ''}</path>`;
+        const key = `${row.parent}:${row.edge}`;
+        if (!branches.has(key)) branches.set(key, { halos: '', paths: '' });
+        const branch = branches.get(key),
+          path = inlineBranch(layout.rows, index);
+        branch.halos += `<path class="inline-edge-halo" d="${path}" aria-hidden="true"/>`;
+        branch.paths += `<path class="edge ${row.edge}" d="${path}" data-edge-index="${index}"${label ? ` aria-label="${esc(label)}"` : ''}>${label ? `<title>${esc(label)}</title>` : ''}</path>`;
       }
       nodes += renderASTCard(row, {
         trace: model.trace,
@@ -208,11 +209,16 @@ export function renderGraph(
         collapsed,
         x: row.x,
         y: row.y,
-        metrics: presentations[index],
+        metrics: row.metrics,
         visit,
         layout: 'inline',
       }).html;
     }
+    // Draw each branch's halo first, preserving its sibling junctions while
+    // separating crossings with unrelated branches drawn underneath it.
+    const edges = [...branches.values()]
+      .map(({ halos, paths }) => `<g>${halos}${paths}</g>`)
+      .join('');
     graph.innerHTML = `<svg class="ast-svg inline-svg" xmlns="http://www.w3.org/2000/svg" width="${layout.width}" height="${layout.height}" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.inline'))}">${edges}${headings}${nodes}</svg>`;
   }
   function renderMindmap(s) {

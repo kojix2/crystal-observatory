@@ -310,7 +310,10 @@ test('hook expansion edges are labeled in every supported locale', () => {
   try {
     for (const locale of locales) {
       setLocale(locale);
-      renderGraph({ model, selected: 0, snapshot: 0, view: 'ast', collapsed: new Set() }, () => {});
+      renderGraph(
+        { model, selected: 0, snapshot: 0, view: 'ast', astLayout: 'cards', collapsed: new Set() },
+        () => {},
+      );
       assert(graph.innerHTML.includes(`${t('decl.hookExpansion')} ↘`), locale);
       assert(graph.innerHTML.includes('class="edge hook"'));
     }

@@ -57,8 +57,9 @@ test('inline cards follow source lines and indentation, then wrap within a line'
   assert.match(inlineBranch(wide.rows, 1), /^M\d+ \d+ H\d+$/);
   const leftSibling = inlineBranch(wide.rows, 3);
   const rightSibling = inlineBranch(wide.rows, 4);
-  const bus = `V${wide.rows[2].lineBottom + 12 + (2 % 3) * 6} H`;
-  assert(leftSibling.includes(bus) && rightSibling.includes(bus));
+  const bus = / V([\d.]+) H/.exec(leftSibling)[1];
+  assert(Number(bus) > wide.rows[2].lineBottom);
+  assert(rightSibling.includes(`V${bus} H`));
   assert(leftSibling.startsWith(rightSibling.slice(0, rightSibling.indexOf(' H'))));
   assert(leftSibling.endsWith(`V${wide.rows[3].y + wide.rows[3].height}`));
   assert(rightSibling.endsWith(`V${wide.rows[4].y + wide.rows[4].height}`));
@@ -104,9 +105,8 @@ test('inline layout keeps every edge kind and reference while folding branches',
       const path = inlineBranch(layout.rows, i);
       assert(!/NaN|Infinity/.test(path));
       if (row.lineIndex !== layout.rows[row.parent].lineIndex) {
-        const parent = layout.rows[row.parent];
-        const lane = row.edge === 'child' ? 28 + Math.min(parent.depth, 2) * 6 : 40;
-        assert(path.includes(`H${lane}`));
+        assert(row.gutter);
+        assert.match(path, / H[\d.]+ V[\d.]+ H/);
       }
     }
   }
@@ -195,8 +195,78 @@ test('foreign and structural nodes do not create enormous source-line gaps', () 
   assert.equal(layout.headings[2].x, 46);
   assert(layout.height < 500);
   assert.deepEqual(topology(layout.rows), topology(flattenAST(snapshot)));
-  assert(inlineBranch(layout.rows, 2).includes('H40'));
+  assert(layout.rows[2].gutter !== layout.rows[1].gutter);
   assert(!inlineBranch(layout.rows, 2).includes(`H${layout.labelRight}`));
+});
+
+test('unrelated nested branches never share a horizontal or vertical wire', () => {
+  const sameLine = { filename: 'sample.cr', line: 1, column: 1 };
+  const wide = {
+    roots: [1],
+    nodes: [
+      node(1, [2, 9], sameLine),
+      node(2, [3, 8], sameLine),
+      node(3, [4, 7], sameLine),
+      node(4, [5, 6], sameLine),
+      ...[5, 6, 7, 8, 9].map((id) => node(id, [], sameLine)),
+    ],
+  };
+  const deep = structuredClone(wide);
+  deep.nodes.forEach((n) => (n.line = n.id));
+  const special = {
+    roots: [1],
+    nodes: [
+      node(1, [2], sameLine),
+      node(2, [3, 4], { ...sameLine, expanded: 5, hook_expansions: [6], targets: [7] }),
+      ...[3, 4, 5, 6, 7].map((id) => node(id, [], { ...sameLine, line: id })),
+    ],
+  };
+  for (const snapshot of [wide, deep, special]) {
+    const layout = layoutInlineAST(snapshot, new Set(), () => ({ width: 60, height: 28 }), 1200);
+    const segments = [];
+    layout.rows.forEach((row, i) => {
+      if (row.parent < 0) return;
+      let x = 0,
+        y = 0;
+      for (const [, command, a, b] of inlineBranch(layout.rows, i).matchAll(
+        /([MHV])([\d.]+)(?: ([\d.]+))?/g,
+      )) {
+        const nx = command === 'V' ? x : Number(a),
+          ny = command === 'H' ? y : Number(command === 'V' ? a : b);
+        if (command !== 'M')
+          segments.push({
+            parent: row.parent,
+            child: i,
+            edge: row.edge,
+            x1: Math.min(x, nx),
+            x2: Math.max(x, nx),
+            y1: Math.min(y, ny),
+            y2: Math.max(y, ny),
+            vertical: x === nx,
+          });
+        x = nx;
+        y = ny;
+      }
+    });
+    for (let i = 0; i < segments.length; i++)
+      for (const b of segments.slice(i + 1)) {
+        const a = segments[i];
+        if (
+          (a.parent === b.parent && a.edge === b.edge) ||
+          a.parent === b.child ||
+          a.child === b.parent
+        )
+          continue;
+        const overlap =
+          a.vertical && b.vertical && a.x1 === b.x1
+            ? Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1)
+            : !a.vertical && !b.vertical && a.y1 === b.y1
+              ? Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1)
+              : 0;
+        assert(overlap <= 0, `unrelated branches overlap: ${JSON.stringify({ a, b })}`);
+      }
+    assert(layout.rows.every((row) => row.lineBottom + 24 < layout.height));
+  }
 });
 
 test('inline rendering preserves card details, edge styles, selection, and folding', () => {
@@ -266,7 +336,6 @@ test('inline rendering preserves card details, edge styles, selection, and foldi
           snapshot: 0,
           view: 'ast',
           collapsed,
-          astLayout: 'inline',
           reveal: false,
         },
         (id) => selected.push(id),
