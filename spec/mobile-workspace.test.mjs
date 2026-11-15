@@ -149,10 +149,25 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
     getItem: (key) => storage.get(key) ?? null,
     setItem: (key, value) => storage.set(key, value),
   });
+  const observers = [],
+    frames = new Map();
+  let frameId = 0;
+  install('requestAnimationFrame', (callback) => {
+    frames.set(++frameId, callback);
+    return frameId;
+  });
+  install('cancelAnimationFrame', (id) => frames.delete(id));
   install(
     'ResizeObserver',
     class {
-      observe() {}
+      constructor(callback) {
+        this.callback = callback;
+        this.targets = new Set();
+        observers.push(this);
+      }
+      observe(target) {
+        this.targets.add(target);
+      }
     },
   );
   try {
@@ -163,6 +178,15 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
       buttons,
       storage,
       storageKey,
+      resizeWorkspace(width) {
+        const bench = element('workbench');
+        bench.clientWidth = width;
+        for (const observer of observers)
+          if (observer.targets.has(bench)) observer.callback([{ target: bench }]);
+        const pending = [...frames.values()];
+        frames.clear();
+        for (const callback of pending) callback();
+      },
       resize(value) {
         media.matches = value;
         for (const fn of mediaListeners) fn();
@@ -179,6 +203,19 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
     }
   }
 }
+
+test('desktop columns fill a resized workspace without a window resize', () => {
+  workspace({ mobile: false }, ({ element, resizeWorkspace }) => {
+    const bench = element('workbench');
+    const total = () =>
+      bench.style['--pane-columns'].split(' ').reduce((sum, value) => sum + parseFloat(value), 0);
+    assert(Math.abs(total() - bench.clientWidth) < 0.01);
+    for (const width of [1496, 1440, 1800, 1100]) {
+      resizeWorkspace(width);
+      assert(Math.abs(total() - width) < 0.01, `columns do not fill ${width}px workspace`);
+    }
+  });
+});
 
 test('mobile starts in the side panel and navigation retains scroll and selection', () => {
   workspace({}, ({ controller, element, buttons }) => {

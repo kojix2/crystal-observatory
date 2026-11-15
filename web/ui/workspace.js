@@ -210,10 +210,15 @@ export function setupWorkspace(onResize, { onReset = () => {} } = {}) {
     resizeFrame = requestAnimationFrame(apply);
   });
   let renderFrame;
-  const observer = new ResizeObserver(() => {
+  const observer = new ResizeObserver((entries) => {
+    if (entries.some(({ target }) => target === bench)) {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(apply);
+    }
     cancelAnimationFrame(renderFrame);
     renderFrame = requestAnimationFrame(onResize);
   });
+  observer.observe(bench);
   document.querySelectorAll('[data-observation]').forEach((element) => observer.observe(element));
   apply();
   return {
