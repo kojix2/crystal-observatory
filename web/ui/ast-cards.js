@@ -187,7 +187,12 @@ export function renderASTCard(
   const dispatch = visit
     ? visitDecoration(node.id, visit, { width, height, reference })
     : { classes: '', attributes: '', shape: '' };
-  const nodeClass = layout === 'mindmap' ? 'mindmap-node card-node' : 'card-node';
+  const nodeClass =
+    layout === 'mindmap'
+      ? 'mindmap-node card-node'
+      : layout === 'inline'
+        ? 'inline-node card-node'
+        : 'card-node';
   const html = `<g class="node ${nodeClass} ${node.id === selected ? 'selected' : ''} ${changed ? 'changed' : ''} ${reference ? 'reference' : ''}${dispatch.classes}"${dispatch.attributes} data-node="${node.id}" data-node-family="${family}" tabindex="0" role="button" aria-label="${esc(label)}" transform="translate(${x} ${y})"><title>${esc(tooltip)}</title><rect class="tile" width="${width}" height="${height}" rx="4"/><rect class="accent" width="3" height="${height}" rx="1"/>${fold}<text x="${inset}" y="18" class="svg-card-heading" xml:space="preserve"><tspan class="svg-kind">${esc(kind)}</tspan>${displayedValue ? `<tspan class="svg-card-value" dx="10">${esc(displayedValue)}</tspan>` : ''}</text>${mark}${typeText ? `<text x="${inset}" y="35" class="${type ? 'svg-type' : 'svg-card-pending'}">${esc(fitText(typeText, typeBudget))}</text>` : ''}${countText ? `<text x="${reserveType ? width - 12 : inset}" y="35"${reserveType ? ' text-anchor="end"' : ''} class="svg-card-count">${esc(displayedCount)}</text>` : ''}${dispatch.shape}</g>`;
   return { html, width, height, right: dispatch.right || 0 };
 }

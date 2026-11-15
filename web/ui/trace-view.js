@@ -47,7 +47,7 @@ export class TraceView {
     this.typesZoom = 1;
     try {
       const saved = localStorage.getItem(AST_LAYOUT_KEY);
-      if (['radial', 'mindmap'].includes(saved)) this.astLayout = saved;
+      if (['radial', 'mindmap', 'inline'].includes(saved)) this.astLayout = saved;
     } catch {
       /* Optional preference. */
     }
@@ -364,7 +364,7 @@ export class TraceView {
       if (view === 'ast') {
         const radial = this.astLayout === 'radial';
         $('ast-layout').value = this.astLayout || 'cards';
-        $('ast-radial-controls').hidden = this.astLayout === 'cards';
+        $('ast-radial-controls').hidden = !['radial', 'mindmap'].includes(this.astLayout);
         $('ast-zoom-label').hidden = !radial;
         $('ast-zoom').hidden = !radial;
         $('ast-zoom').value = (this.astZoom || 1) * 100;
@@ -613,7 +613,7 @@ export class TraceView {
     $('ast-layout').value = this.astLayout;
     $('ast-layout').onchange = () => {
       const layout = $('ast-layout').value;
-      this.astLayout = ['radial', 'mindmap'].includes(layout) ? layout : 'cards';
+      this.astLayout = ['radial', 'mindmap', 'inline'].includes(layout) ? layout : 'cards';
       this.astZoom = 1;
       this.scrollPositions.delete('ast');
       $('graph').scrollLeft = $('graph').scrollTop = 0;

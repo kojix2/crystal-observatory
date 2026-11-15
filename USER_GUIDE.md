@@ -245,7 +245,7 @@ to keep the current view and AST snapshot while selecting events. A comparison t
 already includes AST stays open. Playback and stepping update the event without
 switching tabs. **Expand all** appears when the current AST has folded nodes.
 
-The AST layout selector offers **Cards**, **Mind map** and **Radial tree**. Cards use
+The AST layout selector offers **Cards**, **Code cards**, **Mind map** and **Radial tree**. Cards use
 a compact, indented list with the node kind and a short code label together.
 Redundant leading keywords are omitted from labels; expression containers show
 their kind without repeating their contents. Observed expression types appear on
@@ -255,6 +255,13 @@ Card widths follow their content, with a maximum width, and remain stable during
 playback. Folded cards show the number of direct branches. Hover a card for its
 ID, unabridged code label and type, or select it for the full recorded code. Use
 its **+ / −** button (or focus the card and press **+ / −**) to fold a branch.
+Code cards group nodes by the source line they came from. Each group shows
+that line of code, and cards start near its original indentation. Nodes on the
+same line follow their recorded order and wrap at a bounded width. Parent and
+child links branch through the indentation gutter; expansion and target links
+use a nearby dashed lane in the same gutter. Sibling cards on one line share a
+connector below them.
+The same folding, selection and playback controls work in both card layouts.
 The mind map uses the same node labels, type rules, reference markers, and folded
 branch counts. Its boxes follow their content, and labels on special branches
 identify expanded AST, hook expansions, and resolved method targets.

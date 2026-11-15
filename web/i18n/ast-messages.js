@@ -221,6 +221,15 @@ export const astMessages = {
     'Karten',
     'Карточки',
   ),
+  'ast.layout.inline': entry(
+    'コード配置',
+    'Code cards',
+    'Tarjetas de código',
+    '代码卡片',
+    'Cartes de code',
+    'Code-Karten',
+    'Карточки кода',
+  ),
   'ast.layout.radial': entry(
     '円形系統樹',
     'Radial tree',

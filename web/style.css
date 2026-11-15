@@ -272,6 +272,9 @@ kbd+kbd { margin-left:2px; }
 .radial-svg .radial-node.selected .radial-dot,.radial-svg .radial-node:hover .radial-dot,.radial-svg .radial-node:focus-visible .radial-dot { stroke:var(--ink); stroke-width:2; }
 .radial-node:focus-visible { outline:none; }
 .ast-svg.mindmap-svg { min-width:0; margin:12px auto; cursor:grab; }
+.inline-svg .edge { stroke-width:1.4; }
+.inline-source-line { fill:var(--muted); font-size:11px; }
+.inline-source-code { fill:var(--ink); font-size:12px; }
 .dep-svg { min-width:0; cursor:grab; }
 .graph-scroll.panning,.graph-scroll.panning * { cursor:grabbing; user-select:none; }
 .mindmap-svg .edge { stroke-width:1.6; }
@@ -291,7 +294,7 @@ kbd+kbd { margin-left:2px; }
 .card-fold:hover rect,.card-fold:focus-visible rect { stroke:var(--ink); }
 .card-fold:focus-visible { outline:none; }
 .ast-tools { flex-wrap:wrap; }
-.ast-tools #ast-layout { flex:0 1 140px; }
+.ast-tools #ast-layout { flex:0 1 170px; }
 .ast-tools #snapshot { flex:1 1 150px; }
 .ast-tools label { flex-shrink:0; }
 .radial-controls { flex-shrink:0; gap:8px; }

@@ -9,6 +9,7 @@ import { renderActivities } from './inspector.js';
 import { astFamily } from '../core/ast-colors.js';
 import { layoutRadialAST, radialBranch } from '../core/radial-ast.js';
 import { layoutMindmapAST, mindmapBranch } from '../core/mindmap-ast.js';
+import { layoutInlineAST, inlineBranch } from '../core/inline-ast.js';
 
 const radialLayouts = new WeakMap();
 const nodeHeight = 76;
@@ -128,6 +129,7 @@ export function renderGraph(
     const previousBall = captureVisitorBall($('graph'));
     if (astLayout === 'radial') renderRadial(s);
     else if (astLayout === 'mindmap') renderMindmap(s);
+    else if (astLayout === 'inline') renderInline(s);
     else renderCards(s);
     wireGraph($('graph'));
     const activeNode =
@@ -155,6 +157,63 @@ export function renderGraph(
         : astLayout === 'mindmap'
           ? ` · ${t('ast.mindmapHint')}`
           : '');
+  }
+  function renderInline(s) {
+    const graph = $('graph'),
+      presentations = [],
+      layout = layoutInlineAST(
+        s,
+        collapsed,
+        (row, limit) => {
+          const metrics = measureASTCard(row, {
+            trace: model.trace,
+            state: nodeState(row.node),
+            collapsed,
+            availableWidth: limit,
+          });
+          presentations.push(metrics);
+          return metrics;
+        },
+        graph.clientWidth || 600,
+        { filename: model.trace.filename, source: model.trace.source },
+      );
+    let edges = '',
+      nodes = '';
+    const headings = layout.headings
+      .map(({ x, y, label, code }) => {
+        const budget = Math.max(0, Math.floor((layout.labelRight - 66) / 7.8));
+        let shown = '',
+          columns = 0;
+        for (const char of code.replaceAll('\t', '  ')) {
+          const width = char.codePointAt(0) > 0xff ? 2 : 1;
+          if (columns + width > budget - 1) {
+            shown += '…';
+            break;
+          }
+          shown += char;
+          columns += width;
+        }
+        return `<text class="inline-source-line" x="${x}" y="${y}">${esc(label)}</text>${shown ? `<text class="inline-source-code" x="46" y="${y}" xml:space="preserve">${esc(shown)}</text>` : ''}`;
+      })
+      .join('');
+    for (const [index, row] of layout.rows.entries()) {
+      if (row.parent >= 0) {
+        const label = row.edge === 'child' ? '' : t(`ast.edge.${row.edge}`);
+        edges += `<path class="edge ${row.edge}" d="${inlineBranch(layout.rows, index)}"${label ? ` aria-label="${esc(label)}"` : ''}>${label ? `<title>${esc(label)}</title>` : ''}</path>`;
+      }
+      nodes += renderASTCard(row, {
+        trace: model.trace,
+        state: nodeState(row.node),
+        selected,
+        collapsed,
+        x: row.x,
+        y: row.y,
+        metrics: presentations[index],
+        visit,
+        layout: 'inline',
+      }).html;
+    }
+    graph.innerHTML = `<svg class="ast-svg inline-svg" xmlns="http://www.w3.org/2000/svg" width="${layout.width}" height="${layout.height}" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.inline'))}">${edges}${headings}${nodes}</svg>`;
   }
   function renderMindmap(s) {
     const presentations = [];
