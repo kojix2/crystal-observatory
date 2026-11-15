@@ -5,6 +5,7 @@ import { settingsMessages } from './settings-messages.js';
 import { astMessages } from './ast-messages.js';
 import { comparisonMessages } from './comparison-messages.js';
 import { pipelineMessages } from './pipeline-messages.js';
+import { tokenMessages } from './token-messages.js';
 
 import { mobileMessages } from './mobile-messages.js';
 import { nodeMessages } from './node-messages.js';
@@ -28,6 +29,7 @@ export const messages = {
   ...astMessages,
   ...comparisonMessages,
   ...pipelineMessages,
+  ...tokenMessages,
   'app.title': {
     ja: 'Crystal Observatory — コンパイラを観察',
     en: 'Crystal Observatory — Compiler explorer',
@@ -1325,13 +1327,13 @@ export const messages = {
     ru: 'Событие {event} · рёбер: {count} · соседи выбранного узла',
   },
   'graph.tokenCaption': {
-    ja: 'Parserが読んだ実際のToken。同じ位置・種別・値の重複は除去。',
-    en: 'Actual parser tokens; duplicates with the same position, kind and value are omitted.',
-    es: 'Tokens reales del analizador; se omiten duplicados con la misma posición, tipo y valor.',
-    'zh-CN': '实际解析器的词法单元；省略位置、类型和值均相同的重复项。',
-    fr: 'Jetons réels de l’analyseur ; les doublons de même position, type et valeur sont omis.',
-    de: 'Echte Parser-Tokens; Duplikate mit gleicher Position, Art und gleichem Wert werden ausgelassen.',
-    ru: 'Реальные токены парсера; повторы с одинаковыми позицией, видом и значением пропущены.',
+    ja: '行を選ぶと元のソースを確認できます。同じ位置・種別・値の重複は除去しています。',
+    en: 'Select a row to inspect its source. Duplicates with the same position, kind and value are omitted.',
+    es: 'Selecciona una fila para ver el código original. Se omiten los duplicados con la misma posición, tipo y valor.',
+    'zh-CN': '选择一行可查看原始源码。省略位置、类型和值均相同的重复项。',
+    fr: 'Sélectionnez une ligne pour voir le code source. Les doublons de même position, type et valeur sont omis.',
+    de: 'Wähle eine Zeile, um den Quellcode zu sehen. Duplikate mit gleicher Position, Art und gleichem Wert werden ausgelassen.',
+    ru: 'Выберите строку, чтобы увидеть исходный код. Повторы с одинаковыми позицией, видом и значением пропущены.',
   },
   'token.resize': {
     ja: 'Tokensの「{column}」列の幅',

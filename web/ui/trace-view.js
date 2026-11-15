@@ -10,7 +10,7 @@ import { bindGraphNavigation, zoomGraphAt } from './graph-navigation.js';
 import { renderInspector } from './inspector.js';
 import { setupNodeTabs } from './node-tabs.js';
 import { setupEventTabs } from './event-tabs.js';
-import { renderTokens } from './tokens.js';
+import { renderTokens, TOKEN_DISPLAY_LIMIT } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
 import { renderDeclarations } from './declarations.js';
@@ -105,7 +105,15 @@ export class TraceView {
     $('engine').classList.toggle('syntax', trace.mode !== 'full');
     $('versions').textContent = compilerVersionSummary(trace);
     this.ir.load(trace.llvm_ir || '', trace.mode === 'full' ? trace.prelude : null);
-    renderTokens(trace, (node) => this.editor.highlight(node));
+    renderTokens(
+      trace,
+      (node) => this.editor.highlight(node),
+      () => {
+        this.editor.pendingReveal = true;
+        this.setView('source');
+        this.editor.scroll();
+      },
+    );
     this.events.load(model);
     this.scrollPositions.clear();
     this.pendingReveals.clear();
@@ -134,7 +142,16 @@ export class TraceView {
     this.renderComparisonControls();
     this.events.filter(this.events.nodeFilter, { preservePosition: true });
     this.events.localizeActivities();
-    if (this.trace) renderTokens(this.trace, (node) => this.editor.highlight(node));
+    if (this.trace)
+      renderTokens(
+        this.trace,
+        (node) => this.editor.highlight(node),
+        () => {
+          this.editor.pendingReveal = true;
+          this.setView('source');
+          this.editor.scroll();
+        },
+      );
     this.renderSelection({ reveal: false });
     this.revealActiveTab();
   }
@@ -344,7 +361,11 @@ export class TraceView {
     } else if (view === 'ir') {
       this.ir.render();
     } else if (view === 'tokens') {
-      $('tokens-caption').textContent = t('graph.tokenCaption');
+      const total = this.trace.tokens?.length || 0;
+      $('tokens-caption').textContent =
+        (total > TOKEN_DISPLAY_LIMIT
+          ? `${t('token.showing', { shown: TOKEN_DISPLAY_LIMIT.toLocaleString(), total: total.toLocaleString() })} · `
+          : '') + t('graph.tokenCaption');
     } else if (view === 'declarations') {
       renderDeclarations(this.model, this.selectedType, {
         section: this.stateSection,

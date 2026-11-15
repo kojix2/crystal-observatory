@@ -111,7 +111,28 @@
       <div class="view-tools radial-controls"><span data-i18n="ast.zoom">Zoom</span><output id="types-zoom-value">100%</output><button id="types-fit" class="quiet" data-i18n="ast.fit">Fit all</button></div>
       <div id="types" class="graph-scroll"></div><div class="panel-foot" id="types-caption"></div></section>
       <section id="declarations-view" class="observation-view" data-observation="declarations" role="tabpanel" aria-labelledby="tab-declarations" hidden><div class="observation-title" data-i18n="decl.title">State</div><div id="declarations" class="graph-scroll"></div><div class="panel-foot" id="declarations-caption"></div></section>
-      <section id="tokens-view" class="observation-view" data-observation="tokens" role="tabpanel" aria-labelledby="tab-tokens" hidden><div class="observation-title">Tokens</div><div id="token-view" class="graph-scroll"></div><div class="panel-foot" id="tokens-caption"></div></section>
+      <section id="tokens-view" class="observation-view" data-observation="tokens" role="tabpanel" aria-labelledby="tab-tokens" hidden>
+        <div class="observation-title">Tokens</div>
+        <div class="token-overview">
+          <strong class="token-stage" data-i18n="token.stage">Parse stage · lexer</strong>
+          <p id="token-intro">The lexer splits source into tokens; the parser builds the AST. Type inference and LLVM IR generation follow.</p>
+          <div class="token-flow" role="list" data-i18n-aria="token.flow">
+            <span role="listitem" data-i18n="source">Source</span>
+            <span class="token-flow-parse" role="listitem" aria-current="step"><small>Parse</small><b>Tokens <i aria-hidden="true">→</i> AST</b></span>
+            <span class="token-flow-later" role="listitem" data-i18n="token.semantic">Semantic</span>
+            <span class="token-flow-later" role="listitem">LLVM IR</span>
+            <span class="token-flow-later" role="listitem">WASM</span>
+          </div>
+          <div class="token-metrics">
+            <div><strong id="token-total">0</strong><span data-i18n="token.total">Recorded tokens</span></div>
+            <div><strong id="token-kinds">0</strong><span data-i18n="token.kinds">Kinds</span></div>
+            <div><strong id="token-modes">0</strong><span data-i18n="token.modes">Lexer modes</span></div>
+          </div>
+        </div>
+        <section id="token-inspector" class="token-inspector" aria-live="polite"><p data-i18n="token.empty">No tokens were recorded for this source.</p></section>
+        <div id="token-view" class="graph-scroll"></div>
+        <div class="panel-foot" id="tokens-caption"></div>
+      </section>
       <div id="ir-view" class="ir-view observation-view" data-observation="ir" role="tabpanel" aria-labelledby="tab-ir" hidden><div class="observation-title">LLVM IR</div><div class="ir-tools"><input id="ir-search" data-i18n-placeholder="ir.search" data-i18n-aria="ir.search"><select id="ir-function" data-i18n-aria="ir.function"></select><button id="download-ir" class="quiet" data-i18n-title="ir.download"><svg data-icon="download" data-size="12"></svg><span>.ll</span></button><span id="ir-prelude" class="tiny" hidden></span></div><pre id="ir-code"></pre><div class="panel-foot" id="ir-caption" hidden></div></div>
       <div id="comparison-splitter" class="splitter" role="separator" tabindex="0" aria-orientation="vertical" data-i18n-aria="comparison.divider" hidden></div>
       </div></div>
