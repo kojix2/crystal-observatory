@@ -35,6 +35,9 @@ Visits record actual dispatch, while activities record selected decisions and
 mutations. Direct compiler calls and assignments outside the hooks may be absent.
 Serialization by ToSVisitor is formatting, not semantic analysis. Do not infer a
 compiler decision or semantic rationale from an unexplained text difference.
+Node previews are bounded, but rewrite comparisons and their before/after source
+retain the complete formatted text. Lexer observations describe completed token
+steps; internal string-scanning helpers do not supply additional tokens.
 
 Coverage describes instrumentation capability, not proof that a stage or branch
 ran. Keep these states distinct: no coverage metadata, an uncovered node/Visitor
@@ -62,8 +65,10 @@ the link stage without a result shows its description independently of history,
 without appending synthetic events or changing the selected history position.
 
 The full recording's `prelude` identifies the compiler's automatic require,
-not the current editor setting. Empty-prelude compilation verifies LLVM IR and
-emits an object, but deliberately skips linking and execution in the browser.
+not the current editor setting. Only that automatic require is excluded from
+observation; explicit user requires remain visible. Error and completion events
+retain the failed or final compiler stage. Empty-prelude compilation verifies
+LLVM IR and emits an object, but deliberately skips linking and execution in the browser.
 It remains a `full` recording; `mode: "empty"` means no analysis has been run.
 An absent prelude in an older recording is not inferred from the current input.
 Compiler traps may prevent a trace from being written; their WASI diagnostics

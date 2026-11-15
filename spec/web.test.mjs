@@ -108,6 +108,18 @@ test('invalid trace IDs and ordering are rejected before replay', () => {
   assert.throws(() => validateTrace(t));
 });
 
+test('syntax WASM records complete string array tokens with their lexer mode', async () => {
+  const run = await instantiateSyntax(wasm);
+  const trace = validateTrace(run('%w(one two)\n%i(three four)\n'));
+  assert.deepEqual(trace.errors, []);
+  const tokens = trace.tokens.filter((token) => token.kind === 'STRING');
+  assert.deepEqual(
+    tokens.map((token) => token.value),
+    ['one', 'two', 'three', 'four'],
+  );
+  assert(tokens.every((token) => token.mode === 'string array'));
+});
+
 test('prelude metadata preserves old recordings and rejects non-text values', () => {
   const trace = load('01_specialization');
   delete trace.prelude;

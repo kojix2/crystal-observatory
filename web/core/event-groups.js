@@ -75,7 +75,7 @@ export function groupStages(events, visitors = groupEvents(events)) {
 export function eventRows(filtered, groups, expanded = new Set()) {
   const rows = [];
   let groupIndex = 0;
-  for (let i = 0; i < filtered.length; ) {
+  for (let i = 0; i < filtered.length;) {
     const event = filtered[i];
     while (groups[groupIndex]?.end < event.index) groupIndex++;
     const group = groups[groupIndex];

@@ -36,6 +36,7 @@ class Crystal::ProgressTracker
     end
     result = previous_def(name) { yield }
     if rec
+      rec.last_stage = name
       if result.is_a?(Crystal::ASTNode) && (name == "Parse" || name == "Semantic (main)")
         rec.root = result
       end
@@ -43,6 +44,9 @@ class Crystal::ProgressTracker
       rec.snapshot(name)
     end
     result
+  rescue ex
+    rec.failed_stage ||= name if rec
+    raise ex
   ensure
     rec.phase = old_phase if rec && old_phase
   end
@@ -184,14 +188,12 @@ class Observatory::Recorder
     function = block.parent
     return unless function
     instructions = block.instructions.to_a
-    event("ir", node, visitor.class.name,
+    e = event("ir", node, visitor.class.name,
       detail: "Builder insertion point after this visit (includes child emission; not exclusive instruction attribution)",
       after: instructions.map(&.to_s).join("\n"))
-    if e = bundle.events.last?
-      if e.kind == "ir" && e.node_id == id(node)
-        e.llvm_function = function.name
-        e.llvm_block = block.name || ""
-      end
+    if e
+      e.llvm_function = function.name
+      e.llvm_block = block.name || ""
     end
     emitted = instructions
     if before

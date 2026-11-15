@@ -503,7 +503,10 @@ test('re-evaluating translated search results preserves playback, scroll and exp
     setLocale('ja');
     element('search').value = '構文解析';
     list.filter();
-    assert.equal(list.filtered.length, 25);
+    assert.deepEqual(
+      list.filtered,
+      list.model.trace.events.filter((event) => event.phase === 'Parse'),
+    );
     list.toggle(0);
     list.model.seek(118);
     element('trace-content').scrollTop = 80;

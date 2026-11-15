@@ -5,8 +5,7 @@ require "./recorder"
 class Crystal::ASTNode
   def accept(visitor)
     rec = Observatory.recorder
-    old_dispatch = rec.try &.dispatch_node
-    rec.dispatch_node = self if rec
+    dispatched = rec.try &.push_dispatch(self, visitor.class.name)
     entered = rec.try &.enter(self, visitor.class.name)
     {% if flag?(:lab_full) %}
       ir_before = entered && rec && visitor.is_a?(Crystal::CodeGenVisitor) ? rec.codegen_before(visitor) : nil
@@ -25,18 +24,17 @@ class Crystal::ASTNode
     result
   ensure
     rec.try &.leave(self, visitor.class.name) if entered
-    rec.dispatch_node = old_dispatch if rec
+    rec.try &.pop_dispatch if dispatched
   end
 
   def transform(transformer)
     rec = Observatory.recorder
-    old_dispatch = rec.try &.dispatch_node
-    rec.dispatch_node = self if rec
+    dispatched = rec.try &.push_dispatch(self, transformer.class.name)
     entered = rec.try &.enter(self, transformer.class.name, "transform_enter")
-    before = entered ? rec.not_nil!.text(self) : ""
+    before = entered ? rec.not_nil!.text(self, nil) : ""
     result = previous_def
     if entered && rec
-      after = result ? rec.text(result) : "∅"
+      after = result ? rec.text(result, nil) : "∅"
       if before != after || !result.same?(self)
         rec.event("rewrite", self, transformer.class.name, before, after, result)
         rec.activity("rewrite", self, transformer.class.name, before, after,
@@ -46,7 +44,7 @@ class Crystal::ASTNode
     result
   ensure
     rec.try &.leave(self, transformer.class.name, "transform_leave") if entered
-    rec.dispatch_node = old_dispatch if rec
+    rec.try &.pop_dispatch if dispatched
   end
 end
 
@@ -59,24 +57,13 @@ class Crystal::Lexer
 
   def next_string_token(delimiter_state)
     token = previous_def
-    Observatory.recorder.try &.token(@token, "string")
-    token
-  end
-
-  def next_string_token_noescape(delimiter_state)
-    token = previous_def
+    Observatory.recorder.try &.token(@token, delimiter_state.kind.array? ? "string array" : "string")
     token
   end
 
   def next_macro_token(macro_state, skip_whitespace)
     token = previous_def
     Observatory.recorder.try &.token(@token, "macro")
-    token
-  end
-
-  def next_string_array_token_noescape(delimiter_state)
-    token = previous_def
-    Observatory.recorder.try &.token(@token, "string array")
     token
   end
 end

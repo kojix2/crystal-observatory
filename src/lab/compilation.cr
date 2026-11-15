@@ -42,11 +42,14 @@ module Observatory
                  else
                    "Real compiler + LLVM in WebAssembly; verified IR and emitted object; LLD and execution follow in the browser"
                  end
+        rec.phase = rec.last_stage
         rec.event("complete", detail: detail)
       rescue ex : Crystal::CodeError
-        rec.bundle.errors << ex.to_s
+        rec.phase = rec.failed_stage || rec.last_stage
+        rec.bundle.errors << rec.silence { ex.to_s }
         rec.event("error", detail: ex.message || ex.class.name)
       rescue ex
+        rec.phase = rec.failed_stage || rec.last_stage
         rec.bundle.errors << "#{ex.class}: #{ex.message}"
         rec.event("error", detail: ex.message || ex.class.name)
       ensure

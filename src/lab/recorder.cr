@@ -9,12 +9,15 @@ module Observatory
     MAX_NODES  =  8_000
     property bundle : Bundle
     property phase = "Parse"
+    property last_stage = "Parse"
+    property failed_stage : String? = nil
     property root : Crystal::ASTNode? = nil
-    property dispatch_node : Crystal::ASTNode? = nil
+    property automatic_prelude : Crystal::ASTNode? = nil
     @muted = 0
     @objects = {} of UInt64 => Int32
     @retained = [] of Crystal::ASTNode
     @stack = [] of Tuple(Int32, String)
+    @dispatch_stack = [] of Tuple(Crystal::ASTNode, String)
     @token_keys = Set(String).new
 
     def initialize(source : String, filename : String, compiler_version : String)
@@ -36,16 +39,19 @@ module Observatory
     def user_node?(node : Crystal::ASTNode)
       {% if flag?(:lab_full) %}
         return node.filename == bundle.filename if node.is_a?(Crystal::FileNode)
-        return false if node.is_a?(Crystal::Require) && node.string == bundle.prelude
       {% end %}
+      return false if node.same?(automatic_prelude)
       return true if @objects.has_key?(node.object_id)
       location = node.location
       return false unless location
       location.original_filename == bundle.filename || location.macro_location.try(&.original_filename) == bundle.filename
     end
 
-    def text(node : Crystal::ASTNode) : String
-      silence { node.to_s[0, 1000] }
+    def text(node : Crystal::ASTNode, limit : Int32? = 1000) : String
+      silence do
+        source = node.to_s
+        limit ? source[0, limit] : source
+      end
     end
 
     def type_name(node : Crystal::ASTNode) : String
@@ -94,15 +100,19 @@ module Observatory
         bundle.truncated = true
         return
       end
+      node_id = node ? id(node) : 0
+      related_id = related ? id(related) : 0
+      return if (node && node_id == 0) || (related && related_id == 0)
       e = Event.new(kind, phase)
       e.index = bundle.events.size
       e.visitor = visitor
-      e.node_id = node ? id(node) : 0
-      e.related_id = related ? id(related) : 0
+      e.node_id = node_id
+      e.related_id = related_id
       e.parent_id = @stack.last?.try(&.[0]) || 0
       e.depth = @stack.size
       e.before, e.after, e.detail = before, after, detail
       bundle.events << e
+      e
     end
 
     def activity(activity : String, node : Crystal::ASTNode, visitor : String,
@@ -120,20 +130,32 @@ module Observatory
       e.llvm_function, e.llvm_block = llvm_function, llvm_block
     end
 
+    # Keep actual dispatch separate from the filtered, recorded visit stack.
+    # An unrecorded library helper must not inherit its caller's identity.
+    def push_dispatch(node : Crystal::ASTNode, visitor : String) : Bool
+      return false unless active?
+      @dispatch_stack << {node, visitor}
+      true
+    end
+
+    def pop_dispatch
+      @dispatch_stack.pop?
+    end
+
     def current_node : Crystal::ASTNode?
-      dispatch_node
+      @dispatch_stack.last?.try(&.[0])
     end
 
     def current_visitor : String
-      @stack.last?.try(&.[1]) || ""
+      @dispatch_stack.last?.try(&.[1]) || ""
     end
 
     def nested_visit?(visitor : String) : Bool
-      @stack.size > 1 && @stack[-2][1] == visitor
+      @dispatch_stack.size > 1 && @dispatch_stack[-2][1] == visitor
     end
 
     def parent_visitor(visitor : String) : String
-      @stack.reverse_each do |frame|
+      @dispatch_stack.reverse_each do |frame|
         return frame[1] unless frame[1] == visitor
       end
       ""
@@ -145,7 +167,7 @@ module Observatory
 
     def enter(node : Crystal::ASTNode, visitor : String, kind = "visit_enter") : Bool
       return false unless active? && user_node?(node)
-      event(kind, node, visitor, after: type_name(node))
+      return false unless event(kind, node, visitor, after: type_name(node))
       @stack << {id(node), visitor}
       true
     end
@@ -176,7 +198,10 @@ module Observatory
       return unless active? && phase == "Parse" && t.filename.to_s == bundle.filename
       key = "#{t.line_number}:#{t.column_number}:#{t.type}:#{t.value}"
       return unless @token_keys.add?(key)
-      return if bundle.tokens.size >= MAX_EVENTS
+      if bundle.tokens.size >= MAX_EVENTS
+        bundle.truncated = true
+        return
+      end
       bundle.tokens << TokenInfo.new(t.type.to_s, t.value.to_s, t.line_number, t.column_number,
         mode, t.number_kind.to_s, t.delimiter_state.kind.to_s)
     end
@@ -198,6 +223,7 @@ module Observatory
       end
 
       def walk(node : Crystal::ASTNode, parent : NodeInfo? = nil, relation = "child")
+        return if node.same?(@rec.automatic_prelude)
         {% if flag?(:lab_full) %}
           return if node.is_a?(Crystal::FileNode) && node.filename != @rec.bundle.filename
         {% end %}
@@ -207,9 +233,6 @@ module Observatory
           return
         end
         return if parent && node.is_a?(Crystal::Nop) && !node.location
-        {% if flag?(:lab_full) %}
-          return if parent && node.is_a?(Crystal::Require) && node.string == @rec.bundle.prelude
-        {% end %}
         n = @rec.id(node)
         return if n == 0
         if parent

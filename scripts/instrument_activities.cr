@@ -2,6 +2,12 @@
 module ObservatoryScripts::Activities
   MARKER  = "# Observatory activity instrumentation"
   CHANGES = {
+    "compiler.cr" => [
+      {
+        "        nodes = Expressions.new([Require.new(prelude).at(location), nodes] of ASTNode)",
+        "        prelude_require = Require.new(prelude).at(location)\n        {% if flag?(:lab_full) %}\n          Observatory.recorder.try &.automatic_prelude=(prelude_require)\n        {% end %}\n        nodes = Expressions.new([prelude_require, nodes] of ASTNode)",
+      },
+    ],
     "semantic/restrictions_augmenter.cr" => [
       {
         "        args_hash.delete(target.name)",
@@ -19,7 +25,7 @@ module ObservatoryScripts::Activities
     "semantic/type_guess_visitor.cr" => [
       {
         "      if error = @error",
-        "      if (target.is_a?(InstanceVar) || target.is_a?(ClassVar)) && !result\n\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(target, \"reject_guess\", self.class.name, @error.try(&.type.to_s) || \"\", \"unresolved_or_forbidden_type\", value, \"\")\n      {% end %}\n      end\n\n      if error = @error",
+        "      if (target.is_a?(InstanceVar) || target.is_a?(ClassVar)) && !result\n\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(target, \"reject_guess\", self.class.name, @error.try(&.type), \"unresolved_or_forbidden_type\", value, \"\")\n      {% end %}\n      end\n\n      if error = @error",
       },
       {
         "      add_to_initialize_info(target.name)\n\n      value",
@@ -95,11 +101,11 @@ module ObservatoryScripts::Activities
     "semantic/type_declaration_visitor.cr" => [
       {
         "    owner_vars[var.name] = type_decl",
-        "    owner_vars[var.name] = type_decl\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(node, \"declare_var\", self.class.name, var_type, \"instance_variable\", var, \"\#{owner}::\#{var.name}\")\n      {% end %}",
+        "    owner_vars[var.name] = type_decl\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try do |rec|\n          rec.observe(node, \"declare_var\", self.class.name, var_type, \"instance_variable\", var, rec.silence { \"\#{owner}::\#{var.name}\" })\n        end\n      {% end %}",
       },
       {
         "    owner_vars[var.name] = TypeDeclarationWithLocation.new(var_type.virtual_type, node.location.not_nil!, uninitialized, nil)",
-        "    owner_vars[var.name] = TypeDeclarationWithLocation.new(var_type.virtual_type, node.location.not_nil!, uninitialized, nil)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(node, \"declare_var\", self.class.name, var_type, \"class_variable\", var, \"\#{owner}::\#{var.name}\")\n      {% end %}",
+        "    owner_vars[var.name] = TypeDeclarationWithLocation.new(var_type.virtual_type, node.location.not_nil!, uninitialized, nil)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try do |rec|\n          rec.observe(node, \"declare_var\", self.class.name, var_type, \"class_variable\", var, rec.silence { \"\#{owner}::\#{var.name}\" })\n        end\n      {% end %}",
       },
       {
         "    add_external external",
@@ -107,11 +113,11 @@ module ObservatoryScripts::Activities
       },
       {
         "    declare_c_struct_or_union_field(type, field_name, ivar, node.location)",
-        "    declare_c_struct_or_union_field(type, field_name, ivar, node.location)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(node, \"declare_var\", self.class.name, field_type, \"c_field_registered\", nil, \"\#{type}::\#{field_name}\")\n      {% end %}",
+        "    declare_c_struct_or_union_field(type, field_name, ivar, node.location)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try do |rec|\n          rec.observe(node, \"declare_var\", self.class.name, field_type, \"c_field_registered\", nil, rec.silence { \"\#{type}::\#{field_name}\" })\n        end\n      {% end %}",
       },
       {
         "    type.add_def getter\n\n    false",
-        "    type.add_def getter\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(node, \"declare_var\", self.class.name, var_type, \"external_variable\", nil, \"\#{type}::\#{node.name}\")\n      {% end %}\n\n    false",
+        "    type.add_def getter\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try do |rec|\n          rec.observe(node, \"declare_var\", self.class.name, var_type, \"external_variable\", nil, rec.silence { \"\#{type}::\#{node.name}\" })\n        end\n      {% end %}\n\n    false",
       },
     ],
     "semantic/main_visitor.cr" => [
@@ -121,7 +127,7 @@ module ObservatoryScripts::Activities
       },
       {
         "      @vars[var_name] = simple_var\n\n      check_exception_handler_vars",
-        "      @vars[var_name] = simple_var\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(node, \"assign_type\", self.class.name, simple_var.type?, \"local_assignment\", target, \"\#{var_name}; cumulative=\#{meta_var.type?}; scope=\#{@scope || current_type}\")\n      {% end %}\n\n      check_exception_handler_vars",
+        "      @vars[var_name] = simple_var\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try do |rec|\n          rec.observe(node, \"assign_type\", self.class.name, simple_var.type?, \"local_assignment\", target, rec.silence { \"\#{var_name}; cumulative=\#{meta_var.type?}; scope=\#{@scope || current_type}\" })\n        end\n      {% end %}\n\n      check_exception_handler_vars",
       },
       {
         "          program.const_initializers << type",
@@ -195,7 +201,7 @@ module ObservatoryScripts::Activities
     "semantic/top_level_visitor.cr" => [
       {
         "    scope.types[name] = const",
-        "    scope.types[name] = const\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(node, \"declare_const\", self.class.name, name, \"constant_registered\", value, \"\#{scope}\")\n      {% end %}",
+        "    scope.types[name] = const\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try do |rec|\n          rec.observe(node, \"declare_const\", self.class.name, name, \"constant_registered\", value, rec.silence { \"\#{scope}\" })\n        end\n      {% end %}",
       },
       {
         "        new_expansions[node] = new_method",

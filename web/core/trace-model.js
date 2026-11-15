@@ -1,4 +1,5 @@
 import { UIError } from '../i18n/index.js';
+import { LIMITS } from './limits.js';
 import { applyDeclaration, validateDeclarations } from './declarations.js';
 import { validateActivities } from './activities.js';
 import { indexStateObservations } from './compiler-state.js';
@@ -14,19 +15,36 @@ export function validateTrace(t) {
     (t.prelude != null && typeof t.prelude !== 'string')
   )
     throw new UIError('error.traceSchema');
-  if (t.events.length > 100000 || t.nodes.length > 20000 || t.source.length > 262144)
+  if (
+    t.events.length > 100000 ||
+    t.nodes.length > 20000 ||
+    new TextEncoder().encode(t.source).byteLength > LIMITS.sourceBytes
+  )
     throw new UIError('error.traceSize');
-  if (t.events.some((e, i) => e.index !== i || typeof e.kind !== 'string'))
+  if (t.events.some((e, i) => !e || e.index !== i || typeof e.kind !== 'string'))
     throw new UIError('error.traceOrder');
-  const ids = new Set(t.nodes.map((n) => n.id));
+  const ids = new Set(t.nodes.map((n) => n?.id));
   if (
     ids.size !== t.nodes.length ||
-    t.nodes.some((n) => !Number.isInteger(n.id) || n.id <= 0 || typeof n.kind !== 'string')
+    t.nodes.some(
+      (n) => !n || !Number.isSafeInteger(n.id) || n.id <= 0 || typeof n.kind !== 'string',
+    )
   )
     throw new UIError('error.traceNode');
   for (const e of t.events) {
-    if ((e.node_id && !ids.has(e.node_id)) || (e.related_id && !ids.has(e.related_id)))
+    if (
+      [e.node_id, e.related_id, e.parent_id].some(
+        (id) => id != null && (!Number.isSafeInteger(id) || id < 0 || (id > 0 && !ids.has(id))),
+      )
+    )
       throw new UIError('error.traceReference');
+    if (
+      ['phase', 'visitor', 'before', 'after', 'detail', 'llvm_function', 'llvm_block'].some(
+        (field) => e[field] != null && typeof e[field] !== 'string',
+      ) ||
+      (e.depth != null && (!Number.isSafeInteger(e.depth) || e.depth < 0))
+    )
+      throw new UIError('error.traceSchema');
     if (e.kind === 'link') {
       const link = e.link;
       const size = (value) => Number.isSafeInteger(value) && value >= 0;
@@ -48,10 +66,20 @@ export function validateTrace(t) {
     }
   }
   for (const s of t.snapshots) {
-    if (!Array.isArray(s.nodes) || !Array.isArray(s.roots) || s.nodes.length > 20000)
-      throw new UIError('error.traceAST');
-    const local = new Set(s.nodes.map((n) => n.id));
     if (
+      !s ||
+      !Array.isArray(s.nodes) ||
+      !Array.isArray(s.roots) ||
+      s.nodes.length > 20000 ||
+      !Number.isSafeInteger(s.at_event) ||
+      s.at_event < 0 ||
+      s.at_event > t.events.length
+    )
+      throw new UIError('error.traceAST');
+    const local = new Set(s.nodes.map((n) => n?.id));
+    if (
+      local.size !== s.nodes.length ||
+      s.nodes.some((n) => !n || !ids.has(n.id)) ||
       s.roots.some((n) => !local.has(n)) ||
       s.nodes.some(
         (n) =>
@@ -95,6 +123,7 @@ export class TraceModel {
     for (const e of trace.events)
       if (
         (e.kind === 'type' || (e.kind === 'activity' && e.activity === 'fix_missing_type')) &&
+        this.nodes.has(e.node_id) &&
         !seen.has(e.node_id)
       ) {
         this.initialTypes.set(e.node_id, e.before);
@@ -114,10 +143,10 @@ export class TraceModel {
     for (let i = this.index + 1; i <= index; i++) {
       const e = this.trace.events[i];
       if (e.kind === 'declaration') applyDeclaration(this, e);
-      if (e.kind === 'type') this.types.set(e.node_id, e.after);
+      if (e.kind === 'type' && this.nodes.has(e.node_id)) this.types.set(e.node_id, e.after);
       if (e.kind === 'activity' && e.activity === 'fix_missing_type')
         this.types.set(e.node_id, e.after);
-      if (e.kind === 'bind')
+      if (e.kind === 'bind' && this.nodes.has(e.node_id) && this.nodes.has(e.related_id))
         this.edges.set(`${e.related_id}:${e.node_id}`, [e.related_id, e.node_id]);
       if (e.kind === 'unbind') this.edges.delete(`${e.related_id}:${e.node_id}`);
       if (e.kind === 'visit_enter' || e.kind === 'transform_enter') this.stack.push(e);
@@ -128,9 +157,13 @@ export class TraceModel {
     return this;
   }
   snapshotAt(index = this.index) {
-    let found = 0;
+    let found = 0,
+      latest = -1;
     this.trace.snapshots.forEach((s, i) => {
-      if (s.at_event <= index + 1) found = i;
+      if (s.at_event <= index + 1 && s.at_event >= latest) {
+        found = i;
+        latest = s.at_event;
+      }
     });
     return found;
   }

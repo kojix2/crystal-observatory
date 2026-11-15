@@ -40,6 +40,65 @@ test('packaged compiler metadata matches its packaged source version', async () 
   assert.equal(trace.compiler_version.match(/^\d+\.\d+\.\d+(?:-[\w.-]+)?/)[0], version);
   assert.equal(typeof trace.host_compiler_version, 'string');
   assert(trace.llvm_version.length > 0);
+  const complete = trace.events.at(-1);
+  assert.equal(complete.kind, 'complete');
+  assert.equal(compilerStage(complete).id, 'object');
+});
+
+test('explicit prelude requires remain observed independently of the automatic require', async () => {
+  const result = await compile('require "prelude"\nputs 42\n');
+  assert.equal(await execute(result), '42\n');
+  const requires = result.trace.nodes.filter((node) => node.kind === 'Require');
+  assert.equal(requires.length, 1);
+  assert.equal(requires[0].line, 1);
+  assert.equal(requires[0].text, 'require "prelude"');
+  assert(result.trace.events.some((event) => event.node_id === requires[0].id));
+  assert(result.trace.snapshots[0].nodes.some((node) => node.id === requires[0].id));
+});
+
+test('diagnostic formatting is muted and failure events retain the actual failed stage', async () => {
+  const { trace } = await compile('def bad(x : Int32); x; end\nbad("x")\n');
+  assert.match(trace.errors.join('\n'), /expected argument #1/);
+  const error = trace.events.at(-1);
+  assert.equal(error.kind, 'error');
+  assert.equal(compilerStage(error).id, 'main');
+  const serializations = trace.events.filter(
+    (event) => event.kind === 'activity' && event.activity === 'serialize_source',
+  );
+  assert(serializations.length > 0, "Keep the compiler's own diagnostic construction observable");
+  assert(serializations.every((event) => event.parent_visitor === 'Crystal::MainVisitor'));
+  const syntax = await compile('def broken(\n');
+  assert.equal(compilerStage(syntax.trace.events.at(-1)).id, 'parse');
+});
+
+test('string array observations contain only completed lexer tokens', async () => {
+  const result = await compile('puts %w(one two).join(",")\nputs %i(three four).join(",")\n');
+  assert.equal(await execute(result), 'one,two\nthree,four\n');
+  const tokens = result.trace.tokens.filter(
+    (token) => token.kind === 'STRING' && token.mode === 'string array',
+  );
+  assert.deepEqual(
+    tokens.map((token) => token.value),
+    ['one', 'two', 'three', 'four'],
+  );
+  assert(!result.trace.tokens.some((token) => token.kind === 'STRING' && token.value === ''));
+});
+
+test('normalization records changes beyond the first thousand characters of an AST', async () => {
+  const source = '1\n'.repeat(600) + 'unless false\n  7\nend\n';
+  const { trace } = await compile(source, 'empty');
+  assert.deepEqual(trace.errors, []);
+  const root = trace.snapshots[0].roots[0];
+  assert(
+    trace.events.some(
+      (event) =>
+        event.kind === 'rewrite' &&
+        event.node_id === root &&
+        event.before.length > 1000 &&
+        event.before.includes('unless') &&
+        !event.after.includes('unless'),
+    ),
+  );
 });
 
 test('activity instrumentation preserves initialization and unused-block behavior', async () => {
