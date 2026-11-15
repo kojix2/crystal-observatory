@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.js';
 import { $, esc } from './dom.js';
+import { icon } from './icons.js';
 import { setupTableColumns } from './table-columns.js';
 
 const KEY = 'crystal-observatory.token-columns.v1';
@@ -126,7 +127,7 @@ export function renderTokens(trace, highlightSource, openSource) {
         : []),
     ];
     $('token-inspector').innerHTML =
-      `<div class="token-detail-top"><span class="token-index">${esc(t('token.selected', { index: index + 1, total: all.length }))}</span><strong class="token-detail-value" data-token-family="${tokenFamily(token)}">${esc(tokenDisplay(token, sourceLine))}</strong><span class="token-kind" data-token-family="${tokenFamily(token)}">${esc(token.kind)}</span>${openSource ? `<button class="token-open-source link-button" aria-label="${esc(t('token.openSource'))}" title="${esc(t('token.openSource'))}"><span>${esc(t('token.openSource'))}</span><span aria-hidden="true">↗</span></button>` : ''}</div>
+      `<div class="token-detail-top"><span class="token-index">${esc(t('token.selected', { index: index + 1, total: all.length }))}</span><strong class="token-detail-value" data-token-family="${tokenFamily(token)}">${esc(tokenDisplay(token, sourceLine))}</strong><span class="token-kind" data-token-family="${tokenFamily(token)}">${esc(token.kind)}</span>${openSource ? `<button class="token-open-source link-button" aria-label="${esc(t('token.openSource'))}" title="${esc(t('token.openSource'))}"><span>${esc(t('token.openSource'))}</span>${icon('external')}</button>` : ''}</div>
       <div class="token-detail-meta"><span>${token.line}:${token.column}</span>${metadata.map(([label, value]) => `<span>${esc(label)} <code>${esc(value)}</code></span>`).join('')}</div>
       <div class="token-source-preview"><small>${esc(t('token.sourceLine', { line: token.line }))}</small><pre>${esc(parts.before)}${parts.match ? `<mark>${esc(parts.match)}</mark>` : ''}${esc(parts.after)}</pre></div>`;
     $('token-inspector')

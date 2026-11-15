@@ -7,6 +7,7 @@ export const lucideNames = {
   run: 'play',
   play: 'play',
   pause: 'pause',
+  record: 'circle',
   stop: 'square',
   first: 'chevron-first',
   previous: 'chevron-left',

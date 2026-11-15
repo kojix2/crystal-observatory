@@ -1,7 +1,8 @@
 import { t } from '../i18n/index.js';
 import { text } from './language.js';
-import { $, notify, download } from './dom.js';
+import { $, notify, download, downloadBlob } from './dom.js';
 import { setIcon } from './icons.js';
+import { AstRecorder, astMarker } from './ast-recorder.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
 import { renderGraph } from './graphs.js';
 import { renderVisitorSpeech } from './visitor-speech.js';
@@ -48,6 +49,20 @@ export class TraceView {
     this.astZoom = 1;
     this.typesZoom = 1;
     this.speechSound = new SpeechSound();
+    this.astRecorder = new AstRecorder({
+      onSave: (blob, extension) => {
+        downloadBlob(`crystal-observatory-ast.${extension}`, blob, 60_000);
+        notify(() => t('playback.videoSaved'));
+      },
+      onStop: () => {
+        this.updateRecordButton();
+        if (this.playTimer) this.stop();
+      },
+      onError: () => {
+        this.stop();
+        notify(() => t('playback.videoError'), 'error');
+      },
+    });
     this.soundEnabled = false;
     try {
       const saved = localStorage.getItem(AST_LAYOUT_KEY);
@@ -98,6 +113,7 @@ export class TraceView {
     $('scrubber').max = Math.max(0, trace.events.length - 1);
     for (const id of ['play', 'scrubber', 'playback-options'])
       $(id).disabled = !trace.events.length;
+    this.updateRecordButton();
     text('meta', () =>
       t('count.trace', { events: trace.events.length.toLocaleString(), nodes: trace.nodes.length }),
     );
@@ -163,14 +179,65 @@ export class TraceView {
     this.revealActiveTab();
   }
   stop() {
+    this.recordingRequest = null;
     clearInterval(this.playTimer);
     this.playTimer = null;
+    this.astRecorder?.stop();
+    this.updateRecordButton();
     this.speechSound?.stop();
     setIcon($('play'), 'play');
     $('play').dataset.i18nAria = 'play';
     $('play').dataset.i18nTitle = 'play';
     $('play').setAttribute('aria-label', t('play'));
     $('play').title = t('play');
+  }
+  updateRecordButton() {
+    const button = $('record-video');
+    const recording = this.astRecorder?.recorder?.state === 'recording';
+    button.disabled =
+      !this.trace?.events.length ||
+      this.recordPending ||
+      this.astRecorder?.stopping ||
+      this.astRecorder?.recorder?.state === 'inactive' ||
+      !AstRecorder.supported();
+    button.dataset.i18nAria = recording ? 'playback.stopVideo' : 'playback.recordVideo';
+    button.dataset.i18nTitle = button.dataset.i18nAria;
+    button.setAttribute('aria-label', t(button.dataset.i18nAria));
+    button.title = t(button.dataset.i18nTitle);
+    button.classList.toggle('recording', recording);
+    setIcon(button, recording ? 'stop' : 'record');
+  }
+  async recordVideo() {
+    if (this.recordPending) return;
+    if (this.astRecorder.recorder?.state === 'recording') return this.stop();
+    if (this.astRecorder.recorder) return;
+    if (!this.trace?.events.length || !AstRecorder.supported()) return;
+    this.stop();
+    this.setView('ast');
+    this.onPlaybackStart?.();
+    if (this.model.index >= this.trace.events.length - 1) this.seek(0);
+    const request = Symbol('recording');
+    this.recordingRequest = request;
+    this.recordPending = true;
+    this.updateRecordButton();
+    try {
+      const started = await this.astRecorder.start(
+        $('graph'),
+        () => this.recordingRequest === request,
+      );
+      if (started) {
+        this.recordPending = false;
+        this.updateRecordButton();
+        this.togglePlay();
+      }
+    } catch (error) {
+      this.stop();
+      notify(() => t('playback.videoError'), 'error');
+    } finally {
+      this.recordPending = false;
+      if (this.recordingRequest === request) this.recordingRequest = null;
+      this.updateRecordButton();
+    }
   }
   setSpeechSoundEnabled(enabled) {
     this.soundEnabled = enabled;
@@ -197,22 +264,41 @@ export class TraceView {
     $('play').dataset.i18nTitle = 'pause';
     $('play').setAttribute('aria-label', t('pause'));
     $('play').title = t('pause');
-    this.playTimer = setInterval(
-      () => {
-        if (this.model.index >= this.trace.events.length - 1) this.stop();
-        else {
-          this.seek(this.model.index + 1);
-          if (this.soundEnabled && this.layout.has('ast')) {
-            const cue = currentSpeechCue(
-              this.model,
-              Boolean($('graph').querySelector('.visitor-speech')),
-            );
-            if (cue) this.speechSound.play(cue);
-          }
+    const speed = () =>
+      Number(document.querySelector('input[name="playback-speed"]:checked').value);
+    const step = () => {
+      if (this.model.index >= this.trace.events.length - 1) {
+        this.stop();
+        return false;
+      }
+      this.seek(this.model.index + 1);
+      if (this.soundEnabled && this.layout.has('ast')) {
+        const cue = currentSpeechCue(
+          this.model,
+          Boolean($('graph').querySelector('.visitor-speech')),
+        );
+        if (cue) this.speechSound.play(cue);
+      }
+      return true;
+    };
+    if (this.astRecorder?.recorder?.state === 'recording') {
+      const recordedStep = async () => {
+        if (!this.playTimer) return;
+        const previous = astMarker($('graph'));
+        if (!step()) return;
+        try {
+          await this.astRecorder.capture($('graph'), previous, Math.max(240, speed()));
+        } catch {
+          this.stop();
+          notify(() => t('playback.videoError'), 'error');
+          return;
         }
-      },
-      Number(document.querySelector('input[name="playback-speed"]:checked').value),
-    );
+        if (this.playTimer) this.playTimer = setTimeout(recordedStep, 0);
+      };
+      this.playTimer = setTimeout(recordedStep, Math.max(240, speed()));
+    } else {
+      this.playTimer = setInterval(step, speed());
+    }
   }
   seek(index) {
     if (!this.model) return;
@@ -643,10 +729,11 @@ export class TraceView {
       else this.endComparison();
     };
     $('play').onclick = () => this.togglePlay();
+    $('record-video').onclick = () => this.recordVideo();
     $('playback-settings').onchange = (event) => {
       if (event.target.id === 'speech-sound') {
         this.setSpeechSoundEnabled(event.target.checked);
-      } else if (this.playTimer) {
+      } else if (this.playTimer && !this.astRecorder.recorder) {
         this.stop();
         this.togglePlay();
       }

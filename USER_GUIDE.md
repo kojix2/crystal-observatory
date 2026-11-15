@@ -154,6 +154,12 @@ Compilation trace opens search, event kind, and Clear.
 Starting playback selects Compilation trace in the side panel. On phones, it
 does not switch panes; the trace is ready when you open Files & trace. A
 collapsed desktop side panel stays collapsed.
+To save a video, press the record button beside the AST seek bar. Playback starts
+and the AST view is drawn directly into the video, including the Visitor marker
+and its speech bubbles.
+Stopping playback or reaching the end downloads a silent `.webm` video (or `.mp4`
+if that is the browser's supported format). Browser canvas recording support is
+required; no screen-sharing permission is needed.
 Choosing Activity reveals its subtype filter and the next-activity action.
 An active node condition can be removed separately in the same popup. Closing this
 popup gives the space back to the event list. A highlighted
