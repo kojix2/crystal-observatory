@@ -5,6 +5,7 @@ const gutter = 34;
 const cardGap = 56;
 const rowGap = 36;
 const headingHeight = 24;
+const rightInset = 20;
 const trackGap = 6;
 const bottomPorts = { expanded: -12, hook: -24, target: 12 };
 const sidePorts = { expanded: -8, hook: -4, target: 8 };
@@ -215,7 +216,7 @@ export function layoutInlineAST(
     return {
       rows,
       headings,
-      width: Math.max(availableWidth, contentRight + 56),
+      width: Math.max(availableWidth, contentRight + rightInset),
       height: rows.length ? y + shift : inset * 2,
       labelRight: contentRight + 16,
       sourceX: inset + gutterWidth,

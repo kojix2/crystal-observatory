@@ -112,6 +112,21 @@ test('inline layout keeps every edge kind and reference while folding branches',
   }
 });
 
+test('intrinsically wide cards fit a narrow viewport without unused annotation space', () => {
+  const at = { filename: 'sample.cr', line: 7, column: 3 };
+  const snapshot = {
+    roots: [1],
+    nodes: [
+      node(1, [2], { ...at, kind: 'StringInterpolation', label: '"#{n}"' }),
+      node(2, [], { ...at, kind: 'Var', label: 'n' }),
+    ],
+  };
+  const layout = layoutInlineAST(snapshot, new Set(), () => ({ width: 214, height: 44 }), 320);
+  assert.equal(layout.width, 320);
+  assert(layout.rows.every((row) => row.x + row.width <= layout.width));
+  assert(layout.rows[1].y > layout.rows[0].y);
+});
+
 test('cross-line connections stay clear of cards and enter sibling cards equally', () => {
   const at = (line, column = 1) => ({ line, column, filename: 'sample.cr' });
   const snapshot = {

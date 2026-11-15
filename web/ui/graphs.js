@@ -174,7 +174,8 @@ export function renderGraph(
         { filename: model.trace.filename, source: model.trace.source },
       );
     const branches = new Map();
-    let nodes = '';
+    let nodes = '',
+      width = layout.width;
     const headings = layout.headings
       .map(({ x, y, label, code }) => {
         const budget = Math.max(0, Math.floor((layout.labelRight - layout.sourceX - 20) / 7.8));
@@ -202,7 +203,7 @@ export function renderGraph(
         branch.halos += `<path class="inline-edge-halo" d="${path}" aria-hidden="true"/>`;
         branch.paths += `<path class="edge ${row.edge}" d="${path}" data-edge-index="${index}"${label ? ` aria-label="${esc(label)}"` : ''}>${label ? `<title>${esc(label)}</title>` : ''}</path>`;
       }
-      nodes += renderASTCard(row, {
+      const card = renderASTCard(row, {
         trace: model.trace,
         state: nodeState(row.node),
         selected,
@@ -212,14 +213,16 @@ export function renderGraph(
         metrics: row.metrics,
         visit,
         layout: 'inline',
-      }).html;
+      });
+      nodes += card.html;
+      width = Math.max(width, row.x + card.width + Math.max(cardRightInset, card.right));
     }
     // Draw each branch's halo first, preserving its sibling junctions while
     // separating crossings with unrelated branches drawn underneath it.
     const edges = [...branches.values()]
       .map(({ halos, paths }) => `<g>${halos}${paths}</g>`)
       .join('');
-    graph.innerHTML = `<svg class="ast-svg inline-svg" xmlns="http://www.w3.org/2000/svg" width="${layout.width}" height="${layout.height}" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.inline'))}">${edges}${headings}${nodes}</svg>`;
+    graph.innerHTML = `<svg class="ast-svg inline-svg" xmlns="http://www.w3.org/2000/svg" width="${width}" height="${layout.height}" data-snapshot="${snapshot}" aria-label="${esc(t('ast.layout.inline'))}">${edges}${headings}${nodes}</svg>`;
   }
   function renderMindmap(s) {
     const presentations = [];
