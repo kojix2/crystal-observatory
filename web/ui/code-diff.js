@@ -19,15 +19,15 @@ export function renderCodeDiff(change) {
   }
   let view = views.get(code);
   if (!view || view.before !== change.before || view.after !== change.after) {
-    view = { ...change, diff: createCrystalDiff(change.before, change.after), page: 0 };
+    view = { ...change, diff: createCrystalDiff(change.before, change.after) };
     views.set(code, view);
   }
-  const show = (page) => {
-    view.page = Math.max(0, Math.min(view.diff.pageCount - 1, Math.trunc(page) || 0));
-    if (view.renderedPage !== view.page) {
-      code.innerHTML = view.diff.pageHTML(view.page);
+  const show = (page = 0) => {
+    const next = Math.max(0, Math.min(view.diff.pageCount - 1, Math.trunc(page) || 0));
+    if (view.page !== next) {
+      view.page = next;
+      code.innerHTML = view.diff.pageHTML(next);
       code.scrollTop = code.scrollLeft = 0;
-      view.renderedPage = view.page;
     }
     controls.hidden = view.diff.pageCount <= 1;
     input.value = view.page + 1;

@@ -45,7 +45,7 @@ export function diffLines(before, after) {
   for (let i = 0; i < start; i++) add('context', i, i);
   const oldCount = oldEnd - start,
     newCount = newEnd - start;
-  if (oldCount * newCount <= 250_000) {
+  if (oldCount > 0 && newCount > 0 && oldCount * newCount <= 250_000) {
     const lengths = Array.from({ length: oldCount + 1 }, () => new Uint32Array(newCount + 1));
     for (let i = oldCount - 1; i >= 0; i--)
       for (let j = newCount - 1; j >= 0; j--)
@@ -121,7 +121,7 @@ export function createCrystalDiff(before, after) {
   return {
     pageCount: Math.max(1, pages.length),
     pageHTML(index = 0) {
-      const page = pages[Math.max(0, Math.min(pages.length - 1, Math.trunc(index) || 0))];
+      const page = pages[index];
       if (!page) return '';
       const html = [];
       for (let i = page.startRow; i < page.endRow + (page.endOffset > 0 ? 1 : 0); i++) {
@@ -141,8 +141,4 @@ export function createCrystalDiff(before, after) {
       return html.join('');
     },
   };
-}
-
-export function crystalDiffHTML(before, after) {
-  return createCrystalDiff(before, after).pageHTML();
 }

@@ -3,12 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { createContext, runInContext } from 'node:vm';
-import {
-  sourceChange,
-  diffLines,
-  crystalDiffHTML,
-  createCrystalDiff,
-} from '../web/core/code-diff.js';
+import { sourceChange, diffLines, createCrystalDiff } from '../web/core/code-diff.js';
+
+const firstPageHTML = (before, after) => createCrystalDiff(before, after).pageHTML();
 
 test('only recorded source transformations become diffs, including deleted AST nodes', () => {
   for (const kind of ['rewrite', 'expand']) {
@@ -96,7 +93,7 @@ test('diff rows keep multiline Prism tokens balanced, preserve code and escape s
   try {
     const before = 'value = %q{hello\nold <script>&</script>\nworld}\nputs value';
     const after = 'value = %q{hello\nnew <img src=x onerror=alert(1)>\nworld}\nputs value';
-    const html = crystalDiffHTML(before, after);
+    const html = firstPageHTML(before, after);
     assert.match(html, /class="token string"/);
     assert(!html.includes('<script>') && !html.includes('<img'));
     const renderedRows = html.split(/(?=<span class="diff-line )/).filter(Boolean);
@@ -118,8 +115,8 @@ test('diff rows keep multiline Prism tokens balanced, preserve code and escape s
       renderedRows.find((row) => row.includes('new &lt;img')),
       /token string/,
     );
-    assert(!crystalDiffHTML('foo', 'foo').includes('diff-added'));
-    assert(!crystalDiffHTML('foo', 'foo').includes('diff-removed'));
+    assert(!firstPageHTML('foo', 'foo').includes('diff-added'));
+    assert(!firstPageHTML('foo', 'foo').includes('diff-removed'));
   } finally {
     if (original) globalThis.Prism = original;
     else delete globalThis.Prism;
@@ -127,7 +124,7 @@ test('diff rows keep multiline Prism tokens balanced, preserve code and escape s
 });
 
 test('diffs remain escaped and readable when Prism is unavailable', () => {
-  const html = crystalDiffHTML('<old>&', '<new>&');
+  const html = firstPageHTML('<old>&', '<new>&');
   assert(html.includes('&lt;old&gt;&amp;') && html.includes('&lt;new&gt;&amp;'));
   assert(!html.includes('<old>') && !html.includes('<new>'));
 });
@@ -188,8 +185,6 @@ test('paging preserves every line, blank line, context and final newline', () =>
     texts,
     diffLines(before, after).map((row) => row.text),
   );
-  assert.equal(diff.pageHTML(-1), diff.pageHTML(0));
-  assert.equal(diff.pageHTML(Infinity), diff.pageHTML(diff.pageCount - 1));
   assert.equal(createCrystalDiff('', '').pageCount, 1);
   assert.equal(createCrystalDiff('', '').pageHTML(), '');
 });
