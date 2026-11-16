@@ -2,6 +2,11 @@
 // copies exactly these glyphs into web/vendor/lucide/icons.js, so adding an icon means
 // adding a line here and regenerating.
 export const lucideNames = {
+  'new-file': 'file-plus',
+  'open-file': 'folder-open',
+  save: 'save',
+  templates: 'library-big',
+  share: 'share-2',
   parse: 'code',
   codegen: 'braces',
   run: 'play',

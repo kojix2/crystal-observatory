@@ -21,8 +21,8 @@ export function setupMobileWorkspace(onModeChange) {
     details: $('inspector-panel'),
   };
   const buttons = [...navigation.querySelectorAll('[data-pane]')];
-  // Start with the Files tab of the shared Files / compilation trace panel.
-  let current = 'history';
+  // Start with the editor so source actions and templates are immediately available.
+  let current = 'work';
   let wasMobile = false;
   let detailContext = { section: 'event', key: null };
   let displayedDetailContext = detailContext;

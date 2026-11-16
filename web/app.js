@@ -5,7 +5,7 @@ import { setupSettings } from './ui/settings.js';
 import { mountIcons } from './ui/icons.js';
 import { resetTokenColumns } from './ui/tokens.js';
 import { setupLearningNavigation } from './ui/learning-navigation.js';
-import { setupFileWorkspace } from './ui/file-workspace.js';
+import { setupSourceTools } from './ui/source-tools.js';
 import { setupNavigationRail } from './ui/navigation-rail.js';
 
 mountIcons();
@@ -37,7 +37,7 @@ const navigation = setupLearningNavigation({
   },
 });
 app.navigation = navigation;
-app.sidePanel = setupFileWorkspace(app);
+setupSourceTools(app);
 if (new URL(window.location.href).searchParams.get('page') === 'api') navigation.show('api');
 app.loadManifest();
 app.sharing.openURL(window.location.href);

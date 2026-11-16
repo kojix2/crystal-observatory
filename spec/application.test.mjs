@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Application } from '../web/ui/application.js';
 import { t, setLocale } from '../web/i18n/index.js';
 import { WorkSession } from '../web/runtime/session.js';
+import { readFile } from 'node:fs/promises';
 
 async function fixture(run) {
   const oldDocument = globalThis.document;
@@ -169,4 +170,41 @@ test('a pending local source read cannot replace a newer document after cancella
     assert.deepEqual(opened, []);
     assert.equal(app.session.busy, false);
   });
+});
+
+test('choosing a template shows its source and keeps the recording available', async () => {
+  const recording = await readFile(
+    new URL('../web/traces/01_normalization.json.gz', import.meta.url),
+  );
+  const oldFetch = globalThis.fetch;
+  try {
+    await fixture(async ({ app, get }) => {
+      app.session = new WorkSession();
+      get('templates').open = true;
+      get('templates').close = () => {
+        get('templates').open = false;
+      };
+      let focused = false;
+      get('graph-panel').focus = () => {
+        focused = true;
+      };
+      globalThis.fetch = async (url, { signal }) => {
+        assert.match(url.pathname, /\/web\/traces\/01_normalization\.json\.gz$/);
+        assert.equal(signal.aborted, false);
+        assert.equal(get('templates').open, false);
+        assert.equal(focused, true);
+        return new Response(recording);
+      };
+      await app.loadExample({ title: 'Normalization', trace: './traces/01_normalization.json.gz' });
+      assert.equal(app.trace.view, 'source');
+      assert.equal(app.trace.recording.mode, 'full');
+      assert.match(app.trace.recording.source, /x \+= 1/);
+      assert(app.trace.recording.events.length > 0);
+      assert.equal(app.artifact, null);
+      assert.equal(get('run-state').textContent, t('state.recorded'));
+      assert.equal(app.session.busy, false);
+    });
+  } finally {
+    globalThis.fetch = oldFetch;
+  }
 });

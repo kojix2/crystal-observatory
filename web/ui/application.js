@@ -52,7 +52,10 @@ export class Application {
     $('download-wasm').onclick = () => {
       if (this.artifact) download('program.wasm', this.artifact.wasm, 'application/wasm');
     };
-    $('import').onclick = () => $('file').click();
+    $('import').onclick = () => {
+      $('trace-file-actions').hidePopover();
+      $('file').click();
+    };
     $('file').onchange = () => {
       const file = $('file').files[0];
       $('file').value = '';
@@ -154,7 +157,6 @@ export class Application {
     return !changed;
   }
   async compile(andRun) {
-    this.sidePanel?.showSide('trace');
     const prelude = this.prelude;
     this.prepare('state.compiling');
     const source = this.editor.value;
@@ -197,7 +199,6 @@ export class Application {
     }
   }
   async parse() {
-    this.sidePanel?.showSide('trace');
     this.prepare('state.parsing');
     const source = this.editor.value;
     notify(() => t('notice.parsing'));
@@ -247,15 +248,15 @@ export class Application {
       this.showError(error);
     }
   }
-  async openRecord(load, origin) {
+  async openRecord(load, origin, { view } = {}) {
     this.prepare('state.loading');
     const source = this.editor.value;
     notify(() => t('notice.recordLoading'));
     try {
       const trace = await this.session.load(load);
       const current = this.acceptTrace(trace, origin, source);
+      if (view) this.trace.setView(view);
       if (current) this.sourceName = trace.filename || 'main.cr';
-      this.sidePanel?.showSide('trace');
       this.navigation?.show('observatory');
       state('state.recorded');
     } catch (error) {
@@ -285,9 +286,13 @@ export class Application {
     this.updateControls();
   }
   loadExample(item) {
-    this.openRecord(
+    $('templates').close();
+    // Keep focus in the work area while the template loads.
+    $('graph-panel').focus({ preventScroll: true });
+    return this.openRecord(
       (signal) => fetchTrace(new URL(item.trace, WEB_ROOT), signal),
       () => t('origin.recorded', { title: this.exampleTitle(item) }),
+      { view: 'source' },
     );
   }
   async loadManifest() {

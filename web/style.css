@@ -119,17 +119,18 @@ kbd+kbd { margin-left:2px; }
 .learning-navigation-divider { flex:0 0 1px; width:24px; margin:2px 0; background:var(--line); }
 .learning-panel { grid-column:2; grid-row:1; min-width:0; min-height:0; overflow:auto; background:var(--paper); }
 .side-panel { display:flex; flex-direction:column; min-width:0; min-height:0; }
-.side-tabs { gap:10px; }
-.file-panel { flex:1; min-width:0; min-height:0; overflow:auto; background:var(--paper); }
-.file-inner { padding:12px; }
-.template-section { margin-top:24px; padding-top:16px; border-top:1px solid var(--line); }
-.template-section h3 { margin-bottom:12px; }
+.side-head h2 { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+#templates h2 { margin-bottom:16px; }
 .template-list { display:flex; flex-direction:column; gap:4px; }
 .template-list button { padding:6px 9px; text-align:left; white-space:normal; overflow-wrap:anywhere; }
-.file-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
-.file-actions button { white-space:normal; text-align:left; }
-.file-section { padding:0 0 24px; margin-bottom:24px; border-bottom:1px solid var(--line); }
-.file-section h3 { margin-bottom:8px; }
+.trace-file-actions { position:fixed; inset:50% auto auto 50%; transform:translate(-50%,-50%); margin:4px 0 0; padding:4px; width:max-content; max-width:calc(100vw - 16px); border:1px solid var(--line); border-radius:5px; background:var(--paper); color:var(--ink); box-shadow:0 8px 30px #0003; }
+.trace-file-actions:popover-open { display:flex; flex-direction:column; gap:2px; }
+.trace-file-actions button { display:flex; align-items:center; min-height:36px; padding:6px 10px; text-align:left; background:transparent; }
+.trace-file-actions button:hover { background:var(--soft-2); }
+#trace-file-tools { anchor-name:--trace-file-tools; }
+@supports (top:anchor(bottom)) {
+  .trace-file-actions { position-anchor:--trace-file-tools; top:anchor(bottom); left:anchor(left); transform:none; position-try-fallbacks:flip-block,flip-inline; }
+}
 .learning-inner { width:min(100%,1120px); margin:0 auto; padding:32px; }
 .learning-heading { margin-bottom:24px; }
 .learning-heading h2 { font-size:var(--text-large); margin-bottom:8px; }
@@ -202,11 +203,13 @@ kbd+kbd { margin-left:2px; }
 #source-location { font:var(--text-small) var(--mono); color:#9cc8e6; margin-left:4px; }
 .source-panel { flex:1; min-height:0; overflow:hidden; background:var(--editor-bg); color:var(--editor-ink); }
 .source-tools { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:6px 8px; background:var(--editor-bg); }
+.source-tools .icon-button { color:var(--editor-ink); }
+.source-tools .icon-button:hover { background:var(--editor-highlight); }
 .run-compile-tools { display:flex; flex:0 0 auto; flex-wrap:wrap; align-items:center; gap:6px; padding:6px 8px; background:var(--header-bg); color:var(--header-ink); }
 .run-compile-tools label { display:inline-flex; align-items:center; gap:6px; min-height:24px; font-size:var(--text-small); cursor:pointer; }
 .prelude-toggle input { flex-shrink:0; width:16px; height:16px; margin:0; accent-color:#f0f2f3; }
 .prelude-hint { color:var(--editor-ink); font-size:var(--text-small); }
-#share-source { margin-left:auto; background:#34383e; color:var(--editor-ink); font-size:var(--text-small); }
+#share-source { margin-left:auto; }
 .source-wrap { position:relative; flex:1; min-height:0; overflow:hidden; background:var(--editor-bg); }
 .source-wrap:focus-within { box-shadow:inset 0 0 0 1px #6a747d; }
 /* Native textarea owns editing, selection, IME, scrolling and accessibility.
@@ -593,7 +596,7 @@ body.resizing { user-select:none; }
 .trace-empty #inspector-panel { display:flex; align-items:center; justify-content:center; padding:24px; background:var(--soft); }
 .trace-empty #inspector-panel>:not(#inspector-empty) { display:none; }
 .trace-empty #inspector-empty { display:block; max-width:26ch; text-align:center; color:var(--muted); }
-.side-head:has(#side-tab-files[aria-selected="true"]) #history-tools,.trace-empty #history-tools { display:none; }
+.trace-empty #history-tools { display:none; }
 .playback { display:flex; flex-shrink:0; align-items:center; gap:6px; min-width:0; padding:5px 8px; border-top:1px solid var(--line); background:var(--paper); }
 .playback .icon-button { flex-basis:30px; width:30px; height:30px; }
 #record-video.recording { color:#c43131; }
@@ -671,7 +674,7 @@ footer a { display:inline-flex; align-items:center; gap:3px; text-decoration:non
 #engine { color:#51575d; }
 #versions { overflow:hidden; text-overflow:ellipsis; }
 /* Collapsed History retains its expand button. */
-.trace-collapsed:not(.mobile) #side-panel>:not(.side-head),.trace-collapsed:not(.mobile) #side-tabs { display:none; }
+.trace-collapsed:not(.mobile) #side-panel>:not(.side-head),.trace-collapsed:not(.mobile) .side-head>:not(#toggle-trace) { display:none; }
 .trace-collapsed:not(.mobile) #side-panel .side-head { justify-content:center; padding:0; }
 .workbench>.splitter[aria-disabled="true"] { pointer-events:none; }
 .workbench>.splitter[aria-disabled="true"]::after { display:none; }
@@ -741,7 +744,7 @@ dialog .close:hover { color:var(--ink); }
   body { height:var(--viewport-height,100dvh); grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
   .learning-navigation { display:none; }
   #app,.learning-panel { grid-column:1; grid-row:1; }
-  .file-panel button { min-height:44px; }
+  .trace-file-actions button { min-height:44px; }
   .learning-inner { padding:20px 16px; }
   .mobile .compile-actions #compile-run,.mobile #compile-options-button { width:44px; }
   .mobile .compile-actions .icon-button { height:44px; }
@@ -801,6 +804,7 @@ dialog .close:hover { color:var(--ink); }
   select,input:not([type=checkbox]):not([type=range]),textarea { font-size:max(16px,var(--text-body))!important; }
   #source,#source-colors { font-size:var(--editor-font-size)!important; }
   .mobile .source-tools { flex-wrap:wrap; gap:4px; }
+  .mobile .source-tools .icon { width:20px; height:20px; }
   .mobile .run-compile-tools label { min-height:44px; }
   .mobile #source-view { overflow-y:auto; }
   .mobile #source-view .source-wrap { min-height:180px; }

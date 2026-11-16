@@ -218,7 +218,6 @@ export class TraceView {
     if (!this.trace?.events.length || !AstRecorder.supported()) return;
     this.stop();
     this.setView('ast');
-    this.onPlaybackStart?.();
     if (this.model.index >= this.trace.events.length - 1) this.seek(0);
     const request = Symbol('recording');
     this.recordingRequest = request;
@@ -261,7 +260,6 @@ export class TraceView {
     if (this.playTimer) return this.stop();
     if (!this.trace?.events.length) return;
     if (this.model.index >= this.trace.events.length - 1) this.seek(0);
-    this.onPlaybackStart?.();
     if (this.soundEnabled) this.speechSound.activate();
     setIcon($('play'), 'pause');
     $('play').dataset.i18nAria = 'pause';
@@ -843,6 +841,7 @@ export class TraceView {
       if (this.trace?.llvm_ir) download('crystal-observatory.ll', this.trace.llvm_ir, 'text/plain');
     };
     $('export').onclick = () => {
+      $('trace-file-actions').hidePopover();
       if (this.trace) download('crystal-observatory-trace.json', JSON.stringify(this.trace));
     };
     document

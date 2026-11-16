@@ -56,10 +56,13 @@ an existing Observatory source link.
 
 ## Files and templates
 
-The left side panel has **Files** and **Compilation trace** tabs. It starts in
-**Files**, with file actions first and a simple list of template buttons below.
-The source editor and observation views stay visible in the center while using
-either side tab. Each template button opens its bundled recording and source.
+The toolbar at the top of **Source** contains icons for **New source** (page
+with a plus), **Open source** (open folder), **Save source** (floppy disk), and
+**Open template** (books), with **Share** at the right. Hover an icon for its
+label. The template icon opens a dialog of examples; selecting one opens its
+bundled recording and displays its source code. Switch to AST to inspect the
+recording. Close the dialog or press Escape to return without changing the
+current document.
 Language, GitHub, and Settings are at the bottom of the left sidebar.
 The button below Settings hides the icon sidebar. Restore it from the button
 before the observation tabs, or from the upper-left corner of a learning page.
@@ -71,13 +74,13 @@ initialization and macro expansion. The specialization and overload examples use
 the same method body so you can compare specializing one definition with selecting
 an overload.
 
-The file menu contains **New source**, **Open source** (`.cr` / UTF-8),
-**Save source**, and separate **Open trace** / **Save trace** actions for JSON or
-gzip recordings. **Close current file** clears the source, recording and executable
-and selects Files in the side panel. Saving downloads a file to your computer.
-Switching side tabs preserves the editor, observation view, selected event and
-node. Compiling or parsing selects **Compilation trace**; opening a recording
-also reveals that tab.
+**Open source** accepts `.cr` / UTF-8 files. **New source** clears the source,
+recording and executable and focuses the editor. Saving downloads the current
+source to your computer. The left panel is dedicated to **Compilation trace**;
+its header's **Trace file actions** menu (ellipsis) contains **Open trace** /
+**Save trace** for JSON or gzip recordings. Saving a trace is available once a
+recording has been loaded or produced. **Open trace** reveals its AST in the
+work area; templates open in Source.
 
 ## Compile and inspect
 
@@ -93,7 +96,8 @@ you change views or screen size.
 
 The **Compilation trace** panel shows compiler stages, Visitor calls and their
 events. It contains search and filters; playback is below the AST. Templates and
-file operations are in **Files**. Compilation always analyzes the current editor contents.
+source file operations are above the source editor. Compilation always analyzes
+the current editor contents.
 
 The **Standard library** checkbox controls whether Crystal loads its standard
 `prelude`. Clearing it uses `--prelude empty` and shows **IR only**. This can make
@@ -132,9 +136,10 @@ Editing source does not update an existing AST or IR. Escape exits maximization;
 
 ## On a smartphone
 
-At widths up to 960 px, the bottom navigation is **Work**, **Files & trace**,
-and **Details**. The initial pane is **Files & trace**, containing the same Files
-and Compilation trace tabs as the desktop side panel. Opening source or a
+At widths up to 960 px, the bottom navigation is **Work**, **Trace**,
+and **Details**. The initial pane is **Work**, with source file actions and the
+template picker above the editor. **Trace** shows the compilation stages and
+events, with its file actions in the header's ellipsis menu. Opening source or a
 recording reveals Work, which contains the editor and all observation tabs.
 Swipe the tab row to reach more views. Compile & run and the Standard library
 setting are in the Output area below Source. Stop and status messages sit in
@@ -144,7 +149,7 @@ only; the bottom menu opens Compare, language, settings, and GitHub.
 Layout reset is available in Settings. Editing remains available while compilation runs.
 
 Selecting a trace event or stage heading opens Details, with the operation
-above the node information. Return to Files & trace to continue from the same selection,
+above the node information. Return to Trace to continue from the same selection,
 filters, and scroll position. Playback and stepping stay in the current screen.
 Selecting an AST node updates its details and source location without leaving
 AST. The existing Details navigation opens that node's information; the Source
@@ -157,8 +162,7 @@ The Play/Pause button sits to the left of the seek bar below the AST. Drag the b
 to move through the recording, or select an event in the list. The speed menu
 offers Slow, Normal and Fast on both desktop and mobile. The filter button in
 Compilation trace opens search, event kind, and Clear.
-Starting playback selects Compilation trace in the side panel. On phones, it
-does not switch panes; the trace is ready when you open Files & trace. A
+Starting playback keeps the current phone pane; the trace is ready when you open Trace. A
 collapsed desktop side panel stays collapsed.
 To save a video, press the record button beside the AST seek bar. Playback starts
 and the AST view is drawn directly into the video, including the Visitor marker
@@ -180,7 +184,7 @@ navigation and other controls.
 
 Rotating the device or returning to a desktop-sized window preserves source,
 selection, and comparison. Desktop divider sizes and collapsed panels remain
-separate from phone navigation. The phone initially shows Files in the side panel.
+separate from phone navigation. The phone initially shows Source in Work.
 
 ## Read observations
 
@@ -339,9 +343,9 @@ references. The zoom slider spreads the branches out; scroll to explore and use
 **Fit all** to return to the overview. Switching layouts preserves selection,
 playback, the snapshot and branch folds; the chosen layout is saved in the browser.
 
-The desktop workspace uses three columns: the **Files / Compilation trace** side
+The desktop workspace uses three columns: the **Compilation trace** side
 panel, the selected observation (AST, source, IR or output), and node/operation
-details. The Files / Compilation trace panel starts narrower. Drag the column
+details. The Compilation trace panel starts narrower. Drag the column
 dividers to resize them, or collapse the side panel
 with its header button. Widths and the
 collapsed state are saved in the browser. Select a stage heading in Compilation trace to

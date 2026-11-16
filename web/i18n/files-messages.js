@@ -1,15 +1,23 @@
 const entry = (ja, en, es, zh, fr, de, ru) => ({ ja, en, es, 'zh-CN': zh, fr, de, ru });
 
 export const filesMessages = {
-  'files.title': entry('ファイル', 'Files', 'Archivos', '文件', 'Fichiers', 'Dateien', 'Файлы'),
-  'files.templates': entry(
-    'テンプレート',
-    'Templates',
-    'Plantillas',
-    '模板',
-    'Modèles',
-    'Vorlagen',
-    'Шаблоны',
+  'files.openTemplates': entry(
+    'テンプレートを開く',
+    'Open template',
+    'Abrir plantilla',
+    '打开模板',
+    'Ouvrir un modèle',
+    'Vorlage öffnen',
+    'Открыть шаблон',
+  ),
+  'files.traceActions': entry(
+    '工程記録の操作',
+    'Trace file actions',
+    'Acciones de archivo de traza',
+    '轨迹文件操作',
+    'Actions sur les fichiers de trace',
+    'Aufzeichnungsdatei-Aktionen',
+    'Действия с файлом трассы',
   ),
   'files.openTrace': entry(
     '工程記録を開く',
@@ -28,24 +36,6 @@ export const filesMessages = {
     'Enregistrer la trace',
     'Aufzeichnung speichern',
     'Сохранить трассу',
-  ),
-  'files.source': entry(
-    'ソースコード',
-    'Source code',
-    'Código fuente',
-    '源代码',
-    'Code source',
-    'Quellcode',
-    'Исходный код',
-  ),
-  'files.trace': entry(
-    'コンパイル工程の記録',
-    'Compilation trace recording',
-    'Registro de la traza de compilación',
-    '编译轨迹记录',
-    'Enregistrement de compilation',
-    'Aufzeichnung des Kompilierungsablaufs',
-    'Запись трассы компиляции',
   ),
   'files.newSource': entry(
     '新規作成',
@@ -73,24 +63,6 @@ export const filesMessages = {
     'Enregistrer le code',
     'Quellcode speichern',
     'Сохранить код',
-  ),
-  'files.close': entry(
-    '現在のファイルを閉じる',
-    'Close current file',
-    'Cerrar archivo actual',
-    '关闭当前文件',
-    'Fermer le fichier actuel',
-    'Aktuelle Datei schließen',
-    'Закрыть текущий файл',
-  ),
-  'files.sidebar': entry(
-    'ファイル・工程',
-    'Files & trace',
-    'Archivos y traza',
-    '文件与轨迹',
-    'Fichiers et trace',
-    'Dateien & Ablauf',
-    'Файлы и трасса',
   ),
   'side.collapse': entry(
     'サイドパネルを折りたたむ',

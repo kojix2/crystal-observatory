@@ -25,6 +25,11 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
         'next',
         'last',
         'history-extra-playback',
+        'file-panel',
+        'side-tabs',
+        'side-tab-files',
+        'side-tab-trace',
+        'close-document',
       ].includes(id),
       `Removed element accessed: ${id}`,
     );
@@ -110,14 +115,17 @@ function workspace({ mobile = true, saved = {} } = {}, run) {
   for (const [parent, children] of [
     ['learning-navigation', ['header-options']],
     ['work-status', ['status-label', 'status-message', 'cancel-job']],
-    ['source-tools', ['share-source']],
+    [
+      'source-tools',
+      ['new-source', 'open-source', 'save-source', 'open-templates', 'share-source'],
+    ],
     ['run-compile-tools', ['compile-actions', 'compile-options', 'prelude-toggle', 'prelude-hint']],
     ['compile-actions', ['compile-run', 'compile-options-button']],
     ['compile-options', ['compile-only', 'analyze']],
     ['prelude-toggle', ['prelude']],
     ['status-message', ['notice']],
     ['header-options', ['language']],
-    ['side-head', ['side-tabs', 'history-tools', 'toggle-trace']],
+    ['side-head', ['trace-title', 'trace-file-tools', 'history-tools', 'toggle-trace']],
     ['graph-head', ['view-tabs', 'compare-view', 'maximize-graph']],
     ['playback', ['play', 'scrubber', 'position', 'playback-options', 'playback-settings']],
   ])
@@ -215,13 +223,13 @@ test('desktop columns fill a resized workspace without a window resize', () => {
   });
 });
 
-test('mobile starts in the side panel and navigation retains scroll and selection', () => {
+test('mobile starts in Work with source actions and navigation retains scroll and selection', () => {
   workspace({}, ({ controller, element, buttons }) => {
     assert.equal(controller.mobile, true);
-    assert.equal(element('app').dataset.mobilePane, 'history');
-    assert.equal(element('side-panel').inert, false);
-    assert.equal(element('graph-panel').inert, true);
-    assert.equal(buttons[1].getAttribute('aria-pressed'), 'true');
+    assert.equal(element('app').dataset.mobilePane, 'work');
+    assert.equal(element('side-panel').inert, true);
+    assert.equal(element('graph-panel').inert, false);
+    assert.equal(buttons[0].getAttribute('aria-pressed'), 'true');
     assert.equal(element('header-options').getAttribute('popover'), 'auto');
     assert.deepEqual(
       buttons.map((button) => button.dataset.pane),
