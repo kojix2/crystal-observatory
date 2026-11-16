@@ -10,6 +10,7 @@ export class IRView {
     this.hasIR = false;
     this.visible = false;
     this.following = true;
+    $('ir-code').onscroll = () => this.scroll();
     $('ir-search').oninput = () => {
       this.following = false;
       this.filter();
@@ -56,6 +57,9 @@ export class IRView {
     $('ir-function').value = this.selected;
     this.render();
   }
+  scroll() {
+    $('ir-line-numbers').style.transform = `translateY(${-$('ir-code').scrollTop}px)`;
+  }
   render(visible = this.visible) {
     this.visible = visible;
     const fn = this.functions.find((fn) => fn.name === this.selected);
@@ -63,7 +67,11 @@ export class IRView {
     if (content !== this.renderedText) {
       if (fn) renderLLVM($('ir-code'), content);
       else $('ir-code').textContent = content;
+      $('ir-line-numbers').textContent = fn
+        ? Array.from({ length: content.split('\n').length }, (_, i) => fn.startLine + i).join('\n')
+        : '';
       this.renderedText = content;
+      this.scroll();
     }
     $('ir-caption').hidden = !fn;
     $('ir-caption').textContent = fn ? t('ir.caption', { count: this.functions.length }) : '';

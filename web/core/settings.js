@@ -75,7 +75,7 @@ export const colorSettings = colorGroups.flatMap((group) => group.colors);
 export const isColor = (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
 export const fontSettings = {
   editorFontSize: { default: 12, min: 10, max: 24, variable: '--editor-font-size' },
-  irFontSize: { default: 10, min: 8, max: 22, variable: '--ir-font-size' },
+  irFontSize: { default: 8, min: 8, max: 22, variable: '--ir-font-size' },
 };
 
 export function isFontSize(value, { min, max }) {

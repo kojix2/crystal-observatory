@@ -237,6 +237,7 @@ export function indexIR(ir) {
     while (i + 1 < lines.length && lines[i] !== '}') i++;
     functions.push({
       name: name[1] || name[2],
+      startLine: start + 1,
       text: lines.slice(start, i + 1).join('\n'),
     });
   }

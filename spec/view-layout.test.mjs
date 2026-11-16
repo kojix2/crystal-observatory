@@ -162,18 +162,21 @@ test('comparison widths preserve readable panes, valid ratios, and the outer col
 
 test('IR searches and manual function choices survive automatic following and resizing', () => {
   const elements = Object.fromEntries(
-    ['ir-search', 'ir-function', 'ir-code', 'ir-caption', 'ir-prelude'].map((id) => [
-      id,
-      {
-        value: '',
-        textContent: '',
-        innerHTML: '',
-        scrollTop: 0,
-        replaceChildren(...children) {
-          this.children = children;
+    ['ir-search', 'ir-function', 'ir-code', 'ir-line-numbers', 'ir-caption', 'ir-prelude'].map(
+      (id) => [
+        id,
+        {
+          value: '',
+          textContent: '',
+          innerHTML: '',
+          scrollTop: 0,
+          style: {},
+          replaceChildren(...children) {
+            this.children = children;
+          },
         },
-      },
-    ]),
+      ],
+    ),
   );
   const oldDocument = globalThis.document;
   const oldOption = globalThis.Option;
@@ -187,32 +190,41 @@ test('IR searches and manual function choices survive automatic following and re
   try {
     const view = new IRView();
     view.load(
-      'define void @alpha() {\nentry:\n  ret void\n}\ndefine void @beta() {\nentry:\n  ret void\n}\n',
+      '; module header\n\ndefine void @alpha() {\nentry:\n  ret void\n}\ndefine void @beta() {\nentry:\n  ret void\n}\n',
       'empty',
     );
     assert.equal(elements['ir-prelude'].textContent, '--prelude empty');
     assert.equal(elements['ir-prelude'].hidden, false);
+    assert.equal(elements['ir-line-numbers'].textContent, '3\n4\n5\n6');
     view.render(true);
     elements['ir-search'].value = 'beta';
     elements['ir-search'].oninput();
     view.follow('alpha');
     assert.equal(view.selected, 'beta');
     assert.equal(elements['ir-search'].value, 'beta');
+    assert.equal(elements['ir-line-numbers'].textContent, '7\n8\n9\n10');
     elements['ir-code'].scrollTop = 75;
+    elements['ir-code'].onscroll();
+    assert.equal(elements['ir-line-numbers'].style.transform, 'translateY(-75px)');
     view.render();
     assert.equal(elements['ir-code'].scrollTop, 75);
     view.follow('alpha', '', true);
     assert.equal(view.selected, 'alpha');
     assert.equal(elements['ir-search'].value, '');
+    assert.equal(elements['ir-line-numbers'].textContent, '3\n4\n5\n6');
     elements['ir-function'].value = 'beta';
     elements['ir-function'].onchange();
     view.follow('alpha');
     assert.equal(view.selected, 'beta');
     view.follow('missing_function', '', true);
     assert.equal(view.selected, 'beta');
+    elements['ir-search'].value = 'no_such_function';
+    elements['ir-search'].oninput();
+    assert.equal(elements['ir-line-numbers'].textContent, '');
     view.load('');
     assert.equal(elements['ir-prelude'].hidden, true);
     assert.equal(elements['ir-prelude'].textContent, '');
+    assert.equal(elements['ir-line-numbers'].textContent, '');
   } finally {
     globalThis.document = oldDocument;
     globalThis.Option = oldOption;
