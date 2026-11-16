@@ -209,6 +209,7 @@ test('declaration AST navigation reveals a generated node without seeking', () =
   const trace = fixture();
   const node = (id, children = [], hook_expansions = []) => ({
     id,
+    kind: 'ClassDef',
     children,
     targets: [],
     hook_expansions,

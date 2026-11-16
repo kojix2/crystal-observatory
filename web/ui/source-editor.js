@@ -36,8 +36,9 @@ export class SourceEditor {
   get dirty() {
     return this.value !== this.recordedSource;
   }
-  setRecord(source, preserveEdits = false, hasRecord = true) {
+  setRecord(source, preserveEdits = false, hasRecord = true, filename = '') {
     this.recordedSource = source;
+    this.recordedFilename = filename;
     this.hasRecord = hasRecord;
     this.line = 0;
     this.nodeId = null;
@@ -88,10 +89,13 @@ export class SourceEditor {
       `${padding + (this.line - 1) * lineHeight - $('source').scrollTop}px`;
   }
   highlight(node) {
-    const changed = this.nodeId !== node?.id || this.line !== (node?.line || 0);
+    const local =
+      !node?.filename || !this.recordedFilename || node.filename === this.recordedFilename;
+    const line = local ? node?.line || 0 : 0;
+    const changed = this.nodeId !== node?.id || this.line !== line;
     this.nodeId = node?.id;
-    this.line = node?.line || 0;
-    this.column = node?.column || 0;
+    this.line = line;
+    this.column = local ? node?.column || 0 : 0;
     if (changed) this.pendingReveal = this.line > 0;
     this.scroll();
   }

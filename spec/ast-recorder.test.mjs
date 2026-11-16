@@ -144,6 +144,7 @@ function fixture(run) {
         ball,
         drawn,
         track,
+        canvas,
         setBubble(value) {
           bubble = value;
         },
@@ -203,6 +204,90 @@ test('a cancelled AST video request does not create a recorder', async () => {
     assert.equal(await recorder.start(graph, () => false), false);
     assert.equal(recorder.recorder, undefined);
     assert.equal(saved, false);
+  });
+});
+
+test('all stop callers wait for finalization and release canvas memory before another recording', async () => {
+  await fixture(async ({ graph, canvas, track }) => {
+    let stops = 0;
+    const recorder = new AstRecorder({
+      onSave() {},
+      onStop() {
+        stops++;
+      },
+      onError(error) {
+        throw error;
+      },
+    });
+    await recorder.start(graph);
+    const first = recorder.stop();
+    await recorder.stop();
+    assert.equal(stops, 1);
+    assert.equal(track.stopped, true);
+    assert.equal(recorder.recorder, null);
+    assert.equal(recorder.canvas, null);
+    assert.equal(recorder.context, null);
+    assert.equal(recorder.pending, null);
+    assert.equal(canvas.width, 0);
+    assert.equal(canvas.height, 0);
+    await first;
+    assert.equal(await recorder.start(graph), true);
+    await recorder.stop();
+    assert.equal(stops, 2);
+  });
+});
+
+test('failed MediaRecorder startup releases resources and allows retry', async () => {
+  await fixture(async ({ graph, track }) => {
+    const start = MediaRecorder.prototype.start;
+    MediaRecorder.prototype.start = () => {
+      throw new Error('device unavailable');
+    };
+    const recorder = new AstRecorder({ onSave() {}, onStop() {}, onError() {} });
+    await assert.rejects(recorder.start(graph), /device unavailable/);
+    assert.equal(track.stopped, true);
+    assert.equal(recorder.recorder, null);
+    assert.equal(recorder.canvas, null);
+    MediaRecorder.prototype.start = start;
+    assert.equal(await recorder.start(graph), true);
+    await recorder.stop();
+  });
+});
+
+test('a recorder stopped by the browser discards a frame still loading its SVG', async () => {
+  await fixture(async ({ graph, track }) => {
+    let saved = 0;
+    const recorder = new AstRecorder({
+      onSave() {
+        saved++;
+      },
+      onStop() {},
+      onError(error) {
+        throw error;
+      },
+    });
+    await recorder.start(graph);
+    const pending = recorder.capture(graph, null, 30);
+    recorder.recorder.stop();
+    await pending;
+    assert.equal(saved, 1);
+    assert.equal(track.stopped, true);
+    assert.equal(recorder.canvas, null);
+  });
+});
+
+test('finalizing an older recording cannot stop a new one after a browser-initiated stop', async () => {
+  await fixture(async ({ graph }) => {
+    const recorder = new AstRecorder({ onSave() {}, onStop() {}, onError() {} });
+    await recorder.start(graph);
+    const pending = recorder.stop();
+    await Promise.resolve(); // The final canvas frame is waiting to be emitted.
+    recorder.recorder.stop();
+    await Promise.resolve();
+    assert.equal(await recorder.start(graph), true);
+    await pending;
+    assert.equal(recorder.recorder?.state, 'recording');
+    await recorder.stop();
   });
 });
 

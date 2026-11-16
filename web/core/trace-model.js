@@ -4,6 +4,18 @@ import { applyDeclaration, validateDeclarations } from './declarations.js';
 import { validateActivities } from './activities.js';
 import { indexStateObservations } from './compiler-state.js';
 
+const nodeStrings = ['label', 'text', 'filename', 'inferred_type'];
+const nodePositions = ['line', 'column', 'end_line', 'end_column'];
+const validNode = (node) =>
+  node &&
+  Number.isSafeInteger(node.id) &&
+  node.id > 0 &&
+  typeof node.kind === 'string' &&
+  nodeStrings.every((field) => node[field] == null || typeof node[field] === 'string') &&
+  nodePositions.every(
+    (field) => node[field] == null || (Number.isSafeInteger(node[field]) && node[field] >= 0),
+  );
+
 export function validateTrace(t) {
   if (
     !t ||
@@ -12,7 +24,11 @@ export function validateTrace(t) {
     !Array.isArray(t.nodes) ||
     !Array.isArray(t.snapshots) ||
     typeof t.source !== 'string' ||
-    (t.prelude != null && typeof t.prelude !== 'string')
+    ['prelude', 'filename', 'llvm_ir', 'mode', 'compiler_version', 'host_compiler_version'].some(
+      (field) => t[field] != null && typeof t[field] !== 'string',
+    ) ||
+    (t.errors != null &&
+      (!Array.isArray(t.errors) || t.errors.some((error) => typeof error !== 'string')))
   )
     throw new UIError('error.traceSchema');
   if (
@@ -24,12 +40,7 @@ export function validateTrace(t) {
   if (t.events.some((e, i) => !e || e.index !== i || typeof e.kind !== 'string'))
     throw new UIError('error.traceOrder');
   const ids = new Set(t.nodes.map((n) => n?.id));
-  if (
-    ids.size !== t.nodes.length ||
-    t.nodes.some(
-      (n) => !n || !Number.isSafeInteger(n.id) || n.id <= 0 || typeof n.kind !== 'string',
-    )
-  )
+  if (ids.size !== t.nodes.length || t.nodes.some((node) => !validNode(node)))
     throw new UIError('error.traceNode');
   for (const e of t.events) {
     if (
@@ -70,6 +81,7 @@ export function validateTrace(t) {
       !s ||
       !Array.isArray(s.nodes) ||
       !Array.isArray(s.roots) ||
+      (s.name != null && typeof s.name !== 'string') ||
       s.nodes.length > 20000 ||
       !Number.isSafeInteger(s.at_event) ||
       s.at_event < 0 ||
@@ -79,12 +91,13 @@ export function validateTrace(t) {
     const local = new Set(s.nodes.map((n) => n?.id));
     if (
       local.size !== s.nodes.length ||
-      s.nodes.some((n) => !n || !ids.has(n.id)) ||
+      s.nodes.some((n) => !validNode(n) || !ids.has(n.id)) ||
       s.roots.some((n) => !local.has(n)) ||
       s.nodes.some(
         (n) =>
           !Array.isArray(n.children) ||
           !Array.isArray(n.targets) ||
+          (n.expanded != null && (!Number.isSafeInteger(n.expanded) || n.expanded < 0)) ||
           (n.hook_expansions != null && !Array.isArray(n.hook_expansions)) ||
           [
             ...n.children,

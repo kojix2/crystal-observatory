@@ -31,6 +31,9 @@ host. The complete build has been tested on Linux x86_64; macOS is unverified.
   results without invalidating reusable assets.
 - Keep node selection independent of playback selection. Language changes and
   view switching must preserve both; do not reload a trace to redraw it.
+- Discard late captures from an older playback after stopping or restarting.
+  Recording finalization ends at the MediaRecorder stop event; release its
+  canvas, stream and handlers before allowing another recording.
 - Store generated WASM with its source. A result must not overwrite newer editor
   text or execute automatically against different source.
 - Preserve older schema-1 recordings. Missing coverage and declaration metadata

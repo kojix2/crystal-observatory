@@ -64,6 +64,7 @@ function patchFileGrowth() {
 
   OpenFile.prototype.fd_write = function (data) {
     if (this.file.readonly) return write.call(this, data);
+    if (!data.byteLength) return { ret: 0, nwritten: 0 };
     const end = Number(this.file_pos + BigInt(data.byteLength));
     grow(this.file, end);
     this.file.data.set(data, Number(this.file_pos));
@@ -74,6 +75,7 @@ function patchFileGrowth() {
 
   OpenFile.prototype.fd_pwrite = function (data, offset) {
     if (this.file.readonly) return pwrite.call(this, data, offset);
+    if (!data.byteLength) return { ret: 0, nwritten: 0 };
     const end = Number(offset + BigInt(data.byteLength));
     grow(this.file, end);
     this.file.data.set(data, Number(offset));

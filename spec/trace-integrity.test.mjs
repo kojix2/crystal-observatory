@@ -36,6 +36,18 @@ test('snapshot identities and timestamps are checked before reconstructing compi
     (t) => (t.events[0].node_id = false),
     (t) => (t.events[0].after = 42),
     (t) => (t.events[0].depth = -1),
+    (t) => (t.nodes[0].label = {}),
+    (t) => (t.nodes[0].text = []),
+    (t) => (t.nodes[0].inferred_type = 1),
+    (t) => (t.nodes[0].line = -1),
+    (t) => delete t.snapshots[0].nodes[0].kind,
+    (t) => (t.snapshots[0].nodes[0].kind = {}),
+    (t) => (t.snapshots[0].nodes[0].label = []),
+    (t) => (t.snapshots[0].nodes[0].expanded = false),
+    (t) => (t.snapshots[0].name = {}),
+    (t) => (t.llvm_ir = []),
+    (t) => (t.errors = 'failed'),
+    (t) => (t.errors = [42]),
   ]) {
     const trace = recording();
     mutate(trace);

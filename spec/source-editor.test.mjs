@@ -56,3 +56,29 @@ test('a selection made in another view reveals its source line once, preserving 
     globalThis.window = previousWindow;
   }
 });
+
+test('foreign-file AST locations do not highlight unrelated lines in the recorded source', () => {
+  const originalDocument = globalThis.document;
+  const originalWindow = globalThis.window;
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, { value: '', style: {}, scrollTop: 0, scrollLeft: 0 });
+    return elements.get(id);
+  };
+  globalThis.document = { getElementById: get, addEventListener() {} };
+  globalThis.window = { getComputedStyle: () => ({ lineHeight: '24px', paddingTop: '14px' }) };
+  try {
+    const editor = new SourceEditor(() => {});
+    editor.setRecord('puts 42\n', false, true, '/main.cr');
+    editor.highlight({ id: 1, filename: '/main.cr', line: 1, column: 1 });
+    assert.equal(get('highlight').style.display, 'block');
+    editor.highlight({ id: 2, filename: '/src/object.cr', line: 1, column: 1 });
+    assert.equal(get('highlight').style.display, 'none');
+    assert.equal(get('source-location').textContent, '');
+    editor.highlight({ line: 1, column: 2 }); // Lexer selections have no filename.
+    assert.equal(get('highlight').style.display, 'block');
+  } finally {
+    globalThis.document = originalDocument;
+    globalThis.window = originalWindow;
+  }
+});

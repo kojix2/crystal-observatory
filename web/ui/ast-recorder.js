@@ -250,6 +250,7 @@ export class AstRecorder {
   }
 
   async start(graph, isCurrent = () => true) {
+    if (this.recorder || this.stopping) return false;
     if (!AstRecorder.supported()) throw new Error('AST video recording is unavailable');
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(1, graph.clientWidth);
@@ -258,7 +259,10 @@ export class AstRecorder {
     if (!context) throw new Error('Canvas is unavailable');
     const first = snapshot(graph);
     const image = await imageFromSVG(first.xml);
-    if (!isCurrent()) return false;
+    if (!isCurrent() || this.recorder || this.stopping) {
+      canvas.width = canvas.height = 0;
+      return false;
+    }
     context.fillStyle = first.background;
     this.background = first.background;
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -282,6 +286,8 @@ export class AstRecorder {
       this.recorder = recorder;
       this.failed = false;
       this.pending = Promise.resolve();
+      let finish;
+      this.finished = new Promise((resolve) => (finish = resolve));
       recorder.ondataavailable = (event) => {
         if (event.data.size) chunks.push(event.data);
       };
@@ -291,9 +297,6 @@ export class AstRecorder {
         this.onError(event.error || new Error('Recording failed'));
       };
       recorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
-        this.recorder = null;
-        this.stream = null;
         try {
           if (chunks.length && !failed && !this.failed) {
             const type = recorder.mimeType || mimeType || 'video/webm';
@@ -302,6 +305,9 @@ export class AstRecorder {
             this.onError(new Error('No video frames recorded'));
           }
         } finally {
+          chunks.length = 0;
+          this.release();
+          finish();
           this.onStop();
         }
       };
@@ -310,12 +316,24 @@ export class AstRecorder {
       return true;
     } catch (error) {
       stream.getTracks().forEach((track) => track.stop());
+      canvas.width = canvas.height = 0;
+      this.release();
       throw error;
     }
   }
 
+  release() {
+    if (this.recorder)
+      this.recorder.ondataavailable = this.recorder.onerror = this.recorder.onstop = null;
+    this.stream?.getTracks().forEach((track) => track.stop());
+    if (this.canvas) this.canvas.width = this.canvas.height = 0;
+    this.canvas = this.context = this.stream = this.recorder = this.pending = this.finished = null;
+    this.stopping = false;
+  }
+
   capture(graph, previous, duration) {
     if (this.recorder?.state !== 'recording' || this.stopping) return Promise.resolve();
+    const recorder = this.recorder;
     const frame = snapshot(graph);
     const current = marker(graph);
     const bubble = speech(graph);
@@ -328,6 +346,7 @@ export class AstRecorder {
       previous.layout === current.layout;
     this.pending = this.pending.then(async () => {
       const image = await imageFromSVG(frame.xml);
+      if (this.recorder !== recorder) return;
       const paint = (progress) => {
         const ctx = this.context;
         this.background = frame.background;
@@ -348,6 +367,7 @@ export class AstRecorder {
       };
       if (moving) {
         for (let i = 0; i < 6; i++) {
+          if (this.recorder !== recorder) return;
           paint(i / 5);
           await new Promise((resolve) => setTimeout(resolve, Math.max(30, duration / 6)));
         }
@@ -360,22 +380,27 @@ export class AstRecorder {
   }
 
   async stop() {
-    if (!this.recorder || this.stopping) return;
+    if (!this.recorder) return;
+    if (this.stopping) return this.finished;
     this.stopping = true;
+    const recorder = this.recorder;
+    const finished = this.finished;
     try {
       await this.pending;
     } catch (error) {
-      this.failed = true;
-      this.onError(error);
+      if (this.recorder === recorder) {
+        this.failed = true;
+        this.onError(error);
+      }
     }
-    if (this.recorder?.state === 'recording') {
+    if (this.recorder === recorder && recorder.state !== 'inactive') {
       this.context.fillStyle = this.background;
       this.context.fillRect(0, 0, 1, 1);
       this.stream.getVideoTracks()[0].requestFrame?.();
       await new Promise((resolve) => setTimeout(resolve, 40));
-      this.recorder.stop();
+      if (this.recorder === recorder && recorder.state !== 'inactive') recorder.stop();
     }
-    this.stopping = false;
+    return finished;
   }
 }
 

@@ -56,10 +56,10 @@ export class TraceView {
       },
       onStop: () => {
         this.updateRecordButton();
-        if (this.playTimer) this.stop();
+        if (this.playback?.recording) this.stop();
       },
       onError: () => {
-        this.stop();
+        if (this.playback?.recording) this.stop();
         notify(() => t('playback.videoError'), 'error');
       },
     });
@@ -109,7 +109,7 @@ export class TraceView {
     this.collapsed.clear();
     this.astZoom = 1;
     this.typesZoom = 1;
-    this.editor.setRecord(trace.source, preserveEdits, trace.mode !== 'empty');
+    this.editor.setRecord(trace.source, preserveEdits, trace.mode !== 'empty', trace.filename);
     $('app').classList.toggle('trace-empty', trace.mode === 'empty');
     $('export').disabled = trace.mode === 'empty';
     $('follow').checked = true;
@@ -147,7 +147,7 @@ export class TraceView {
     if (!this.layout.secondary) this.view = trace.mode === 'empty' ? 'source' : 'ast';
     this.applyLayout({ remember: false });
     const firstType = trace.events.findIndex(
-      (event) => event.kind === 'type' && event.visitor.includes('MainVisitor'),
+      (event) => event.kind === 'type' && event.visitor?.includes('MainVisitor'),
     );
     this.seek(firstType >= 0 ? firstType : 0);
     const originText = () => (typeof origin === 'function' ? origin() : origin);
@@ -184,6 +184,7 @@ export class TraceView {
   }
   stop() {
     this.recordingRequest = null;
+    this.playback = null;
     clearInterval(this.playTimer);
     this.playTimer = null;
     this.astRecorder?.stop();
@@ -268,7 +269,12 @@ export class TraceView {
     $('play').title = t('pause');
     const speed = () =>
       Number(document.querySelector('input[name="playback-speed"]:checked').value);
+    const playback = {
+      recording: this.astRecorder?.recorder?.state === 'recording' && !this.astRecorder.stopping,
+    };
+    this.playback = playback;
     const step = () => {
+      if (this.playback !== playback) return false;
       if (this.model.index >= this.trace.events.length - 1) {
         this.stop();
         return false;
@@ -283,19 +289,20 @@ export class TraceView {
       }
       return true;
     };
-    if (this.astRecorder?.recorder?.state === 'recording') {
+    if (playback.recording) {
       const recordedStep = async () => {
-        if (!this.playTimer) return;
+        if (this.playback !== playback) return;
         const previous = astMarker($('graph'));
         if (!step()) return;
         try {
           await this.astRecorder.capture($('graph'), previous, Math.max(240, speed()));
         } catch {
+          if (this.playback !== playback) return;
           this.stop();
           notify(() => t('playback.videoError'), 'error');
           return;
         }
-        if (this.playTimer) this.playTimer = setTimeout(recordedStep, 0);
+        if (this.playback === playback) this.playTimer = setTimeout(recordedStep, 0);
       };
       this.playTimer = setTimeout(recordedStep, Math.max(240, speed()));
     } else {
