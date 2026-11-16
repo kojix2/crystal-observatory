@@ -1,6 +1,7 @@
 const entry = (ja, en, es, zh, fr, de, ru) => ({ ja, en, es, 'zh-CN': zh, fr, de, ru });
 
 export const learningMessages = {
+  'learning.navigation.menu': entry('メニュー', 'Menu', 'Menú', '菜单', 'Menu', 'Menü', 'Меню'),
   'learning.navigation': entry(
     '画面の切り替え',
     'Navigation',

@@ -65,7 +65,7 @@
     </section>
     <div class="splitter" id="timeline-splitter" role="separator" tabindex="0" data-i18n-aria="split.trace" aria-orientation="vertical" aria-controls="side-panel graph-panel"></div>
     <article class="panel graph-panel" id="graph-panel" tabindex="-1">
-      <div class="panel-head"><button id="show-navigation-app" type="button" class="quiet icon-button" data-i18n-title="learning.navigation.show" data-i18n-aria="learning.navigation.show" aria-controls="learning-navigation"><svg class="icon" data-icon="collapse" width="16" height="16"></svg></button><div class="tabs" id="view-tabs" role="tablist" data-i18n-aria="views">
+      <div class="panel-head"><div class="tabs" id="view-tabs" role="tablist" data-i18n-aria="views">
         <button class="active" id="tab-source" data-view="source" role="tab" aria-selected="true" aria-controls="source-view" data-i18n="source">Source</button>
         <button id="tab-tokens" data-view="tokens" role="tab" aria-controls="tokens-view" aria-selected="false">Tokens</button>
         <button id="tab-ast" data-view="ast" role="tab" aria-selected="false" aria-controls="ast-view">AST</button>
@@ -209,7 +209,7 @@
 
   </section>
   </div>
-  <footer><span id="engine"></span><span id="meta"></span><span class="spacer"></span><span id="versions"></span><a href="https://github.com/crystal-lang/crystal" target="_blank" rel="noreferrer">Crystal<svg class="icon" data-icon="external" data-size="10" width="10" height="10"></svg></a></footer>
+  <footer><button id="show-navigation-app" type="button" class="quiet navigation-restore" data-i18n-title="learning.navigation.show" data-i18n-aria="learning.navigation.show" aria-controls="learning-navigation"><svg class="icon" data-icon="navigation" width="16" height="16"></svg><span data-i18n="learning.navigation.menu">Menu</span></button><span id="engine"></span><span id="meta"></span><span class="spacer"></span><span id="versions"></span><a href="https://github.com/crystal-lang/crystal" target="_blank" rel="noreferrer">Crystal<svg class="icon" data-icon="external" data-size="10" width="10" height="10"></svg></a></footer>
 </main>
 <nav id="mobile-navigation" data-i18n-aria="mobile.navigation" hidden>
   <button type="button" data-pane="work" aria-controls="graph-panel" aria-pressed="false"><svg class="icon" data-icon="parse" width="16" height="16"></svg><span data-i18n="mobile.work">Work</span></button>
@@ -219,7 +219,7 @@
 </nav>
 
 <main id="learning-panel" class="learning-panel" hidden>
-  <button id="show-navigation-learning" type="button" class="quiet icon-button" data-i18n-title="learning.navigation.show" data-i18n-aria="learning.navigation.show" aria-controls="learning-navigation"><svg class="icon" data-icon="collapse" width="16" height="16"></svg></button>
+  <button id="show-navigation-learning" type="button" class="quiet navigation-restore" data-i18n-title="learning.navigation.show" data-i18n-aria="learning.navigation.show" aria-controls="learning-navigation"><svg class="icon" data-icon="navigation" width="16" height="16"></svg><span data-i18n="learning.navigation.menu">Menu</span></button>
   <div class="learning-inner">
     <header class="learning-heading"><h2 id="learning-title" tabindex="-1"></h2><p id="learning-intro"></p></header>
     <div id="learning-search-tools" class="learning-search-tools" hidden><input id="learning-search" type="search" data-i18n-placeholder="learning.search" data-i18n-aria="learning.search"><span id="learning-count" class="subtle" aria-live="polite"></span></div>

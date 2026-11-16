@@ -24,6 +24,7 @@ export const lucideNames = {
   external: 'external-link',
   info: 'info',
   menu: 'ellipsis',
+  navigation: 'panel-left',
   filter: 'list-filter',
   history: 'list-tree',
   reference: 'arrow-up-right',
