@@ -273,6 +273,50 @@ test('overview excludes future findings while whole-recording activities label t
   }
 });
 
+test('cleanup playback keeps diff pages and summary DOM bounded through both former stopping points', () => {
+  const elements = new Map();
+  const get = (id) => {
+    if (!elements.has(id)) elements.set(id, new Element());
+    return elements.get(id);
+  };
+  const original = globalThis.document;
+  globalThis.document = { getElementById: get, createElement: () => new Element() };
+  const contents = (element) => [element.textContent, ...element.children.map(contents)].join('\n');
+  try {
+    for (const [name, index] of [
+      ['01_specialization', 270],
+      ['05_overloads', 322],
+    ]) {
+      const trace = JSON.parse(
+        gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))),
+      );
+      const model = new TraceModel(trace);
+      const fullSource = trace.events[index].after;
+      for (let i = index - 1; i < trace.events.length; i++) {
+        model.seek(i);
+        renderInspector(model, trace.events[index].node_id, () => {});
+        assert(get('code-diff').innerHTML.length < 240_000);
+        assert(contents(get('node-overview')).length < 2_000);
+        assert(contents(get('node-activities')).length < 10_000);
+        if (i === index) {
+          assert.equal(get('diff-pages').hidden, false);
+          get('diff-page').value = get('diff-page').max;
+          get('diff-page').onchange();
+          assert(
+            get('code-diff').innerHTML.includes(
+              name === '01_specialization' ? 'twice(1.0)' : 'scale(1.0)',
+            ),
+          );
+        }
+      }
+      assert.equal(model.index, trace.events.length - 1);
+      assert.equal(trace.events[index].after, fullSource);
+    }
+  } finally {
+    globalThis.document = original;
+  }
+});
+
 test('long node code is previewed without losing generated text and source navigation requires a loaded file', () => {
   const elements = new Map();
   const get = (id) => {

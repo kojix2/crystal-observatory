@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { createContext, runInContext } from 'node:vm';
-import { sourceChange, diffLines, crystalDiffHTML } from '../web/core/code-diff.js';
+import {
+  sourceChange,
+  diffLines,
+  crystalDiffHTML,
+  createCrystalDiff,
+} from '../web/core/code-diff.js';
 
 test('only recorded source transformations become diffs, including deleted AST nodes', () => {
   for (const kind of ['rewrite', 'expand']) {
@@ -125,4 +130,82 @@ test('diffs remain escaped and readable when Prism is unavailable', () => {
   const html = crystalDiffHTML('<old>&', '<new>&');
   assert(html.includes('&lt;old&gt;&amp;') && html.includes('&lt;new&gt;&amp;'));
   assert(!html.includes('<old>') && !html.includes('<new>'));
+});
+
+test('the cleanup rewrites that stalled playback render bounded pages without highlighting entire libraries', () => {
+  const original = globalThis.Prism;
+  let highlightCalls = 0;
+  globalThis.Prism = {
+    languages: { crystal: {} },
+    highlight() {
+      highlightCalls++;
+      return '';
+    },
+  };
+  try {
+    for (const [name, index] of [
+      ['01_specialization', 270],
+      ['05_overloads', 322],
+    ]) {
+      const trace = JSON.parse(
+        gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))),
+      );
+      const { before, after } = sourceChange(trace.events[index]);
+      assert(after.length > 2_000_000);
+      const diff = createCrystalDiff(before, after);
+      assert(diff.pageCount > 1_000);
+      for (const page of [0, 1, diff.pageCount - 1]) {
+        const html = diff.pageHTML(page);
+        assert(html.length < 240_000);
+        assert([...html.matchAll(/<span\b/g)].length <= 600);
+        assert(!html.includes('class="token'));
+      }
+      assert(
+        diff
+          .pageHTML(diff.pageCount - 1)
+          .includes(name === '01_specialization' ? 'twice(1.0)' : 'scale(1.0)'),
+      );
+      assert.equal(trace.events[index].after, after);
+    }
+    assert.equal(highlightCalls, 0, 'Large serialized libraries must not be passed to Prism');
+  } finally {
+    if (original) globalThis.Prism = original;
+    else delete globalThis.Prism;
+  }
+});
+
+const pageTexts = (html) =>
+  [...html.matchAll(/<span class="diff-code">(.*?)<\/span>/gs)].map((match) => uncolored(match[1]));
+
+test('paging preserves every line, blank line, context and final newline', () => {
+  const before = 'head\n' + 'old\n'.repeat(401) + 'tail\n';
+  const after = 'head\n' + 'new\n'.repeat(401) + 'tail\n';
+  const diff = createCrystalDiff(before, after);
+  const texts = Array.from({ length: diff.pageCount }, (_, i) =>
+    pageTexts(diff.pageHTML(i)),
+  ).flat();
+  assert.deepEqual(
+    texts,
+    diffLines(before, after).map((row) => row.text),
+  );
+  assert.equal(diff.pageHTML(-1), diff.pageHTML(0));
+  assert.equal(diff.pageHTML(Infinity), diff.pageHTML(diff.pageCount - 1));
+  assert.equal(createCrystalDiff('', '').pageCount, 1);
+  assert.equal(createCrystalDiff('', '').pageHTML(), '');
+});
+
+test('a huge single line stays bounded and can be read completely across pages, including Unicode and HTML characters', () => {
+  const after = 'a'.repeat(32_767) + '💎<&>'.repeat(20_000);
+  const diff = createCrystalDiff('', after);
+  let restored = '';
+  for (let page = 0; page < diff.pageCount; page++) {
+    const html = diff.pageHTML(page);
+    const [text] = pageTexts(html);
+    assert(text.length <= 32_768);
+    assert(text.isWellFormed());
+    assert(html.length < 240_000);
+    assert(!html.includes('💎<&>'));
+    restored += text;
+  }
+  assert.equal(restored, after);
 });

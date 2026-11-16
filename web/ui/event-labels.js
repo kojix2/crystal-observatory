@@ -83,7 +83,12 @@ export function activityLabel(activity) {
   return messages[`activity.${activity}`] ? t(`activity.${activity}`) : activity;
 }
 export function activitySummary(event) {
-  return `${activityLabel(event.activity)}${event.after ? `: ${event.after}` : ''}`;
+  return `${activityLabel(event.activity)}${event.after ? `: ${eventValuePreview(event.after)}` : ''}`;
+}
+// Summaries link to full operation details; do not lay out serialized libraries
+// in overview rows, activity buttons or history tooltips.
+export function eventValuePreview(value) {
+  return value.length > 240 ? value.slice(0, 240) + '…' : value;
 }
 export function visitorRole(event, model) {
   if (!event) return '—';

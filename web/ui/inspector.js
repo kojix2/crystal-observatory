@@ -4,7 +4,8 @@ import { icon, summaryLabel } from './icons.js';
 import { renderCrystal } from '../core/crystal-highlight.js';
 import { astFamily } from '../core/ast-colors.js';
 import { renderLLVM } from '../core/llvm-highlight.js';
-import { sourceChange, crystalDiffHTML } from '../core/code-diff.js';
+import { sourceChange } from '../core/code-diff.js';
+import { renderCodeDiff } from './code-diff.js';
 import {
   eventLabel,
   sourceFiles,
@@ -15,6 +16,7 @@ import {
   visitorRole,
   activitySummary,
   activityLabel,
+  eventValuePreview,
 } from './event-labels.js';
 import { activityVisitors, coverageFor } from '../core/activities.js';
 import { compilerStage } from '../core/compiler-stages.js';
@@ -191,7 +193,7 @@ export function renderInspector(
   $('event-diff').hidden = !change;
   $('event-diff-unchanged').hidden = !change || change.before !== change.after;
   $('event-diff-unchanged').textContent = t('event.sourceUnchanged');
-  $('code-diff').innerHTML = change ? crystalDiffHTML(change.before, change.after) : '';
+  renderCodeDiff(change);
   $('change').hidden =
     Boolean(change) ||
     !event ||
@@ -310,10 +312,11 @@ function renderNodeOverview(model, node, events, declarations, onSeek) {
       event.kind === 'activity' ? activityLabel(event.activity) : eventLabel(event.kind);
     const value = document.createElement('span');
     value.className = 'node-fact-value';
-    value.textContent =
+    value.textContent = eventValuePreview(
       event.kind === 'type'
         ? `${event.before || t('unknown')} → ${event.after || '—'}`
-        : event.after || '—';
+        : event.after || '—',
+    );
     const index = document.createElement('small');
     index.textContent = `#${event.index}`;
     button.append(label, value, index);

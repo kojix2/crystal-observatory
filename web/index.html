@@ -175,6 +175,15 @@
               <h4 data-i18n="event.codeDiff">Code changes</h4>
               <div class="diff-legend"><span class="diff-removed"><span aria-hidden="true">− </span><span data-i18n="before">BEFORE</span></span><span class="diff-added"><span aria-hidden="true">+ </span><span data-i18n="after">AFTER</span></span></div>
               <p id="event-diff-unchanged" hidden data-i18n="event.sourceUnchanged">Source text unchanged; AST nodes may differ.</p>
+              <div id="diff-pages" hidden>
+                <p id="diff-page-note" data-i18n="event.diffPaged">Large changes are paged. Long lines may continue on the next page.</p>
+                <div class="diff-page-controls">
+                  <button id="diff-previous" type="button" data-i18n="event.diffPrevious" aria-controls="code-diff">Previous page</button>
+                  <label><span data-i18n="event.diffPage">Page</span> <input id="diff-page" type="number" min="1" step="1" value="1" data-i18n-aria="event.diffPage" aria-label="Page" aria-controls="code-diff"></label>
+                  <span id="diff-page-count"></span>
+                  <button id="diff-next" type="button" data-i18n="event.diffNext" aria-controls="code-diff">Next page</button>
+                </div>
+              </div>
               <pre id="code-diff" class="code-diff crystal-code" role="region" tabindex="0" data-i18n-aria="event.codeDiff" aria-label="Code changes"></pre>
             </div>
             <div id="change" class="event-change"><div id="event-before"><h4 data-i18n="before">BEFORE</h4><pre id="before" class="crystal-code"></pre></div><div><h4 id="event-result-label" data-i18n="after">AFTER</h4><pre id="after" class="crystal-code"></pre></div></div>

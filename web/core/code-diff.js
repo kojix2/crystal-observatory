@@ -1,4 +1,8 @@
-import { highlightCrystal } from './crystal-highlight.js';
+import { escapeCode, highlightCrystal } from './crystal-highlight.js';
+
+const PAGE_ROWS = 200;
+const PAGE_CHARS = 32_768;
+const HIGHLIGHT_CHARS = 16_384;
 
 // Only these observations compare source with source. Other before/after values
 // describe types, signatures or results, even when they happen to look like code.
@@ -82,14 +86,63 @@ function highlightedLines(source) {
     });
 }
 
+// Keep the complete alignment, but only materialize one bounded page as HTML.
+// A long single line can span pages too; never split a UTF-16 surrogate pair.
+export function createCrystalDiff(before, after) {
+  const rows = diffLines(before, after),
+    pages = [];
+  let row = 0,
+    offset = 0;
+  while (row < rows.length) {
+    const startRow = row,
+      startOffset = offset;
+    let chars = 0,
+      count = 0;
+    while (row < rows.length && count < PAGE_ROWS && chars < PAGE_CHARS) {
+      const text = rows[row].text;
+      let size = Math.min(text.length - offset, PAGE_CHARS - chars);
+      const last = text.charCodeAt(offset + size - 1);
+      if (offset + size < text.length && last >= 0xd800 && last <= 0xdbff) size--;
+      if (!size && offset < text.length) break;
+      offset += size;
+      chars += size;
+      count++;
+      if (offset < text.length) break;
+      row++;
+      offset = 0;
+    }
+    pages.push({ startRow, startOffset, endRow: row, endOffset: offset });
+  }
+  // Only small sources are highlighted as complete versions, preserving their
+  // multiline token context. Large sources use escaped text on every page.
+  const highlighted = before.length + after.length <= HIGHLIGHT_CHARS;
+  const oldHTML = highlighted ? highlightedLines(before) : null,
+    newHTML = highlighted ? highlightedLines(after) : null;
+  return {
+    pageCount: Math.max(1, pages.length),
+    pageHTML(index = 0) {
+      const page = pages[Math.max(0, Math.min(pages.length - 1, Math.trunc(index) || 0))];
+      if (!page) return '';
+      const html = [];
+      for (let i = page.startRow; i < page.endRow + (page.endOffset > 0 ? 1 : 0); i++) {
+        const { kind, oldIndex, newIndex, text } = rows[i];
+        const start = i === page.startRow ? page.startOffset : 0,
+          end = i === page.endRow ? page.endOffset : text.length,
+          marker = { removed: '-', added: '+', context: ' ' }[kind];
+        const code = highlighted
+          ? kind === 'removed'
+            ? oldHTML[oldIndex]
+            : newHTML[newIndex]
+          : escapeCode(text.slice(start, end));
+        html.push(
+          `<span class="diff-line diff-${kind}"><span class="diff-marker" aria-hidden="true">${marker}</span><span class="diff-code">${code}</span></span>`,
+        );
+      }
+      return html.join('');
+    },
+  };
+}
+
 export function crystalDiffHTML(before, after) {
-  const oldHTML = highlightedLines(before),
-    newHTML = highlightedLines(after);
-  return diffLines(before, after)
-    .map(({ kind, oldIndex, newIndex }) => {
-      const marker = { removed: '-', added: '+', context: ' ' }[kind];
-      const html = kind === 'removed' ? oldHTML[oldIndex] : newHTML[newIndex];
-      return `<span class="diff-line diff-${kind}"><span class="diff-marker" aria-hidden="true">${marker}</span><span class="diff-code">${html}</span></span>`;
-    })
-    .join('');
+  return createCrystalDiff(before, after).pageHTML();
 }

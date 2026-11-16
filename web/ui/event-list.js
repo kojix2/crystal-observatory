@@ -7,6 +7,7 @@ import {
   visitorKey,
   activityLabel,
   activitySummary,
+  eventValuePreview,
   explanation,
 } from './event-labels.js';
 import { groupActivitySummary } from '../core/activities.js';
@@ -244,7 +245,7 @@ export class EventList {
         event.visitor === parent.event.visitor &&
         event.node_id === parent.event.node_id,
       actor = shortVisitor(event.visitor) || (!parent ? this.stageLabel(event) : ''),
-      result = milestone ? '' : this.result(event),
+      result = milestone ? '' : eventValuePreview(this.result(event) || ''),
       context =
         !milestone && !sameContext && (actor || event.node_id)
           ? `<span class="event-context"><span class="event-visitor" data-visitor="${esc(visitorKey(event.visitor))}" title="${esc(event.visitor)}">${esc(actor)}</span>${this.renderNode(event)}</span>`

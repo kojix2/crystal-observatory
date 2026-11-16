@@ -432,6 +432,10 @@ kbd+kbd { margin-left:2px; }
 .event-change[data-layout="pair"] { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
 .diff-legend { display:flex; gap:8px; margin-bottom:5px; font-size:var(--text-small); }
 .diff-legend>span { padding:1px 6px; border-radius:3px; }
+.diff-page-controls { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-bottom:5px; font-size:var(--text-small); }
+.diff-page-controls button,.diff-page-controls input { font:inherit; }
+.diff-page-controls input { width:7ch; }
+#diff-page-note { font-size:var(--text-small); color:var(--muted); }
 .event-tab-panel.inspect-scroll .code-diff { padding:5px 0; max-height:320px; background:var(--soft); }
 .diff-line { display:grid; grid-template-columns:2ch minmax(0,1fr); padding:0 8px 0 4px; min-height:1.6em; }
 .diff-marker { user-select:none; color:var(--muted); text-align:center; }
