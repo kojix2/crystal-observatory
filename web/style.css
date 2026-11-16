@@ -650,8 +650,8 @@ td { padding:4px 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowra
 .event-result { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:2px; color:var(--muted); font:var(--text-small)/1.5 var(--mono); white-space:pre-wrap; overflow-wrap:anywhere; }
 .event-label { min-width:0; overflow-wrap:anywhere; }
 .event-outline .activity-summary { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:3px; }
-.event-stage .event-visitor { font-weight:600; font-family:var(--sans); }
-.event-milestone .event-label { font-weight:600; }
+/* Nesting identifies stages; the active row identifies selection. */
+.event-stage .event-visitor { font-family:var(--sans); }
 .event-milestone.error .event-label { color:#a13329; }
 .event-group-toggle { display:inline-flex; align-items:center; justify-content:center; flex:0 0 24px; min-height:34px; margin-top:1px; padding:0; border:0; background:transparent; color:var(--muted); }
 .event-row.type .event-label { color:var(--type); }
