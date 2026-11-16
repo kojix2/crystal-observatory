@@ -8,18 +8,18 @@ const recording = (name) =>
   JSON.parse(gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))));
 
 test('recorded lexer output keeps names, numeric values and spacing distinct from source text', () => {
-  const trace = recording('01_specialization');
+  const trace = recording('03_specialization');
   const lines = trace.source.split('\n');
-  const word = trace.tokens.find((token) => token.kind === 'IDENT' && token.value === 'twice');
+  const word = trace.tokens.find((token) => token.kind === 'IDENT' && token.value === 'identity');
   const number = trace.tokens.find((token) => token.kind === 'NUMBER');
   const space = trace.tokens.find((token) => token.kind === 'SPACE');
   const newline = trace.tokens.find((token) => token.kind === 'NEWLINE');
 
-  assert.equal(tokenDisplay(word), 'twice');
+  assert.equal(tokenDisplay(word), 'identity');
   assert.equal(tokenFamily(word), 'name');
   assert.deepEqual(tokenSourceParts(word, lines[word.line - 1]), {
     before: 'def ',
-    match: 'twice',
+    match: 'identity',
     after: '(x)',
   });
   assert.equal(tokenDisplay(number), '1');
@@ -31,7 +31,7 @@ test('recorded lexer output keeps names, numeric values and spacing distinct fro
 });
 
 test('macro text, delimiters and Unicode source positions remain inspectable', () => {
-  const macro = recording('03_macro_expansion');
+  const macro = recording('09_macro_expansion');
   const token = macro.tokens.find((item) => item.kind === 'MACRO_LITERAL');
   assert.equal(tokenFamily(token), 'macro');
   assert.equal(tokenDisplay(token), '"  "');

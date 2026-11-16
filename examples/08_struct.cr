@@ -2,10 +2,6 @@
 struct Point
   def initialize(@x : Int32)
   end
-
-  def x
-    @x
-  end
 end
 
-Point.new(1).x
+Point.new(1)

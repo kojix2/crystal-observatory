@@ -230,7 +230,7 @@ test('overview excludes future findings while whole-recording activities label t
   const contents = (el) => [el.textContent, ...el.children.map(contents)].join('\n');
   try {
     setLocale('en');
-    const model = load('03_macro_expansion').seek(62);
+    const model = load('09_macro_expansion').seek(62);
     let seek;
     const render = () =>
       renderInspector(
@@ -260,10 +260,10 @@ test('overview excludes future findings while whole-recording activities label t
     assert.equal(get('node-type').textContent, 'Int32');
     assert.match(contents(get('node-overview')), /Int32/);
     assert.match(get('node-type-at').textContent, /171/);
-    const union = load('02_union_and_narrowing').seek(218);
+    const union = load('06_union_and_narrowing').seek(218);
     renderInspector(union, 3, () => {});
     assert(contents(get('node-activities')).includes(t('activity.related', { id: 2 })));
-    const broken = load('08_type_error').seek(85);
+    const broken = load('05_type_error').seek(85);
     renderInspector(broken, 1, () => {});
     assert.equal(get('node-incomplete').hidden, false);
     assert.equal(get('node-incomplete').textContent, t('activity.incomplete'));
@@ -283,15 +283,20 @@ test('cleanup playback keeps diff pages and summary DOM bounded through both for
   globalThis.document = { getElementById: get, createElement: () => new Element() };
   const contents = (element) => [element.textContent, ...element.children.map(contents)].join('\n');
   try {
-    for (const [name, index] of [
-      ['01_specialization', 270],
-      ['05_overloads', 322],
-    ]) {
+    for (const name of ['03_specialization', '04_overloads']) {
       const trace = JSON.parse(
         gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))),
       );
+      const event = trace.events.find(
+        (event) =>
+          event.kind === 'activity' &&
+          event.visitor === 'Crystal::CleanupTransformer' &&
+          event.activity === 'rewrite',
+      );
+      assert(event);
+      const { index } = event;
       const model = new TraceModel(trace);
-      const fullSource = trace.events[index].after;
+      const fullSource = event.after;
       for (let i = index - 1; i < trace.events.length; i++) {
         model.seek(i);
         renderInspector(model, trace.events[index].node_id, () => {});
@@ -302,11 +307,7 @@ test('cleanup playback keeps diff pages and summary DOM bounded through both for
           assert.equal(get('diff-pages').hidden, false);
           get('diff-page').value = get('diff-page').max;
           get('diff-page').onchange();
-          assert(
-            get('code-diff').innerHTML.includes(
-              name === '01_specialization' ? 'twice(1.0)' : 'scale(1.0)',
-            ),
-          );
+          assert(get('code-diff').innerHTML.includes('identity(1.0)'));
         }
       }
       assert.equal(model.index, trace.events.length - 1);

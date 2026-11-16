@@ -8,7 +8,7 @@ const recording = (name) =>
   JSON.parse(gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))));
 
 test('pipeline order follows actual compiler boundaries, including stages with no Visitor', () => {
-  const trace = recording('02_union_and_narrowing');
+  const trace = recording('06_union_and_narrowing');
   const observed = trace.events.filter((event) => event.kind === 'phase_enter');
   assert.deepEqual(
     observed.map((event) => compilerStage(event)?.id),
@@ -26,7 +26,7 @@ test('pipeline order follows actual compiler boundaries, including stages with n
 });
 
 test('partial, error and syntax recordings do not invent later compiler stages', () => {
-  const trace = recording('08_type_error');
+  const trace = recording('05_type_error');
   const stages = new Set(trace.events.map((event) => compilerStage(event)?.id));
   assert(stages.has('main'));
   assert(!stages.has('codegen'));

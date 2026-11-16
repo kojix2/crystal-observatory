@@ -37,7 +37,7 @@ for (const [directory, target, published] of [
       const { trace, wasm } = await compileSource(source, assets);
       validateTrace(trace);
       assert.match(trace.compiler_version, /WASI/);
-      if (stem === '08_type_error') {
+      if (stem.endsWith('_type_error')) {
         assert(trace.errors.length > 0, 'The type-error sample must produce a diagnostic');
         assert.match(trace.errors.join('\n'), /Int32#\+[\s\S]*not String/);
         assert.equal(wasm, undefined);

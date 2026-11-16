@@ -140,14 +140,18 @@ test('the cleanup rewrites that stalled playback render bounded pages without hi
     },
   };
   try {
-    for (const [name, index] of [
-      ['01_specialization', 270],
-      ['05_overloads', 322],
-    ]) {
+    for (const name of ['03_specialization', '04_overloads']) {
       const trace = JSON.parse(
         gunzipSync(readFileSync(new URL(`../web/traces/${name}.json.gz`, import.meta.url))),
       );
-      const { before, after } = sourceChange(trace.events[index]);
+      const event = trace.events.find(
+        (event) =>
+          event.kind === 'activity' &&
+          event.visitor === 'Crystal::CleanupTransformer' &&
+          event.activity === 'rewrite',
+      );
+      assert(event);
+      const { before, after } = sourceChange(event);
       assert(after.length > 2_000_000);
       const diff = createCrystalDiff(before, after);
       assert(diff.pageCount > 1_000);
@@ -157,12 +161,8 @@ test('the cleanup rewrites that stalled playback render bounded pages without hi
         assert([...html.matchAll(/<span\b/g)].length <= 600);
         assert(!html.includes('class="token'));
       }
-      assert(
-        diff
-          .pageHTML(diff.pageCount - 1)
-          .includes(name === '01_specialization' ? 'twice(1.0)' : 'scale(1.0)'),
-      );
-      assert.equal(trace.events[index].after, after);
+      assert(diff.pageHTML(diff.pageCount - 1).includes('identity(1.0)'));
+      assert.equal(event.after, after);
     }
     assert.equal(highlightCalls, 0, 'Large serialized libraries must not be passed to Prism');
   } finally {

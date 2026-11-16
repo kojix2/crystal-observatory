@@ -1,12 +1,12 @@
 export const declarationMessages = {
-  'example.09': {
-    en: '09 · Declarations and type hierarchy',
-    ja: '09 · 宣言と型階層の構築',
-    es: '09 · Declaraciones y jerarquía de tipos',
-    'zh-CN': '09 · 声明与类型层次构建',
-    fr: '09 · Déclarations et hiérarchie des types',
-    de: '09 · Deklarationen und Typhierarchie',
-    ru: '09 · Объявления и иерархия типов',
+  'example.07': {
+    en: '07 · Declarations and type hierarchy',
+    ja: '07 · 宣言と型階層の構築',
+    es: '07 · Declaraciones y jerarquía de tipos',
+    'zh-CN': '07 · 声明与类型层次构建',
+    fr: '07 · Déclarations et hiérarchie des types',
+    de: '07 · Deklarationen und Typhierarchie',
+    ru: '07 · Объявления и иерархия типов',
   },
   'decl.title': {
     en: 'State',

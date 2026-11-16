@@ -1,7 +1,7 @@
 # Compare the Int32 and Float64 specializations of the same method.
-def twice(x)
-  x + x
+def identity(x)
+  x
 end
 
-twice(1)
-twice(1.0)
+identity(1)
+identity(1.0)

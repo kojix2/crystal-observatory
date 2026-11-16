@@ -65,6 +65,12 @@ The button below Settings hides the icon sidebar. Restore it from the button
 before the observation tabs, or from the upper-left corner of a learning page.
 This choice is saved in the browser.
 
+Templates progress from normalization and constant branches to method
+specialization, overloads and type errors, then union narrowing, type declarations,
+initialization and macro expansion. The specialization and overload examples use
+the same method body so you can compare specializing one definition with selecting
+an overload.
+
 The file menu contains **New source**, **Open source** (`.cr` / UTF-8),
 **Save source**, and separate **Open trace** / **Save trace** actions for JSON or
 gzip recordings. **Close current file** clears the source, recording and executable

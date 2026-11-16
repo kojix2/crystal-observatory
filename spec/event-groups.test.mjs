@@ -132,7 +132,7 @@ test('all bundled traces expand in recorded order without boundary rows or neste
     );
     assert.deepEqual(trace, original, file);
   }
-  const cleanup = load('06_cleanup'),
+  const cleanup = load('02_cleanup'),
     group = groupEvents(cleanup.events).find(
       (group) => group.event.visitor === 'Crystal::CleanupTransformer',
     );
@@ -198,7 +198,7 @@ test('stages require matching recorded boundaries and never conceal compiler err
     ],
   );
 
-  const failed = load('08_type_error'),
+  const failed = load('05_type_error'),
     rows = eventRows(failed.events, groupStages(failed.events));
   assert(rows.some((row) => row.event?.kind === 'error'));
   assert(rows.every((row) => !['phase_enter', 'phase_leave'].includes(row.event?.kind)));
@@ -238,7 +238,7 @@ function withList(trace, run) {
 }
 
 test('stage disclosure preserves selection, nested state, localized names and filter context', () => {
-  withList(load('06_cleanup'), (list, element, seeks) => {
+  withList(load('02_cleanup'), (list, element, seeks) => {
     assert.equal(list.rows.length, 15);
     assert.equal(list.rows.filter((row) => row.group?.kind === 'phase').length, 13);
     assert.deepEqual(
@@ -288,13 +288,13 @@ test('stage disclosure preserves selection, nested state, localized names and fi
     };
     element('events').onkeydown({ target, key: 'Enter', preventDefault() {} });
     assert.deepEqual(seeks, [phase.start]);
-    list.load(new TraceModel(load('01_specialization')));
+    list.load(new TraceModel(load('03_specialization')));
     assert.equal(list.expanded.size, 0);
   });
 });
 
 test('opening, closing, filtering and localizing keep playback position and expanded state', () => {
-  withList(load('06_cleanup'), (list, element, seeks) => {
+  withList(load('02_cleanup'), (list, element, seeks) => {
     const cleanupGroup = list.groups.find(
       (group) => group.event.visitor === 'Crystal::CleanupTransformer',
     );
@@ -334,14 +334,14 @@ test('opening, closing, filtering and localizing keep playback position and expa
     assert.equal(list.model.index, current);
     assert.deepEqual(seeks, []);
 
-    list.load(new TraceModel(load('01_specialization')));
+    list.load(new TraceModel(load('03_specialization')));
     assert.equal(list.expanded.size, 0);
     assert.equal(element('kind').value, '');
   });
 });
 
 test('node/search filters retain parent context, while original event rows still seek', () => {
-  withList(load('01_specialization'), (list, element, seeks) => {
+  withList(load('03_specialization'), (list, element, seeks) => {
     const event = list.model.trace.events.find((event) => event.kind === 'dispatch');
     element('search').value = 'Call#recalculate';
     element('search').oninput();
@@ -368,7 +368,7 @@ test('node/search filters retain parent context, while original event rows still
 });
 
 test('Visitor headings select an event by click or keyboard, separately from disclosure', () => {
-  withList(load('01_specialization'), (list, element, seeks) => {
+  withList(load('03_specialization'), (list, element, seeks) => {
     const group = list.groups[0];
     const html = list.renderRow({ group });
     assert(html.includes(`class="event-select event-group-select" data-index="${group.start}"`));
@@ -400,12 +400,12 @@ test('Visitor headings select an event by click or keyboard, separately from dis
 });
 
 test('declaration filtering exposes operations directly and searches relationships by name', () => {
-  withList(load('09_declarations'), (list, element, seeks) => {
+  withList(load('09_declarations', './fixtures/traces/'), (list, element, seeks) => {
     element('kind').value = 'declaration';
     element('kind').onchange();
     assert(list.rows.length > 0);
     assert(list.rows.every((row) => row.event?.kind === 'declaration'));
-    element('search').value = 'Named';
+    element('search').value = 'FactoryLabel';
     element('search').oninput();
     assert(list.filtered.some((event) => event.declaration_action === 'extend'));
     const operation = list.filtered.find((event) => event.declaration_action === 'extend');
@@ -455,7 +455,7 @@ test('paging follows visible rows and a collapsed group tracks its hidden curren
 });
 
 test('manual paging starts at the top and signals browsing without moving the selected event', () => {
-  withList(load('07_struct'), (list, element, seeks, browses) => {
+  withList(load('08_struct'), (list, element, seeks, browses) => {
     for (const group of list.historyGroups) {
       list.expanded.add(group.start);
       for (const visitor of group.children || []) list.expanded.add(visitor.start);
@@ -477,7 +477,7 @@ test('manual paging starts at the top and signals browsing without moving the se
 });
 
 test('a hash-prefixed node query matches exactly the displayed node ID', () => {
-  withList(load('07_struct'), (list, element) => {
+  withList(load('08_struct'), (list, element) => {
     element('search').value = '#7';
     element('search').oninput();
     assert(list.filtered.length > 0);
@@ -499,7 +499,7 @@ test('a hash-prefixed node query matches exactly the displayed node ID', () => {
 });
 
 test('re-evaluating translated search results preserves playback, scroll and expanded groups', () => {
-  withList(load('06_cleanup'), (list, element) => {
+  withList(load('02_cleanup'), (list, element) => {
     setLocale('ja');
     element('search').value = '構文解析';
     list.filter();
@@ -520,7 +520,7 @@ test('re-evaluating translated search results preserves playback, scroll and exp
 });
 
 test('next activity uses the current search, node and activity filters', () => {
-  withList(load('06_cleanup'), (list, element) => {
+  withList(load('02_cleanup'), (list, element) => {
     element('activity-kind').value = 'simplify_condition';
     list.filter();
     assert.equal(list.filtered.length, 1);

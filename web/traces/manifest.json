@@ -1,47 +1,47 @@
 [
   {
-    "title": "01 · Method specialization",
-    "trace": "./traces/01_specialization.json.gz",
-    "source": "# Compare the Int32 and Float64 specializations of the same method.\ndef twice(x)\n  x + x\nend\n\ntwice(1)\ntwice(1.0)\n"
+    "title": "01 · Normalization",
+    "trace": "./traces/01_normalization.json.gz",
+    "source": "# Compare x += 1 with its normalized AST: x = x + 1.\nx = 0\nx += 1\n"
   },
   {
-    "title": "02 · Union types and narrowing",
-    "trace": "./traces/02_union_and_narrowing.json.gz",
-    "source": "# The branches produce Int32 | String; is_a? narrows it inside each branch.\nvalue = ARGV.empty? ? 1 : \"a\"\n\nif value.is_a?(Int32)\n  value + 1\nelse\n  value.size\nend\n"
+    "title": "02 · Constant conditions and cleanup",
+    "trace": "./traces/02_cleanup.json.gz",
+    "source": "# Cleanup marks the condition always_false; codegen visits only the else branch.\nif false\n  1\nelse\n  2\nend\n"
   },
   {
-    "title": "03 · Macro-generated AST",
-    "trace": "./traces/03_macro_expansion.json.gz",
-    "source": "# Compare this call with the expanded AST: 3 * 3.\nmacro square(x)\n  {{x}} * {{x}}\nend\n\nsquare(3)\n"
+    "title": "03 · Method specialization",
+    "trace": "./traces/03_specialization.json.gz",
+    "source": "# Compare the Int32 and Float64 specializations of the same method.\ndef identity(x)\n  x\nend\n\nidentity(1)\nidentity(1.0)\n"
   },
   {
-    "title": "04 · Normalization",
-    "trace": "./traces/04_normalization.json.gz",
-    "source": "# Compare +=, unless and until with their normalized AST.\nx = 0\nx += 1\nunless x == 2\n  x += 1\nend\nuntil x == 3\n  x += 1\nend\n"
+    "title": "04 · Overload resolution",
+    "trace": "./traces/04_overloads.json.gz",
+    "source": "# Each call selects a different Def; compare this with example 03.\ndef identity(x : Int32)\n  x\nend\n\ndef identity(x : Float64)\n  x\nend\n\nidentity(1)\nidentity(1.0)\n"
   },
   {
-    "title": "05 · Overload resolution",
-    "trace": "./traces/05_overloads.json.gz",
-    "source": "# Each call selects a different Def; compare this with example 01.\ndef scale(x : Int32)\n  x * 2\nend\n\ndef scale(x : Float64)\n  x * 2\nend\n\nscale(1)\nscale(1.0)\n"
-  },
-  {
-    "title": "06 · Unused methods and cleanup",
-    "trace": "./traces/06_cleanup.json.gz",
-    "source": "# The unused body is not type-checked; Cleanup removes the constant branch.\ndef unused(x)\n  x.this_method_does_not_exist\nend\n\nif false\n  0\nelse\n  1\nend\n"
-  },
-  {
-    "title": "07 · Structs and initialize",
-    "trace": "./traces/07_struct.json.gz",
-    "source": "# Follow initialize, the generated new method and the instance variable's type.\nstruct Point\n  def initialize(@x : Int32)\n  end\n\n  def x\n    @x\n  end\nend\n\nPoint.new(1).x\n"
-  },
-  {
-    "title": "08 · Before a type error",
-    "trace": "./traces/08_type_error.json.gz",
+    "title": "05 · Before a type error",
+    "trace": "./traces/05_type_error.json.gz",
     "source": "# Inspect the operations recorded before the incompatible argument is rejected.\n1 + \"a\"\n"
   },
   {
-    "title": "09 · Declarations and type hierarchy",
-    "trace": "./traces/09_declarations.json.gz",
-    "source": "# Follow type creation, inheritance, include/extend and reopening.\nmodule Named\n  def value\n    1\n  end\nend\n\nclass Parent\nend\n\nclass Child < Parent\n  include Named\n  extend Named\nend\n\nclass Child\n  def value\n    2\n  end\nend\n\nChild.new.value\nChild.value\n"
+    "title": "06 · Union types and narrowing",
+    "trace": "./traces/06_union_and_narrowing.json.gz",
+    "source": "# The branches produce Int32 | String; is_a? narrows it inside each branch.\nvalue = true ? 1 : \"a\"\n\nif value.is_a?(Int32)\n  value\nelse\n  value\nend\n"
+  },
+  {
+    "title": "07 · Declarations and type hierarchy",
+    "trace": "./traces/07_declarations.json.gz",
+    "source": "# Follow the creation of two classes and the Child < Parent relationship.\nclass Parent\nend\n\nclass Child < Parent\nend\n"
+  },
+  {
+    "title": "08 · Structs and initialize",
+    "trace": "./traces/08_struct.json.gz",
+    "source": "# Follow initialize, the generated new method and the instance variable's type.\nstruct Point\n  def initialize(@x : Int32)\n  end\nend\n\nPoint.new(1)\n"
+  },
+  {
+    "title": "09 · Macro-generated AST",
+    "trace": "./traces/09_macro_expansion.json.gz",
+    "source": "# Compare this call with the expanded AST: 3 * 3.\nmacro square(x)\n  {{x}} * {{x}}\nend\n\nsquare(3)\n"
   }
 ]

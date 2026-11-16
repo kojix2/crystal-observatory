@@ -41,7 +41,7 @@ test('real compiler traces have coherent references, balanced visits, and verifi
         assert.deepEqual(stack.pop(), [e.node_id, e.visitor], f);
     }
     assert.equal(stack.length, 0, f);
-    if (f.startsWith('08')) {
+    if (f.endsWith('_type_error.json.gz')) {
       assert(t.errors.length > 0);
       assert.equal(t.llvm_ir, '');
     } else {
@@ -53,7 +53,7 @@ test('real compiler traces have coherent references, balanced visits, and verifi
   }
 });
 test('seeking backwards restores types and observer edges', () => {
-  const t = load('02_union_and_narrowing'),
+  const t = load('06_union_and_narrowing'),
     m = new TraceModel(t);
   const union = t.events.findIndex(
     (e) => e.kind === 'type' && e.after.includes('Int32') && e.after.includes('String'),
@@ -74,12 +74,16 @@ test('seeking backwards restores types and observer edges', () => {
   assert.equal(m.edges.has(`${e.related_id}:${e.node_id}`), old);
 });
 test('macro expansion and typed method resolution are observed, not invented', () => {
-  const macro = load('03_macro_expansion');
+  const macro = load('09_macro_expansion');
   assert(macro.events.some((e) => e.kind === 'expand' && e.after.includes('3 * 3')));
   assert(macro.snapshots.some((s) => s.nodes.some((n) => n.expanded)));
-  const overloads = load('05_overloads');
-  assert(overloads.events.some((e) => e.kind === 'dispatch' && e.after.includes('scale(Int32)')));
-  assert(overloads.events.some((e) => e.kind === 'dispatch' && e.after.includes('scale(Float64)')));
+  const overloads = load('04_overloads');
+  assert(
+    overloads.events.some((e) => e.kind === 'dispatch' && e.after.includes('identity(Int32)')),
+  );
+  assert(
+    overloads.events.some((e) => e.kind === 'dispatch' && e.after.includes('identity(Float64)')),
+  );
   assert(overloads.events.some((e) => e.kind === 'ir' && e.llvm_function));
 });
 test('WASM parses Unicode, interpolation, macros, and reports syntax errors', async () => {
@@ -103,7 +107,7 @@ test('WASM parses Unicode, interpolation, macros, and reports syntax errors', as
   assert.throws(() => run('42'), /fresh WASM instance/);
 });
 test('invalid trace IDs and ordering are rejected before replay', () => {
-  const t = load('01_specialization');
+  const t = load('03_specialization');
   t.events[0].node_id = 999999;
   assert.throws(() => validateTrace(t));
 });
@@ -121,7 +125,7 @@ test('syntax WASM records complete string array tokens with their lexer mode', a
 });
 
 test('prelude metadata preserves old recordings and rejects non-text values', () => {
-  const trace = load('01_specialization');
+  const trace = load('03_specialization');
   delete trace.prelude;
   assert.equal(validateTrace(trace).prelude, undefined);
   trace.prelude = 'custom';
