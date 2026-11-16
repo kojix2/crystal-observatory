@@ -96,6 +96,10 @@ export class TraceView {
   load(trace, { origin = () => t('origin.input'), preserveEdits = false, live = false } = {}) {
     const model = new TraceModel(trace); // Validate before replacing a usable view.
     this.stop();
+    // Hidden views are rendered on demand. Drop their old DOM/handlers now so
+    // they cannot retain a previous recording until the user opens them again.
+    for (const id of ['graph', 'types', 'declarations']) $(id).replaceChildren();
+    delete $('declarations').stateTrace;
     this.model = model;
     this.selected = 0;
     this.selectedType = 0;

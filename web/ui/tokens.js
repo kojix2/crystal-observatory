@@ -64,6 +64,9 @@ export function renderTokens(trace, highlightSource, openSource) {
     ? document.activeElement?.dataset?.tokenIndex
     : null;
   controllers.get(container)?.destroy();
+  // An empty token view does not install a replacement controller. Remove the
+  // old one as well, since its resize closures retain the detached table.
+  controllers.delete(container);
 
   const all = Array.isArray(trace.tokens)
     ? trace.tokens.filter(
