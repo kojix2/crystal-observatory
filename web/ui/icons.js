@@ -24,7 +24,8 @@ export function icon(name, { size = 16, className = '' } = {}) {
   return `<svg class="icon${className ? ` ${className}` : ''}" data-icon="${name}" width="${size}" height="${size}" viewBox="0 0 24 24" ${STROKE} aria-hidden="true">${body(name)}</svg>`;
 }
 
-// Static markup declares <svg data-icon="name"> placeholders; fill them once at startup.
+// Static placeholders include class="icon" and dimensions to reserve their space
+// before JavaScript loads; fill their glyphs once at startup.
 export function mountIcons(root = document) {
   for (const element of root.querySelectorAll('svg[data-icon]:empty')) {
     const size = Number(element.dataset.size) || 16;
