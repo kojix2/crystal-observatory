@@ -195,6 +195,13 @@ Compilation trace selects an event; the node inspector independently follows the
 node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
 
+In the **08 · Structs and initialize** example, open **AST** and select the **Semantic (top level)**
+snapshot to see the generated `.new` signature below the source tree. Select
+**Semantic (new)** to inspect its body, including the `allocate` call.
+During playback, a plus marks nodes added at the selected operation. Use the
+method selector to inspect another generated constructor, or select its
+`initialize` link to inspect the source definition.
+
 **State** opens on **Storage shelves**, with fixed places for Program, types and
 metaclasses, initializer data, and specialized Defs.
 Playback highlights the shelf and recorded entry that changed; the summary
@@ -226,8 +233,7 @@ history prefix. Older and syntax-only traces remain usable.
 
 The shelf overview shows at most six type entries and three recent operations per
 holder, keeping the changed type visible even when older. Each type lists up to
-four current method definitions; its link opens the complete details. The `.new`
-generation stage explicitly indicates that its generated bodies are unobserved.
+four current method definitions; its link opens the complete details. When the compiler completes a generated `.new`, the shelf overview links to its AST.
 
 Node details keeps the node kind, expression type and source location above
 **Overview**, **Activities** and **IR** tabs. A small square beside the kind

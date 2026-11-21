@@ -212,6 +212,15 @@ const labels = {
     'Konstante registrieren',
     'Зарегистрировать константу',
   ],
+  complete_new: [
+    '.new の本体を生成',
+    'Generate .new body',
+    'Generar cuerpo de .new',
+    '生成 .new 方法体',
+    'Générer le corps de .new',
+    'Rumpf von .new erzeugen',
+    'Создать тело .new',
+  ],
   register_initializer: [
     '初期化子を登録・選択',
     'Register / select initializer',

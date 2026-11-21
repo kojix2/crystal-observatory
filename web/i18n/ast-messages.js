@@ -59,6 +59,35 @@ const families = {
 };
 
 export const astMessages = {
+  'ast.generated': entry(
+    '生成された AST',
+    'Generated AST',
+    'AST generado',
+    '生成的 AST',
+    'AST généré',
+    'Erzeugter AST',
+    'Созданный AST',
+  ),
+  'ast.signatureOnly': entry(
+    '本体は未設定',
+    'Signature only',
+    'Solo la firma',
+    '仅签名',
+    'Signature seule',
+    'Nur Signatur',
+    'Только сигнатура',
+  ),
+  'ast.newBody': entry(
+    '本体を生成',
+    'Body generated',
+    'Cuerpo generado',
+    '已生成方法体',
+    'Corps généré',
+    'Rumpf erzeugt',
+    'Тело создано',
+  ),
+  'ast.newOrigin': entry('生成元', 'Origin', 'Origen', '来源', 'Origine', 'Ursprung', 'Источник'),
+  'ast.addedNode': entry('追加', 'Added', 'Añadido', '新增', 'Ajouté', 'Hinzugefügt', 'Добавлено'),
   'ast.speech.type': entry(
     '{type} 型になったよ',
     'The type is {type} now!',

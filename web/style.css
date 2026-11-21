@@ -250,6 +250,21 @@ kbd+kbd { margin-left:2px; }
 .llvm-code .token.label { color:#a7436b; }
 .llvm-code .token.operator,.llvm-code .token.punctuation { color:#434451; }
 @media(forced-colors:active) { #source { color:CanvasText; -webkit-text-fill-color:CanvasText; } #source-colors { visibility:hidden; } }
+.generated-trees { flex:0 1 auto; max-height:48%; min-height:0; display:flex; flex-direction:column; border-top:2px solid var(--ast-definition); background:var(--paper); }
+.generated-header,.generated-meta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; padding:5px 12px; }
+.generated-header h2 { font-size:var(--text-small); }
+.generated-header select { max-width:100%; font:var(--text-small) var(--mono); }
+.generated-meta { border-block:1px solid var(--hairline); color:var(--muted); font-size:var(--text-small); }
+.generated-meta strong { color:var(--ink); }
+.generated-nodes { overflow:auto; min-height:0; padding:6px 12px; }
+.generated-row { width:max-content; margin-left:calc(var(--depth) * 14px); font:var(--text-small)/1.4 var(--mono); }
+.generated-row:not(:first-child)::before { content:""; display:inline-block; width:10px; height:10px; margin-right:3px; vertical-align:4px; border-left:1px solid var(--edge); border-bottom:1px solid var(--edge); }
+.generated-row button { padding:2px 5px; background:transparent; }
+.generated-row button:hover,.generated-row button[aria-pressed=true] { background:var(--selection); }
+.generated-row button[aria-pressed=true] { outline:1px solid var(--ast-definition); }
+.generated-row small { color:var(--muted); }
+.generated-row .generated-added { background:color-mix(in srgb,var(--ast-literal) 9%,var(--paper)); }
+.generated-plus { color:var(--ast-literal); margin-right:5px; font-weight:bold; }
 .graph-scroll { flex: 1; overflow: auto; min-height: 0; min-width: 0; position: relative; background: var(--graph-bg); }
 .visitor-ball { cursor:help; }
 .visitor-ball-body { fill:var(--visitor-ink,var(--ink)); stroke:var(--paper); stroke-width:1.5; vector-effect:non-scaling-stroke; }

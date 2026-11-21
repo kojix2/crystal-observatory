@@ -198,6 +198,24 @@ module ObservatoryScripts::Activities
         "      args = codegen_fun_signature(mangled_name, target_def, self_type, is_fun_literal, is_closure)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.activity(\"begin_function\", target_def, self.class.name, after: mangled_name, reason: \"function_signature_created\", llvm_function: mangled_name)\n      {% end %}",
       },
     ],
+    "semantic/new.cr" => [
+      {
+        "        expanded.fill_body_from_initialize(original.owner)",
+        "        expanded.fill_body_from_initialize(original.owner)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.generated_new(expanded, original.owner, original)\n      {% end %}",
+      },
+      {
+        "          type.metaclass.as(ModuleType).add_def(new_method)\n\n          # Also",
+        "          type.metaclass.as(ModuleType).add_def(new_method)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.generated_new(new_method, type, nil)\n      {% end %}\n\n          # Also",
+      },
+      {
+        "                type.metaclass.as(ModuleType).add_def(Def.argless_new(type))",
+        "                new_method = Def.argless_new(type)\n                type.metaclass.as(ModuleType).add_def(new_method)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.generated_new(new_method, type, nil)\n      {% end %}",
+      },
+      {
+        "                type.metaclass.as(ModuleType).add_def(new_method)\n              end",
+        "                type.metaclass.as(ModuleType).add_def(new_method)\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.generated_new(new_method, type, initialize)\n      {% end %}\n              end",
+      },
+    ],
     "semantic/top_level_visitor.cr" => [
       {
         "    scope.types[name] = const",
@@ -205,7 +223,7 @@ module ObservatoryScripts::Activities
       },
       {
         "        new_expansions[node] = new_method",
-        "        new_expansions[node] = new_method\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.observe(node, \"register_initializer\", self.class.name, new_method, \"generated_new\", new_method, \"\")\n      {% end %}",
+        "        new_expansions[node] = new_method\n      {% if flag?(:lab_full) %}\n        Observatory.recorder.try &.generated_new(new_method, target_type, node, signature: true)\n      {% end %}",
       },
       {
         "      target.add_macro node",

@@ -49,6 +49,7 @@ for (const [directory, target, published] of [
       trace.filename = name;
       for (const node of [
         ...trace.nodes,
+        ...trace.events.flatMap((event) => event.generated_tree?.nodes || []),
         ...trace.snapshots.flatMap((snapshot) => snapshot.nodes),
       ]) {
         if (node.filename)

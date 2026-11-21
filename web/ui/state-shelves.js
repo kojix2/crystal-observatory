@@ -12,9 +12,15 @@ export function stateShelvesHTML(model, expanded = new Set()) {
   const event = model.event;
   const actor = event?.visitor?.replace(/^Crystal::/, '') || '';
   const covered = model.stateObservations.length || model.trace.activity_coverage?.length;
+  const generated = event?.activity === 'complete_new' && event.generated_tree;
+  const unobservedNew =
+    event?.phase === 'Semantic (new)' &&
+    !model.generatedChanges.some((e) => e.activity === 'complete_new');
   const selected = current
     ? `<span>${esc(t('state.actor'))}: <code>${esc(actor)}</code></span><span>${esc(t('state.holder'))}: <strong>${esc(t(`state.shelf.${current.id}`))}</strong></span>`
-    : `<span>${esc(t(event?.phase === 'Semantic (new)' ? 'state.newUnobserved' : 'state.noStoreChange'))}</span>`;
+    : generated
+      ? `<span>${esc(t('activity.complete_new'))} · <code>${esc(generated.name)}</code></span><button class="link-button" data-declaration-ast="${generated.roots[0]}">${esc(t('ast.generated'))} #${generated.roots[0]}</button>`
+      : `<span>${esc(t(unobservedNew ? 'state.newUnobserved' : 'state.noStoreChange'))}</span>`;
   return `<div class="state-current-change" role="status">${selected}</div>
     <div class="state-shelves">${shelves
       .map((shelf) => {

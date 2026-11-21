@@ -4,6 +4,7 @@ import { $, notify, download, downloadBlob } from './dom.js';
 import { setIcon } from './icons.js';
 import { AstRecorder, astMarker } from './ast-recorder.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
+import { clearGeneratedTrees, renderGeneratedTrees } from './generated-trees.js';
 import { renderGraph } from './graphs.js';
 import { renderVisitorSpeech } from './visitor-speech.js';
 import { currentSpeechCue, SpeechSound } from './speech-sound.js';
@@ -100,7 +101,9 @@ export class TraceView {
     // they cannot retain a previous recording until the user opens them again.
     for (const id of ['graph', 'types', 'declarations']) $(id).replaceChildren();
     delete $('declarations').stateTrace;
+    clearGeneratedTrees();
     this.model = model;
+    this.generatedRoot = 0;
     this.selected = 0;
     this.selectedType = 0;
     this.stateSection = 'holders';
@@ -313,6 +316,8 @@ export class TraceView {
     if (!this.model) return;
     this.model.seek(index);
     const event = this.model.event;
+    if (event?.generated_tree && $('follow').checked)
+      this.generatedRoot = event.generated_tree.roots[0];
     this.workspace?.setDetailContext?.('event', event);
     this.selected = event?.node_id || this.selected;
     if (event?.kind === 'declaration') {
@@ -360,7 +365,7 @@ export class TraceView {
     }
     this.seek(index);
     const node = this.model?.event?.node_id;
-    if ($('follow').checked && node) {
+    if ($('follow').checked && node && !this.model.event?.generated_tree) {
       const snapshot = this.model.snapshotForNode(node, this.snapshot);
       if (snapshot >= 0) {
         this.snapshot = snapshot;
@@ -370,6 +375,7 @@ export class TraceView {
         this.renderObservation({ reveal: true });
       }
     }
+    if (this.model.event?.generated_tree && !this.layout.has('ast')) this.setView('ast');
     if (node) this.showNodeEventTab();
     this.workspace?.showPane('details', { focus: true });
   }
@@ -407,7 +413,12 @@ export class TraceView {
     this.renderSelection();
   }
   selectDeclarationNode(id, view = 'source') {
-    if (view === 'ast') {
+    if (view === 'ast' && this.model.generatedTreesAt().has(id)) {
+      this.generatedRoot = id;
+      $('follow').checked = true;
+      this.snapshot = this.model.snapshotAt();
+      $('snapshot').value = this.snapshot;
+    } else if (view === 'ast') {
       const snapshot = this.model.snapshotForNode(id, this.snapshot);
       if (snapshot >= 0) {
         if (snapshot !== this.snapshot) {
@@ -460,8 +471,16 @@ export class TraceView {
         this.editor.pendingReveal = true;
         this.setView('source');
       },
+      this.model
+        .generatedTreesAt(this.layout.has('ast') ? this.generatedIndex() : this.model.index)
+        .get(this.selected)?.event.generated_tree.nodes[0],
     );
     this.editor.highlight(this.model.nodes.get(this.selected));
+  }
+  generatedIndex() {
+    return $('follow').checked
+      ? this.model.index
+      : (this.trace.snapshots[this.snapshot]?.at_event ?? 0) - 1;
   }
   renderSourceCaption() {
     const stale = this.editor.hasRecord && this.editor.dirty;
@@ -512,7 +531,20 @@ export class TraceView {
         },
       });
     } else if (view === 'ast' || view === 'types') {
+      let selectedInGeneratedTree;
       if (view === 'ast') {
+        const index = this.generatedIndex();
+        selectedInGeneratedTree = renderGeneratedTrees(
+          this.model.generatedTreesAt(index),
+          this.generatedRoot,
+          this.selected,
+          index,
+          (id) => {
+            this.generatedRoot = id;
+            this.selectNode(id);
+          },
+          (id) => this.selectNode(id),
+        );
         const radial = this.astLayout === 'radial';
         $('ast-layout').value = this.astLayout || 'inline';
         $('ast-radial-controls').hidden = !['radial', 'mindmap'].includes(this.astLayout);
@@ -529,6 +561,7 @@ export class TraceView {
       renderGraph(
         {
           model: this.model,
+          selectedInGeneratedTree,
           selected: this.selected,
           snapshot: this.snapshot,
           view,
@@ -769,7 +802,7 @@ export class TraceView {
     $('snapshot').onchange = () => {
       this.snapshot = Number($('snapshot').value);
       $('follow').checked = false;
-      this.renderObservation();
+      this.renderSelection({ reveal: false });
     };
     $('ast-layout').value = this.astLayout;
     $('ast-layout').onchange = () => {

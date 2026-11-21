@@ -93,6 +93,7 @@ export function eventValuePreview(value) {
 export function visitorRole(event, model) {
   if (!event) return '—';
   if (event.kind === 'link') return t('pipeline.action.link');
+  if (event.activity === 'complete_new') return t('pipeline.action.new');
   const name = visitorKey(event.visitor);
   const role = t(
     !name ? 'visitor.stage' : messages[`visitor.${name}`] ? `visitor.${name}` : 'visitor.unknown',

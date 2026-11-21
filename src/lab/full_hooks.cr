@@ -57,6 +57,26 @@ class Observatory::Recorder
   @semantic_types = [] of Crystal::Type
   @definition_ids = {} of Tuple(Int32, Int32, Bool) => Int32
 
+  # Freeze just this generated Def at the operation that registered or filled it.
+  # The source snapshot cannot reach the metaclass method table.
+  def generated_new(method : Crystal::Def, owner : Crystal::Type, origin : Crystal::Def?, signature = false) : Nil
+    return unless active? && user_node?(method)
+    count = bundle.events.size
+    if signature && origin
+      observe(origin, "register_initializer", "Crystal::TopLevelVisitor", method, "generated_new", method)
+    else
+      observe(method, "complete_new", "Crystal::Program#define_new_methods", method.body,
+        origin ? "from_initialize" : "default_new", origin)
+    end
+    return if bundle.events.size == count
+    event = bundle.events.last
+    silence do
+      tree = Snapshot.new(owner.metaclass.to_s, bundle.events.size)
+      Capture.new(self, tree).walk(method)
+      event.generated_tree = tree
+    end
+  end
+
   def semantic_type_id(type : Crystal::Type) : Int32
     type = type.instance_type
     @semantic_type_ids[type.object_id]? || begin

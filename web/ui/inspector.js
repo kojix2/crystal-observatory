@@ -34,8 +34,9 @@ export function renderInspector(
   onSeek = () => {},
   onIR = () => {},
   onSource = () => {},
+  observedNode,
 ) {
-  const node = model.nodes.get(selected),
+  const node = observedNode ?? model.nodes.get(selected),
     event = model.event,
     stage = compilerStage(event),
     nodeEvents = node ? model.eventsFor(selected) : [];

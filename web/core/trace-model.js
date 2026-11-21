@@ -16,6 +16,40 @@ const validNode = (node) =>
     (field) => node[field] == null || (Number.isSafeInteger(node[field]) && node[field] >= 0),
   );
 
+function validateSnapshot(s, ids, eventCount) {
+  if (
+    !s ||
+    !Array.isArray(s.nodes) ||
+    !Array.isArray(s.roots) ||
+    (s.name != null && typeof s.name !== 'string') ||
+    s.nodes.length > 20000 ||
+    !Number.isSafeInteger(s.at_event) ||
+    s.at_event < 0 ||
+    s.at_event > eventCount
+  )
+    throw new UIError('error.traceAST');
+  const local = new Set(s.nodes.map((n) => n?.id));
+  if (
+    local.size !== s.nodes.length ||
+    s.nodes.some((n) => !validNode(n) || !ids.has(n.id)) ||
+    s.roots.some((n) => !local.has(n)) ||
+    s.nodes.some(
+      (n) =>
+        !Array.isArray(n.children) ||
+        !Array.isArray(n.targets) ||
+        (n.expanded != null && (!Number.isSafeInteger(n.expanded) || n.expanded < 0)) ||
+        (n.hook_expansions != null && !Array.isArray(n.hook_expansions)) ||
+        [
+          ...n.children,
+          ...n.targets,
+          ...(n.hook_expansions || []),
+          ...(n.expanded ? [n.expanded] : []),
+        ].some((id) => !local.has(id)),
+    )
+  )
+    throw new UIError('error.traceEdge');
+}
+
 export function validateTrace(t) {
   if (
     !t ||
@@ -76,38 +110,23 @@ export function validateTrace(t) {
         throw new UIError('error.traceSchema');
     }
   }
-  for (const s of t.snapshots) {
+  for (const s of t.snapshots) validateSnapshot(s, ids, t.events.length);
+  for (const event of t.events) {
+    const tree = event.generated_tree;
+    if (tree == null) continue;
+    validateSnapshot(tree, ids, t.events.length);
+    const signature = event.activity === 'register_initializer' && event.reason === 'generated_new';
     if (
-      !s ||
-      !Array.isArray(s.nodes) ||
-      !Array.isArray(s.roots) ||
-      (s.name != null && typeof s.name !== 'string') ||
-      s.nodes.length > 20000 ||
-      !Number.isSafeInteger(s.at_event) ||
-      s.at_event < 0 ||
-      s.at_event > t.events.length
+      event.kind !== 'activity' ||
+      (!signature && event.activity !== 'complete_new') ||
+      tree.at_event !== event.index + 1 ||
+      !tree.name ||
+      tree.roots.length !== 1 ||
+      tree.nodes[0]?.id !== tree.roots[0] ||
+      tree.nodes[0].kind !== 'Def' ||
+      tree.roots[0] !== (signature ? event.related_id : event.node_id)
     )
       throw new UIError('error.traceAST');
-    const local = new Set(s.nodes.map((n) => n?.id));
-    if (
-      local.size !== s.nodes.length ||
-      s.nodes.some((n) => !validNode(n) || !ids.has(n.id)) ||
-      s.roots.some((n) => !local.has(n)) ||
-      s.nodes.some(
-        (n) =>
-          !Array.isArray(n.children) ||
-          !Array.isArray(n.targets) ||
-          (n.expanded != null && (!Number.isSafeInteger(n.expanded) || n.expanded < 0)) ||
-          (n.hook_expansions != null && !Array.isArray(n.hook_expansions)) ||
-          [
-            ...n.children,
-            ...n.targets,
-            ...(n.hook_expansions || []),
-            ...(n.expanded ? [n.expanded] : []),
-          ].some((id) => !local.has(id)),
-      )
-    )
-      throw new UIError('error.traceEdge');
   }
   validateDeclarations(t);
   validateActivities(t, ids);
@@ -119,6 +138,7 @@ export class TraceModel {
     this.trace = validateTrace(trace);
     this.nodes = new Map(trace.nodes.map((n) => [n.id, n]));
     this.stateObservations = indexStateObservations(trace);
+    this.generatedChanges = trace.events.filter((event) => event.generated_tree);
     this.activities = new Map();
     for (const event of trace.events) {
       if (event.kind !== 'activity') continue;
@@ -168,6 +188,25 @@ export class TraceModel {
     this.index = index;
     this.event = this.trace.events[index];
     return this;
+  }
+  generatedTreesAt(index = this.index) {
+    const cached = this.generatedCache;
+    if (cached && index >= cached.start && index < cached.end) return cached.trees;
+    const trees = new Map();
+    let start = -1,
+      end = Infinity;
+    for (const event of this.generatedChanges) {
+      if (event.index > index) {
+        end = event.index;
+        break;
+      }
+      start = event.index;
+      const root = event.generated_tree.roots[0];
+      const previous = trees.get(root)?.event.generated_tree;
+      trees.set(root, { event, previous });
+    }
+    this.generatedCache = { start, end, trees };
+    return trees;
   }
   snapshotAt(index = this.index) {
     let found = 0,

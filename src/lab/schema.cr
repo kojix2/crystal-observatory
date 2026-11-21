@@ -44,6 +44,7 @@ module Observatory
     property related_type_id : Int32 = 0
     property definition_id : Int32 = 0
     property replaced_definition_id : Int32 = 0
+    property generated_tree : Snapshot?
     property origin_id : Int32 = 0
     property implicit : Bool = false
     property activity : String = ""

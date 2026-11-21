@@ -40,6 +40,7 @@ export function renderGraph(
     view,
     collapsed,
     reveal = true,
+    selectedInGeneratedTree,
     astLayout = 'inline',
     astZoom = 1,
     typesZoom = 1,
@@ -157,7 +158,10 @@ export function renderGraph(
         name: s.name,
         count: s.nodes.length,
         time: t($('follow').checked ? 'graph.eventTypes' : 'graph.snapshotTypes'),
-        outside: selected && !s.nodes.some((n) => n.id === selected) ? t('graph.outside') : '',
+        outside:
+          selected && !selectedInGeneratedTree && !s.nodes.some((n) => n.id === selected)
+            ? t('graph.outside')
+            : '',
       }) +
       (astLayout === 'radial'
         ? ` · ${t('ast.radialHint')}`

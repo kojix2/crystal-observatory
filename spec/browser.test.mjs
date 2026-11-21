@@ -567,3 +567,48 @@ end
   assert(invalidInclude.trace.errors.length);
   assert(!invalidInclude.trace.events.some((event) => event.declaration_action === 'include'));
 });
+
+test('an uncalled constructor keeps its identity from empty signature to generated body', async () => {
+  const { trace } = await compile(`
+struct Unused
+  def initialize(@x : Int32)
+  end
+end
+struct Plain
+end
+`);
+  assert.deepEqual(trace.errors, []);
+  const model = new TraceModel(trace);
+  const changes = model.generatedChanges;
+  const signatures = changes.filter((e) => e.reason === 'generated_new');
+  assert.equal(signatures.length, 1);
+  const signature = signatures[0];
+  const root = signature.related_id;
+  const body = changes.find((e) => e.node_id === root && e.activity === 'complete_new');
+  assert.equal(signature.phase, 'Semantic (top level)');
+  assert.equal(body.phase, 'Semantic (new)');
+  assert.equal(body.related_id, signature.node_id);
+  assert.equal(body.generated_tree.name, signature.generated_tree.name);
+  assert.match(body.generated_tree.name, /Unused/);
+  const labels = (e) => e.generated_tree.nodes.filter((n) => n.kind === 'Call').map((n) => n.label);
+  assert(labels(body).includes('allocate'));
+  assert(labels(body).some((call) => call.includes('.initialize(')));
+  assert.deepEqual(labels(signature), []);
+  assert(!trace.snapshots.some((s) => s.nodes.some((n) => n.id === root)));
+  assert.equal(
+    model.seek(body.index).generatedTreesAt().get(root).previous,
+    signature.generated_tree,
+  );
+  assert.equal(model.seek(signature.index).generatedTreesAt().get(root).event, signature);
+  assert(
+    !model
+      .seek(signature.index - 1)
+      .generatedTreesAt()
+      .has(root),
+  );
+  const plain = changes.find((e) => e.generated_tree.name.includes('Plain'));
+  assert.equal(plain.reason, 'default_new');
+  assert(labels(plain).includes('allocate'));
+  assert.equal(plain.related_id, 0);
+  assert(!changes.some((e) => !/Unused|Plain/.test(e.generated_tree.name)));
+});
