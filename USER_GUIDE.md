@@ -95,7 +95,7 @@ you change views or screen size.
 **Parse only** uses a separate lightweight lexer/parser, without semantic analysis.
 
 The **Compilation trace** panel shows compiler stages, Visitor calls and their
-events. It contains search and filters; playback is below the AST. Templates and
+events. It contains search and filters; playback is below AST, State, and Types. Templates and
 source file operations are above the source editor. Compilation always analyzes
 the current editor contents.
 
@@ -158,8 +158,11 @@ without a new selection keeps the reading position. Trace events and stage
 headings open their operation details, while playback and stepping stay in place.
 The active observation tab stays visible as views change.
 
-The Play/Pause button sits to the left of the seek bar below the AST. Drag the bar
-to move through the recording, or select an event in the list. The speed menu
+The Play/Pause button sits to the left of the shared seek bar below AST, State,
+and Types. The bar also appears in comparisons containing any of these views;
+both views follow the same event position. Source, Tokens, and LLVM IR alone do
+not show playback controls. Drag the bar to move through the recording, or select
+an event in the list. The speed menu
 offers Slow, Normal and Fast on both desktop and mobile. The filter button in
 Compilation trace opens search, event kind, and Clear.
 Starting playback keeps the current phone pane; the trace is ready when you open Trace. A

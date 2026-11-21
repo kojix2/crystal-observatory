@@ -636,6 +636,9 @@ export class TraceView {
   applyLayout({ remember = true } = {}) {
     if (remember) this.rememberScroll();
     const comparing = Boolean(this.layout.secondary);
+    $('playback').hidden = !['ast', 'declarations', 'types'].some((view) => this.layout.has(view));
+    for (const id of ['record-video', 'ast-playback-settings'])
+      $(id).hidden = !this.layout.has('ast');
     $('app').classList.toggle('comparing', comparing);
     $('view-tabs').hidden = comparing;
     $('comparison-title').hidden = !comparing;
