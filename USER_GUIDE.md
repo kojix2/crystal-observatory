@@ -195,9 +195,17 @@ Compilation trace selects an event; the node inspector independently follows the
 node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
 
-**State** groups types and methods, constant registrations, variable declarations
+**State** opens on **Storage shelves**, with fixed places for Program, types and
+metaclasses, Visitor environments, initializer data, and specialized Defs.
+Playback highlights the shelf and recorded entry that changed; the summary
+separates the component making the change from the holder. Type entries have
+stable type IDs and show the observed instance/class method counts. Rewinding
+removes later declarations and operations without replacing the shelves. Open a
+type or use the section buttons for the existing lists and details.
+
+The section buttons show types and methods, constant registrations, variable declarations
 and environments, initializer processing, and method specializations through the
-selected event. Use the section buttons and their counts to choose what to inspect.
+selected event. Use their counts to choose what to inspect.
 The types section initially selects an observed type. Operation rows show a short
 context and result; expand a row for its holder, before/after values and navigation.
 **Coverage** explains the observation boundaries. Operation buttons seek Compilation trace;
@@ -211,6 +219,11 @@ and initializer observations do not reconstruct a complete execution order. Each
 section shows at most its latest 60 entries; **Earlier observations** rewinds to the
 preceding entries. Missing observation metadata is distinguished from an empty
 history prefix. Older and syntax-only traces remain usable.
+
+The shelf overview shows at most six type entries and three recent operations per
+holder, keeping the changed type visible even when older. Each type lists up to
+four current method definitions; its link opens the complete details. The `.new`
+generation stage explicitly indicates that its generated bodies are unobserved.
 
 Node details keeps the node kind, expression type and source location above
 **Overview**, **Activities** and **IR** tabs. A small square beside the kind

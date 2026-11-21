@@ -38,7 +38,7 @@ export class TraceView {
     this.editor = editor;
     this.selected = 0;
     this.selectedType = 0;
-    this.stateSection = 'types';
+    this.stateSection = 'holders';
     this.stateExpanded = new Set();
     this.snapshot = 0;
     this.view = 'source';
@@ -103,7 +103,7 @@ export class TraceView {
     this.model = model;
     this.selected = 0;
     this.selectedType = 0;
-    this.stateSection = 'types';
+    this.stateSection = 'holders';
     this.stateExpanded = new Set();
     this.snapshot = 0;
     this.collapsed.clear();
@@ -317,10 +317,10 @@ export class TraceView {
     this.selected = event?.node_id || this.selected;
     if (event?.kind === 'declaration') {
       this.selectedType = event.type_id;
-      this.stateSection = 'types';
+      if (this.stateSection !== 'holders') this.stateSection = 'types';
     } else if (event) {
       const observation = stateObservation(event);
-      if (observation) this.stateSection = observation.category;
+      if (observation && this.stateSection !== 'holders') this.stateSection = observation.category;
     }
     if ($('follow').checked) {
       this.snapshot = this.model.snapshotAt();
@@ -342,7 +342,9 @@ export class TraceView {
     this.renderSelection();
     if (this.layout.has('declarations') && event?.kind === 'declaration')
       $('declarations')
-        .querySelector('.declaration-details .declaration-changed')
+        .querySelector(
+          '.state-type-slot.declaration-changed, .declaration-details .declaration-changed',
+        )
         ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     if (this.layout.has('declarations') && event?.kind === 'activity')
       $('declarations')

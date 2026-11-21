@@ -3,6 +3,7 @@ import { $, esc } from './dom.js';
 import { compilerStateHTML, bindCompilerState } from './compiler-state.js';
 import { stateCategories, stateObservationsAt } from '../core/compiler-state.js';
 import { icon } from './icons.js';
+import { stateShelvesHTML } from './state-shelves.js';
 
 export function declarationSummary(event, model) {
   const type = model.semanticTypes.get(event.type_id)?.name || '';
@@ -27,18 +28,25 @@ export function renderDeclarations(model, selectedType, callbacks) {
   root.stateTrace = model.trace;
   const groups = stateObservationsAt(model.stateObservations, model.index);
   const counts = new Map([
+    ['holders', 5],
     ['types', model.declarations.size],
     ...[...groups].map(([key, entries]) => [key, entries.length]),
   ]);
   const observationCount = [...groups.values()].reduce((sum, entries) => sum + entries.length, 0);
-  const categories = ['types', ...stateCategories];
+  const categories = ['holders', 'types', ...stateCategories];
   const current = categories.includes(section) ? section : 'types';
   const content =
-    current === 'types'
-      ? typeDeclarationsHTML(model, selectedType)
-      : compilerStateHTML(model, current, expanded);
+    current === 'holders'
+      ? stateShelvesHTML(model, expanded)
+      : current === 'types'
+        ? typeDeclarationsHTML(model, selectedType)
+        : compilerStateHTML(model, current, expanded);
   root.innerHTML = `<nav class="state-sections" aria-label="${esc(t('decl.title'))}">${categories.map((key) => `<button class="state-section ${key === current ? 'selected' : ''}" data-state-section="${key}" aria-pressed="${key === current}"><span>${esc(t(`state.${key}`))}</span><span class="state-count">${counts.get(key)}</span></button>`).join('')}</nav>
     <div class="state-content"><div class="state-section-heading"><h3>${esc(t(`state.${current}`))}</h3><details class="state-about" ${aboutOpen ? 'open' : ''}><summary>${icon('info', { size: 12 })}<span>${esc(t('state.about'))}</span></summary><p>${esc(current === 'types' ? t('decl.coverage') : t('state.coverage'))}</p></details></div>${content}</div>`;
+  root.style?.setProperty(
+    '--state-nav-height',
+    `${root.querySelector('.state-sections')?.offsetHeight || 0}px`,
+  );
   $('declarations-caption').textContent =
     t('state.caption', { types: model.declarations.size, count: observationCount }) +
     (model.trace.truncated ? ` ${t('notice.truncated')}` : '');

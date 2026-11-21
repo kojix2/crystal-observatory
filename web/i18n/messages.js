@@ -12,6 +12,7 @@ import { nodeMessages } from './node-messages.js';
 import { eventMessages } from './event-messages.js';
 import { learningMessages } from './learning-messages.js';
 import { stateMessages } from './state-messages.js';
+import { stateShelfMessages } from './state-shelf-messages.js';
 import { sharingMessages } from './sharing-messages.js';
 import { filesMessages } from './files-messages.js';
 import { videoMessages } from './video-messages.js';
@@ -21,6 +22,7 @@ export const messages = {
   ...filesMessages,
   ...sharingMessages,
   ...stateMessages,
+  ...stateShelfMessages,
   ...learningMessages,
   ...eventMessages,
   ...nodeMessages,

@@ -13,6 +13,12 @@ make test
 make lint format-check
 ```
 
+For State UI changes, run `node scripts/check-state-ui.mjs` with Playwright and
+Chromium available. `PLAYWRIGHT_MODULE` can point to a separate Playwright install.
+The check starts a temporary loopback server, exercises recorded and live
+compilations at desktop and phone widths, and saves screenshots under
+`.cache/state-ui/`. Set `STATE_UI_URL` to use an existing development server.
+
 Rebuild the corresponding WASM after changing compiler code or instrumentation:
 `make wasm` for syntax analysis, `LLVM_CONFIG=llvm-config-20 make browser` for the
 full compiler. Then regenerate recordings with `make samples` and run the checks

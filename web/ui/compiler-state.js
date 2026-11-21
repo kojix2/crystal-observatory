@@ -7,7 +7,12 @@ import { icon } from './icons.js';
 const PAGE_SIZE = 60;
 const activityLabel = (value) => (messages[`activity.${value}`] ? t(`activity.${value}`) : value);
 
-export function compilerStateHTML(model, category = 'constants', expanded = new Set()) {
+export function compilerStateHTML(
+  model,
+  category = 'constants',
+  expanded = new Set(),
+  options = {},
+) {
   const observations = model.stateObservations;
   const covered = model.trace.activity_coverage?.some((entry) =>
     entry.activities.some((activity) =>
@@ -23,7 +28,8 @@ export function compilerStateHTML(model, category = 'constants', expanded = new 
     ),
   );
   if (!observations.length && !covered) return `<p class="empty">${esc(t('state.unobserved'))}</p>`;
-  const entries = stateObservationsAt(observations, model.index).get(category) || [];
+  const entries =
+    options.entries || stateObservationsAt(observations, model.index).get(category) || [];
   const rows = entries
     .slice(-PAGE_SIZE)
     .map(({ event, holder }) => {
@@ -31,10 +37,11 @@ export function compilerStateHTML(model, category = 'constants', expanded = new 
       const source = node.filename && node.line ? `${node.filename}:${node.line}` : `#${node.id}`;
       const preview = event.detail || node.label || node.text || `#${node.id}`;
       const active = event === model.event;
-      return `<details class="state-entry ${active ? 'declaration-changed' : ''}" data-state-entry="${event.index}" ${active || expanded.has(event.index) ? 'open' : ''}>
+      return `<details class="state-entry ${active ? 'declaration-changed' : ''}" data-state-entry="${event.index}" ${(!options.compact && active) || expanded.has(event.index) ? 'open' : ''}>
       <summary>${icon('disclosure', { size: 12 })}<span class="state-entry-heading">
         <span class="state-entry-title"><strong>${esc(activityLabel(event.activity))}${event.reason === 'begin_instantiation' || event.reason === 'end_instantiation' ? `<span class="state-step">${esc(t(event.reason === 'begin_instantiation' ? 'state.start' : 'state.end'))}</span>` : ''}</strong><span class="state-event-number">#${event.index}</span></span>
         <code class="state-preview">${esc(preview)}</code>
+        ${options.compact ? `<span class="state-entry-origin">${esc(event.visitor.replace(/^Crystal::/, ''))} · AST #${event.node_id}${event.related_id ? ` / #${event.related_id}` : ''}${active ? ` · ${esc(t('state.changed'))}` : ''}</span>` : ''}
         ${event.after ? `<code class="state-result">${esc(event.after)}</code>` : ''}
       </span></summary>
       <div class="state-entry-body">
@@ -59,7 +66,7 @@ export function compilerStateHTML(model, category = 'constants', expanded = new 
     </details>`;
     })
     .join('');
-  return `<section class="compiler-state" aria-label="${esc(t(`state.${category}`))}">
+  return `<section class="compiler-state${options.compact ? ' state-compact' : ''}" aria-label="${esc(t(`state.${category}`))}">
     ${entries.length > PAGE_SIZE ? `<p class="state-page">${esc(t('state.page', { shown: PAGE_SIZE, count: entries.length }))} <button class="link-button" data-state-event="${entries[entries.length - PAGE_SIZE - 1].event.index}">${esc(t('state.earlier'))}</button></p>` : ''}
     ${rows || `<p class="empty">${esc(t('state.empty'))}</p>`}
   </section>`;
