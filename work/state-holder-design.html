@@ -1,0 +1,140 @@
+<div id="state-holder-design" class="viz-carousel viz-dotted-background" aria-label="ステート表示の設計案" data-previous-label="前の案" data-next-label="次の案">
+  <section data-variant="保持先の棚" aria-label="保持先の棚の動作例">
+    <div class="sh-product" data-design="shelves" aria-label="保持先の棚"></div>
+  </section>
+  <section data-variant="構造と詳細" aria-label="構造と詳細の動作例" hidden>
+    <div class="sh-product" data-design="explorer" aria-label="構造と詳細"></div>
+  </section>
+</div>
+<style>
+#state-holder-design { color-scheme: light dark; }
+#state-holder-design > section { min-height: 680px; padding: 12px 0; }
+#state-holder-design .sh-product {
+  --sh-paper: light-dark(#fafafa,#202226); --sh-ink: light-dark(#202226,#eceef0);
+  --sh-soft: light-dark(#f0f1f2,#2a2d32); --sh-line: light-dark(#d4d6d9,#474c54);
+  --sh-muted: light-dark(#686d73,#b3b8c0); --sh-change: light-dark(#e5f1fa,#233d51);
+  --sh-change-line: light-dark(#1769a8,#9ec9e7);
+  background: var(--sh-paper); color: var(--sh-ink); font: 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;
+  border: 1px solid var(--sh-line); border-radius: 5px; overflow: hidden;
+}
+#state-holder-design .sh-product * { box-sizing: border-box; }
+#state-holder-design .sh-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:var(--sh-soft); padding:10px 12px; }
+#state-holder-design .sh-head strong { font-weight:500; }
+#state-holder-design .sh-caption { color:var(--sh-muted); font-size:12px; }
+#state-holder-design .sh-main { padding:12px; }
+#state-holder-design .sh-shelves { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#state-holder-design .sh-holder { min-width:0; border:1px solid var(--sh-line); border-radius:4px; overflow:hidden; }
+#state-holder-design .sh-holder h3 { margin:0; padding:8px 10px; background:var(--sh-soft); font-size:14px; font-weight:500; }
+#state-holder-design .sh-path { display:block; color:var(--sh-muted); font-size:12px; font-weight:400; overflow-wrap:anywhere; }
+#state-holder-design .sh-row { padding:9px 10px; min-height:77px; border-top:1px solid var(--sh-line); overflow-wrap:anywhere; }
+#state-holder-design .sh-row .sh-key { display:flex; flex-wrap:wrap; align-items:center; gap:8px; color:var(--sh-muted); font-size:12px; }
+#state-holder-design .sh-value { margin-top:4px; white-space:pre-wrap; overflow-wrap:anywhere; font-family:Consolas,"Liberation Mono",monospace; font-size:13px; }
+#state-holder-design .sh-empty { color:var(--sh-muted); font-family:inherit; }
+#state-holder-design .sh-changed { background:var(--sh-change); box-shadow:inset 3px 0 var(--sh-change-line); }
+#state-holder-design .sh-tag { color:var(--sh-ink); font-weight:500; }
+#state-holder-design .sh-operation { border-top:1px solid var(--sh-line); padding:10px 12px; min-height:84px; overflow-wrap:anywhere; }
+#state-holder-design .sh-operation strong { font-weight:500; }
+#state-holder-design .sh-operation .sh-before { color:var(--sh-muted); }
+#state-holder-design .sh-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:9px 12px; border-top:1px solid var(--sh-line); }
+#state-holder-design button { font:inherit; background:var(--sh-paper); color:var(--sh-ink); border:1px solid var(--sh-line); border-radius:4px; padding:6px 10px; cursor:pointer; }
+#state-holder-design button:disabled { opacity:.45; cursor:default; }
+#state-holder-design button[aria-pressed=true] { background:var(--sh-ink); color:var(--sh-paper); }
+#state-holder-design input[type=range] { flex:1; min-width:80px; accent-color:var(--sh-change-line); }
+#state-holder-design .sh-count { font-variant-numeric:tabular-nums; }
+#state-holder-design .sh-explorer { display:grid; grid-template-columns:minmax(150px,.85fr) minmax(0,1.7fr); gap:12px; min-height:400px; }
+#state-holder-design .sh-tree { display:flex; flex-direction:column; align-items:stretch; gap:6px; }
+#state-holder-design .sh-tree button { text-align:left; overflow-wrap:anywhere; }
+#state-holder-design .sh-tree .sh-indent { margin-left:14px; }
+#state-holder-design .sh-tree .sh-deep { margin-left:28px; }
+#state-holder-design .sh-tree .sh-tree-change { box-shadow:inset 3px 0 var(--sh-change-line); }
+#state-holder-design .sh-tree-label { color:var(--sh-muted); font-size:12px; padding:0 2px; }
+#state-holder-design .sh-detail { min-width:0; }
+@media(max-width:520px) {
+  #state-holder-design .sh-shelves { grid-template-columns:minmax(0,1fr); }
+  #state-holder-design .sh-explorer { grid-template-columns:minmax(0,1fr); min-height:0; }
+  #state-holder-design .sh-tree { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #state-holder-design .sh-tree-label { grid-column:1/-1; }
+  #state-holder-design .sh-tree .sh-indent,#state-holder-design .sh-tree .sh-deep { margin-left:0; }
+  #state-holder-design > section { min-height:1080px; }
+}
+@media(pointer:coarse) { #state-holder-design button { min-height:44px; } }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('state-holder-design');
+  const holders = [
+    {id:'program',name:'Program',path:'コンパイル全体',rows:[['initializers','const_initializers','まだ登録なし']]},
+    {id:'foo',name:'Foo : ClassType',path:'Program / 型 Foo',rows:[['constants','定数表','まだ登録なし'],['methods','インスタンスメソッド表','#initialize(n : Int32)']]},
+    {id:'meta',name:'Foo.class : MetaclassType',path:'Program / 型 Foo / メタクラス',rows:[['new','クラスメソッド表','.new(n : Int32)  本体は未設定'],['cache','特殊化キャッシュ','まだ登録なし']]},
+    {id:'visitor',name:'MainVisitor〈Foo#initialize〉',path:'解析中のVisitor / ローカル変数環境',rows:[['vars','vars','まだ登録なし']]}
+  ];
+  const steps = [
+    {title:'定義の登録後',actor:'TopLevelVisitor',holder:null,row:null},
+    {title:'定数を登録',actor:'TopLevelVisitor',holder:'foo',row:'constants',kind:'追加',before:'未登録',after:'LIMIT = 10'},
+    {title:'.new の本体を完成',actor:'Program#define_new_methods',holder:'meta',row:'new',kind:'更新',before:'.new(n : Int32)  本体は未設定',after:'.new(n : Int32)\n  確保 → initialize(n) → 返却'},
+    {title:'定数の初期化を登録',actor:'MainVisitor',holder:'program',row:'initializers',kind:'追加',before:'登録なし',after:'Foo::LIMIT'},
+    {title:'.new(Int32) を特殊化',actor:'MainVisitor',holder:'meta',row:'cache',kind:'追加',before:'登録なし',after:'new(Int32) → 型付き Def'},
+    {title:'引数の型を環境に登録',actor:'MainVisitor〈Foo#initialize〉',holder:'visitor',row:'vars',kind:'追加',before:'登録なし',after:'n : Int32'}
+  ];
+  const escape = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const saved = window.openai?.widgetState;
+  const controllers = [];
+  function create(product) {
+    const design = product.dataset.design;
+    const stored = saved?.privateContent?.[design];
+    let index = Number.isInteger(stored?.index) ? Math.max(0,Math.min(5,stored.index)) : 2;
+    let selected = holders.some(h=>h.id===stored?.selected) ? stored.selected : 'meta';
+    let timer = null;
+    const options = {follow:true};
+    product.innerHTML = `<div class="sh-head"><strong>ステート</strong><span class="sh-caption">設計用の操作例</span></div><div class="sh-main"></div><div class="sh-operation" aria-live="polite"></div><div class="sh-controls"><button type="button" data-play>再生</button><button type="button" data-prev aria-label="前の操作">前へ</button><input type="range" min="0" max="5" step="1" aria-label="操作位置"><span class="sh-count"></span><button type="button" data-next aria-label="次の操作">次へ</button></div>`;
+    const main = product.querySelector('.sh-main');
+    const operation = product.querySelector('.sh-operation');
+    const play = product.querySelector('[data-play]');
+    const prev = product.querySelector('[data-prev]');
+    const next = product.querySelector('[data-next]');
+    const scrubber = product.querySelector('input');
+    const count = product.querySelector('.sh-count');
+    function holderHTML(holder) {
+      return `<section class="sh-holder"><h3>${escape(holder.name)}<span class="sh-path">${escape(holder.path)}</span></h3>${holder.rows.map(([key,label,initial])=>{
+        let value = initial;
+        for(let i=1;i<=index;i++) if(steps[i].holder===holder.id && steps[i].row===key) value=steps[i].after;
+        const changed = steps[index].holder===holder.id && steps[index].row===key;
+        return `<div class="sh-row${changed?' sh-changed':''}"><div class="sh-key">${escape(label)}${changed?`<span class="sh-tag">${steps[index].kind}</span>`:''}</div><div class="sh-value${value==='まだ登録なし'?' sh-empty':''}">${escape(value)}</div></div>`;
+      }).join('')}</section>`;
+    }
+    function render() {
+      const event=steps[index];
+      if(design==='shelves') main.innerHTML=`<div class="sh-shelves">${holders.map(holderHTML).join('')}</div>`;
+      else {
+        main.innerHTML=`<div class="sh-explorer"><nav class="sh-tree" aria-label="情報を保持する実体"><span class="sh-tree-label">保持する実体</span>${holders.map((h,i)=>`<button type="button" data-holder="${h.id}" aria-pressed="${selected===h.id}" class="${i===1?'sh-indent':i===2?'sh-deep':''} ${event.holder===h.id?'sh-tree-change':''}">${escape(h.name)}${event.holder===h.id?' · 変更':''}</button>`).join('')}</nav><div class="sh-detail">${holderHTML(holders.find(h=>h.id===selected))}</div></div>`;
+        main.querySelectorAll('[data-holder]').forEach(button=>button.onclick=()=>{selected=button.dataset.holder;render();save();});
+      }
+      operation.innerHTML=`<div><strong>${escape(event.title)}</strong> <span class="sh-caption">操作元：${escape(event.actor)}</span></div>${event.holder?`<div class="sh-path">保存先：${escape(holders.find(h=>h.id===event.holder).path)} / ${escape(holders.find(h=>h.id===event.holder).rows.find(r=>r[0]===event.row)[1])}</div><div><span class="sh-before">${escape(event.before)}</span> → ${escape(event.after).replaceAll('\n',' ')}</div>`:'<div class="sh-caption">型とメソッドの保持先</div>'}`;
+      scrubber.value=index; count.textContent=`${index} / 5`;prev.disabled=index===0;next.disabled=index===5;
+      play.textContent=timer?'一時停止':'再生';
+    }
+    function stop(){clearInterval(timer);timer=null;render();}
+    function go(value){index=Math.max(0,Math.min(5,value));if(options.follow && steps[index].holder)selected=steps[index].holder;render();save();}
+    function save(){
+      const state=Object.fromEntries(controllers.map(c=>[c.design,c.snapshot()]));
+      window.openai?.setWidgetState?.({modelContent:{design:'保持先の棚／構造と詳細',operation:steps[index].title},privateContent:state})?.catch(()=>{});
+    }
+    play.onclick=()=>{
+      if(timer){stop();save();return;}
+      if(index===5)go(0);
+      timer=setInterval(()=>{if(product.closest('section[data-variant]').hidden){stop();return;}go(index+1);if(index===5)stop();},1400);
+      render();save();
+    };
+    prev.onclick=()=>{stop();go(index-1);};next.onclick=()=>{stop();go(index+1);};
+    scrubber.oninput=()=>{const value=Number(scrubber.value);stop();go(value);};
+    controllers.push({design,snapshot:()=>({index,selected}),restore(value){stop();if(Number.isInteger(value?.index))index=Math.max(0,Math.min(5,value.index));if(holders.some(h=>h.id===value?.selected))selected=value.selected;render();}});
+    render();
+    if(globalThis.Tweak && design==='explorer'){const tweak=new Tweak({container:product,onChange:()=>{if(options.follow && steps[index].holder)selected=steps[index].holder;render();}});tweak.addToggle(options,'follow',{label:'変更した保持先を自動選択'});}
+  }
+  root.querySelectorAll('[data-design]').forEach(create);
+  window.addEventListener('openai:set_globals',event=>{
+    const state=event.detail?.globals?.widgetState?.privateContent;
+    if(state)controllers.forEach(c=>{if(state[c.design])c.restore(state[c.design]);});
+  });
+})();
+</script>
