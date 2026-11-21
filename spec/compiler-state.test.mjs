@@ -24,9 +24,10 @@ test('real recordings expose external stores, without treating AST type updates 
   assert.equal(constant.event.after, 'LIMIT');
   assert.equal(constant.event.detail, 'main');
   assert.equal(constant.holder, 'types');
-  const local = groups.get('variables').find(({ event }) => event.reason === 'local_assignment');
+  const local = model.stateObservations.find(({ event }) => event.reason === 'local_assignment');
   assert.equal(local.holder, 'visitor');
   assert(local.event.detail.includes('cumulative='));
+  assert([...groups.values()].flat().every(({ holder }) => holder !== 'visitor'));
   assert(
     groups
       .get('initializers')

@@ -22,6 +22,7 @@ import { activityVisitors, coverageFor } from '../core/activities.js';
 import { compilerStage } from '../core/compiler-stages.js';
 import { compilerSourceURL } from '../core/compiler-version.js';
 import { renderStageContext } from './stage-context.js';
+import { stateObservation } from '../core/compiler-state.js';
 
 // Node selection can move independently of playback. The lower inspector follows
 // model.event, including its compiler stage context.
@@ -123,6 +124,7 @@ export function renderInspector(
   $('visitor-badge-letter').textContent = badgeVisitor ? visitorLetter(event.visitor) : '';
   $('visitor-role').textContent = visitorRole(event, model);
   const activity = event?.kind === 'activity';
+  const environment = stateObservation(event || {})?.holder === 'visitor';
   const diagnostic = event?.kind === 'error';
   const boundary = event?.kind === 'phase_enter' || event?.kind === 'phase_leave';
   $('event-kind').hidden = boundary;
@@ -161,7 +163,10 @@ export function renderInspector(
   $('event-phase').textContent = phase ? t('event.phase', { phase }) : '';
   $('event-phase').title = event?.phase || '';
   $('raw-event').hidden =
-    boundary || !event?.detail || (diagnostic && event.detail === $('explanation').textContent);
+    environment ||
+    boundary ||
+    !event?.detail ||
+    (diagnostic && event.detail === $('explanation').textContent);
   $('event-detail-label').dataset.i18n = diagnostic ? 'event.diagnostic' : 'event.raw';
   $('event-detail-label').textContent = t($('event-detail-label').dataset.i18n);
   $('event-detail').textContent = event?.detail || '';
@@ -170,8 +175,9 @@ export function renderInspector(
   $('activity-observed').textContent = t('activity.observed');
   $('activity-reason-details').hidden = !activity || !event.reason;
   $('activity-reason').textContent = activity ? event.reason || '' : '';
-  $('activity-context').textContent =
-    activity && visitorKey(event.visitor) === 'HasSelfVisitor'
+  $('activity-context').textContent = environment
+    ? event.detail || ''
+    : activity && visitorKey(event.visitor) === 'HasSelfVisitor'
       ? event.parent_visitor
         ? t('activity.context', { visitor: shortVisitor(event.parent_visitor) })
         : t('activity.contextUnknown')

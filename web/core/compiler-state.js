@@ -50,10 +50,14 @@ export function indexStateObservations(trace) {
   return trace.events.map(stateObservation).filter(Boolean);
 }
 
+// Presentation ownership lives here so shelves, lists and counts move together.
+export const isStateObservation = (observation) => observation.holder !== 'visitor';
+
 export function stateObservationsAt(observations, index) {
   const groups = new Map(stateCategories.map((category) => [category, []]));
   for (const observation of observations) {
     if (observation.event.index > index) break;
+    if (!isStateObservation(observation)) continue;
     groups.get(observation.category).push(observation);
   }
   return groups;

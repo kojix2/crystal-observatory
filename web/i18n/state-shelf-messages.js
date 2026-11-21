@@ -74,15 +74,6 @@ export const stateShelfMessages = {
     'Erzeugte .new-Methodenkörper werden in dieser Aufzeichnung nicht erfasst.',
     'Созданные тела .new в этой записи не наблюдаются.',
   ),
-  'state.storageNote': entry(
-    '型はIDで識別します。個体IDのない情報は保持先の種類ごとにまとめ、記録済みの変更を表示します。',
-    'Types are identified by ID. Information without object IDs is grouped by holder kind and shows recorded changes.',
-    'Los tipos se identifican por ID. Sin ID de objeto, los cambios registrados se agrupan por clase de contenedor.',
-    '类型以 ID 区分。没有对象 ID 的信息按持有者类别分组，显示已记录的变更。',
-    'Les types sont identifiés par ID. Sans ID d’objet, les changements enregistrés sont regroupés par catégorie de détenteur.',
-    'Typen werden über IDs unterschieden. Ohne Objekt-ID werden aufgezeichnete Änderungen nach Halterkategorie gruppiert.',
-    'Типы различаются по ID. Данные без ID объекта группируются по категории владельца и показывают записанные изменения.',
-  ),
   'state.shelf.program': entry(
     'Program',
     'Program',
@@ -100,15 +91,6 @@ export const stateShelfMessages = {
     'Types et métaclasses',
     'Typen und Metaklassen',
     'Типы и метаклассы',
-  ),
-  'state.shelf.visitor': entry(
-    'Visitor の環境',
-    'Visitor environments',
-    'Entornos de Visitor',
-    'Visitor 环境',
-    'Environnements des Visitors',
-    'Visitor-Umgebungen',
-    'Окружения Visitor',
   ),
   'state.shelf.initializers': entry(
     '初期化情報',
@@ -145,15 +127,6 @@ export const stateShelfMessages = {
     'Définitions de types, tables de méthodes, constantes et déclarations de variables',
     'Typdefinitionen, Methodentabellen, Konstanten und Variablendeklarationen',
     'Определения типов, таблицы методов, константы и объявления переменных',
-  ),
-  'state.store.visitor': entry(
-    'Visitor が持つ変数環境・推論情報（個体ID未記録）',
-    'Variable environments and inference data held by Visitors; object IDs are not recorded',
-    'Entornos y datos de inferencia de Visitors; sin ID de objeto registrado',
-    'Visitor 持有的变量环境与推断信息；未记录对象 ID',
-    'Environnements et données d’inférence des Visitors ; ID d’objet non enregistré',
-    'Variablenumgebungen und Inferenzdaten der Visitors; Objekt-IDs nicht erfasst',
-    'Окружения переменных и данные вывода Visitor; ID объектов не записаны',
   ),
   'state.store.initializers': entry(
     'Program / Type / Visitor に保持される初期化情報の操作記録',

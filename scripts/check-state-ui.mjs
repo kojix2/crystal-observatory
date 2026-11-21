@@ -76,7 +76,8 @@ try {
   const shelfIDs = await page
     .locator('[data-state-shelf]')
     .evaluateAll((nodes) => nodes.map((node) => node.dataset.stateShelf));
-  assert.equal(shelfIDs.length, 5);
+  assert.equal(shelfIDs.length, 4);
+  assert(!shelfIDs.includes('visitor'));
   checks.push('実トレースを読み込み、保持先の棚を初期表示');
 
   const seek = async (index) => {
@@ -134,12 +135,36 @@ try {
 
   const variable = trace.events.find((event) => event.reason === 'local_assignment');
   await seek(variable.index);
-  const entry = page.locator(`[data-state-entry="${variable.index}"]`);
-  await entry.locator('summary').click();
-  assert((await entry.getAttribute('open')) !== null);
-  await seek(variable.index + 1);
-  assert((await entry.getAttribute('open')) !== null);
-  checks.push('変更行の詳細を展開でき、次のイベントでも展開状態を保持');
+  assert.equal(
+    await page.locator(`#declarations [data-state-entry="${variable.index}"]`).count(),
+    0,
+  );
+  const environment = page.locator('#activity-context');
+  assert.equal(await environment.innerText(), variable.detail);
+  assert.equal(await page.locator('#after').innerText(), variable.after);
+  await page.screenshot({ path: path.join(output, 'visitor-environment.png'), fullPage: true });
+  await page.locator('#event-node').click();
+  assert((await page.locator('#position').innerText()).startsWith(`${variable.index + 1} /`));
+  checks.push('既存の操作パネルでVisitor環境の文脈・値を表示し、ノード選択でも操作を保持');
+  assert.equal(await page.locator('[data-state-shelf="visitor"]').count(), 0);
+  await page.locator('.state-sections [data-state-section="variables"]').click();
+  assert.equal(
+    await page.locator(`#declarations [data-state-entry="${variable.index}"]`).count(),
+    0,
+  );
+  const firstDeclaration = trace.events.find((event) => event.activity === 'declare_var');
+  assert.equal(
+    await page.locator('[data-state-section="variables"] .state-count').innerText(),
+    '2',
+  );
+  assert.equal(
+    await page.locator(`#declarations [data-state-entry="${firstDeclaration.index}"]`).count(),
+    1,
+  );
+  await overview.click();
+  await seek(variable.index - 1);
+  assert.equal(await environment.isVisible(), false);
+  checks.push('Stateの一覧・件数から環境を除外し、巻き戻しで表示が選択操作に追従');
 
   await page.locator('#compare-view').selectOption('ast');
   assert.equal(await page.locator('#playback').isVisible(), true);
@@ -175,8 +200,9 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForFunction(() => document.getElementById('app').classList.contains('mobile'));
   await seek(variable.index);
-  if ((await entry.getAttribute('open')) !== null) await entry.locator('summary').click();
-  await entry.scrollIntoViewIfNeeded();
+  await page.locator('#declarations').evaluate((node) => {
+    node.scrollTop = node.scrollHeight;
+  });
   const navBounds = await page.locator('.state-sections').boundingBox();
   const currentBounds = await page.locator('.state-current-change').boundingBox();
   assert(currentBounds.y >= navBounds.y + navBounds.height - 1);
@@ -196,12 +222,27 @@ try {
   checks.push(
     '390px幅で棚が1列に並び、横はみ出しなし。スクロール中も操作元・保持先と再生ボタンを表示',
   );
+  await page.locator('#mobile-navigation [data-pane="details"]').click();
+  await environment.scrollIntoViewIfNeeded();
+  assert.equal(await environment.isVisible(), true);
+  assert(
+    await page
+      .locator('#event-operation-panel')
+      .evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
+  );
+  await page.screenshot({
+    path: path.join(output, 'mobile-visitor-environment.png'),
+    fullPage: true,
+  });
+  checks.push('スマートフォンの詳細画面でもVisitor環境を操作ごとに表示');
+  await page.locator('#mobile-navigation [data-pane="work"]').click();
 
   await page.locator('#more-actions').click();
   await page.locator('#language').selectOption('en');
   await page.locator('#more-actions').click();
   assert.match(await page.locator('#declarations').innerText(), /Storage shelves/);
   assert.equal(await overview.getAttribute('aria-pressed'), 'true');
+  assert.equal(await environment.innerText(), variable.detail);
   checks.push('表示言語を変えても再生位置と棚表示を保持');
 
   await page.setViewportSize({ width: 1600, height: 1000 });
@@ -237,7 +278,17 @@ try {
   await writeFile(path.join(output, 'results.json'), JSON.stringify({ checks, errors }, null, 2));
   console.log(
     JSON.stringify(
-      { checks, errors, screenshots: ['desktop.png', 'mobile.png', 'live-compilation.png'] },
+      {
+        checks,
+        errors,
+        screenshots: [
+          'desktop.png',
+          'mobile.png',
+          'visitor-environment.png',
+          'mobile-visitor-environment.png',
+          'live-compilation.png',
+        ],
+      },
       null,
       2,
     ),

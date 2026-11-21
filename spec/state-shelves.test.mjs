@@ -18,7 +18,7 @@ test('shelves exist before their contents, expose no future types, and rewind ex
   const trace = fixture('09_declarations');
   const model = new TraceModel(trace);
   const ids = stateShelves(model).map(({ id }) => id);
-  assert.equal(ids.length, 5);
+  assert.equal(ids.length, 4);
   assert(stateShelves(model).every(({ entries, types }) => !entries.length && !types.length));
   assert(!stateShelvesHTML(model).includes('Generated'));
   const method = trace.events.find(
@@ -73,12 +73,13 @@ test('Program is separate from type objects and context names never merge operat
   assert(
     shelves.find(({ id }) => id === 'types').types.every(({ info }) => info.kind !== 'program'),
   );
-  const observation = model.stateObservations.find(({ holder }) => holder === 'visitor');
+  assert(!shelves.some(({ id }) => id === 'visitor'));
+  const observation = model.stateObservations.find(({ holder }) => holder === 'initializers');
   model.stateObservations = [0, 1].map((index) => ({
     ...observation,
     event: { ...observation.event, index, detail: 'same name', node_id: index + 1 },
   }));
-  const entries = stateShelves(model).find(({ id }) => id === 'visitor').entries;
+  const entries = stateShelves(model).find(({ id }) => id === 'initializers').entries;
   assert.equal(entries.length, 2);
   assert.notEqual(entries[0].event.node_id, entries[1].event.node_id);
 });
@@ -101,7 +102,7 @@ test('shelf rendering bounds operation lists, keeps current changes, and escapes
   assert(!html.includes('<script>'));
   assert(html.includes(t('state.actor')));
   const complete = new TraceModel(fixture('10_initializers')).seek(trace.events.length - 1);
-  assert((stateShelvesHTML(complete).match(/data-state-entry=/g) || []).length <= 15);
+  assert((stateShelvesHTML(complete).match(/data-state-entry=/g) || []).length <= 12);
   assert(stateShelvesHTML(complete).includes(t('state.inspectAll')));
 });
 

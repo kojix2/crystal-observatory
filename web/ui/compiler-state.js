@@ -1,6 +1,6 @@
 import { t } from '../i18n/index.js';
 import { messages } from '../i18n/messages.js';
-import { stateObservationsAt } from '../core/compiler-state.js';
+import { isStateObservation, stateObservationsAt } from '../core/compiler-state.js';
 import { $, esc } from './dom.js';
 import { icon } from './icons.js';
 
@@ -16,18 +16,13 @@ export function compilerStateHTML(
   const observations = model.stateObservations;
   const covered = model.trace.activity_coverage?.some((entry) =>
     entry.activities.some((activity) =>
-      [
-        'declare_const',
-        'declare_var',
-        'guess_type',
-        'narrow_type',
-        'register_initializer',
-        'instantiate_def',
-        'bind_macro_var',
-      ].includes(activity),
+      ['declare_const', 'declare_var', 'register_initializer', 'instantiate_def'].includes(
+        activity,
+      ),
     ),
   );
-  if (!observations.length && !covered) return `<p class="empty">${esc(t('state.unobserved'))}</p>`;
+  if (!observations.some(isStateObservation) && !covered)
+    return `<p class="empty">${esc(t('state.unobserved'))}</p>`;
   const entries =
     options.entries || stateObservationsAt(observations, model.index).get(category) || [];
   const rows = entries

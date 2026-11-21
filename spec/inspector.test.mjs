@@ -166,7 +166,14 @@ test('source activities use diffs while one-sided results and type transitions k
       { kind: 'activity', activity: 'simplify_condition', before: '', after: '1' },
       { kind: 'rewrite', before: 'foo(1)', after: 'foo(1)' },
       { kind: 'rewrite', before: 'foo(1)', after: '∅' },
-      { kind: 'activity', activity: 'merge_guess', before: 'Int32', after: 'Int32 | String' },
+      {
+        kind: 'activity',
+        visitor: 'Crystal::TypeGuessVisitor',
+        activity: 'merge_guess',
+        before: 'Int32',
+        after: 'Int32 | String',
+        detail: '@value; owner=Box',
+      },
     ].map((event, index) => ({
       index,
       node_id: 1,
@@ -207,6 +214,10 @@ test('source activities use diffs while one-sided results and type transitions k
     assert.equal(get('change').dataset.layout, 'pair');
     assert.equal(get('before').textContent, 'Int32');
     assert.equal(get('after').textContent, 'Int32 | String');
+    assert.equal(get('activity-context').textContent, '@value; owner=Box');
+    assert.equal(get('raw-event').hidden, true);
+    render(2);
+    assert.equal(get('activity-context').hidden, true);
   } finally {
     globalThis.document = original;
     setLocale('en');

@@ -1,9 +1,9 @@
-import { stateObservation } from './compiler-state.js';
+import { isStateObservation, stateObservation } from './compiler-state.js';
 
 // These fixed shelves describe recorded holders. Context strings never identify
 // an object: old traces do not contain Visitor/store identities or cache writes.
 export function stateShelves(model) {
-  const shelves = ['program', 'types', 'visitor', 'initializers', 'specializations'].map((id) => ({
+  const shelves = ['program', 'types', 'initializers', 'specializations'].map((id) => ({
     id,
     entries: [],
     types: [],
@@ -11,6 +11,7 @@ export function stateShelves(model) {
   const byId = new Map(shelves.map((shelf) => [shelf.id, shelf]));
   for (const observation of model.stateObservations) {
     if (observation.event.index > model.index) break;
+    if (!isStateObservation(observation)) continue;
     byId.get(observation.holder).entries.push(observation);
   }
   for (const state of [...model.declarations.values()].sort(

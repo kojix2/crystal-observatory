@@ -352,7 +352,6 @@ kbd+kbd { margin-left:2px; }
 .state-sections .state-section.selected { background:var(--selection); border-color:var(--type); color:var(--ink); }
 .state-count { min-width:1.2em; color:var(--muted); font:var(--text-small) var(--mono); }
 .state-content { padding:12px; }
-.state-storage-note { margin-bottom:10px; color:var(--muted); font-size:var(--text-small); line-height:1.6; }
 .state-current-change { position:sticky; top:var(--state-nav-height,0px); z-index:1; display:flex; flex-wrap:wrap; gap:4px 16px; min-height:44px; padding:8px 10px; margin-bottom:12px; background:var(--soft); box-shadow:0 1px 0 var(--line); font-size:var(--text-small); overflow-wrap:anywhere; }
 .state-current-change strong { color:var(--type); }
 .state-shelves { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:12px; }

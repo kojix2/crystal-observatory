@@ -15,8 +15,7 @@ export function stateShelvesHTML(model, expanded = new Set()) {
   const selected = current
     ? `<span>${esc(t('state.actor'))}: <code>${esc(actor)}</code></span><span>${esc(t('state.holder'))}: <strong>${esc(t(`state.shelf.${current.id}`))}</strong></span>`
     : `<span>${esc(t(event?.phase === 'Semantic (new)' ? 'state.newUnobserved' : 'state.noStoreChange'))}</span>`;
-  return `<div class="state-storage-note">${esc(t('state.storageNote'))}</div>
-    <div class="state-current-change" role="status">${selected}</div>
+  return `<div class="state-current-change" role="status">${selected}</div>
     <div class="state-shelves">${shelves
       .map((shelf) => {
         const { id, entries, types, active } = shelf;

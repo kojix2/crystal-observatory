@@ -58,13 +58,13 @@ export const stateMessages = {
   ),
 
   'state.coverage': entry(
-    '選択イベントまでの、AST 外の状態に関わる操作です。保持先の種類と記録された文脈を表示します。文脈の名前は識別 ID ではありません。完全な変数環境・初期化順序・特殊化キャッシュは再構成しません。',
-    'Operations involving state outside the AST through the selected event, with the kind of holder and recorded context. Context names are not identities. Complete variable environments, initializer order and specialization caches are not reconstructed.',
-    'Operaciones sobre estado externo al AST hasta el evento seleccionado, con el tipo de contenedor y contexto registrado. Los nombres no son identidades. No se reconstruyen entornos, orden de inicialización ni cachés completos.',
-    '显示所选事件之前涉及 AST 外部状态的操作、持有者类别及记录的上下文。上下文名称并非身份标识；不重建完整的变量环境、初始化顺序或特化缓存。',
-    'Opérations sur l’état hors AST jusqu’à l’événement sélectionné, avec la catégorie du détenteur et le contexte enregistré. Les noms ne sont pas des identifiants. Les environnements, l’ordre d’initialisation et les caches complets ne sont pas reconstruits.',
-    'Operationen am Zustand außerhalb des AST bis zum gewählten Ereignis, mit Halterkategorie und aufgezeichnetem Kontext. Namen sind keine Identitäten. Vollständige Variablenumgebungen, Initialisierungsreihenfolgen und Caches werden nicht rekonstruiert.',
-    'Операции с состоянием вне AST до выбранного события: категория владельца и записанный контекст. Имена не являются идентификаторами. Полные окружения переменных, порядок инициализации и кеши специализаций не восстанавливаются.',
+    '選択イベントまでの、AST 外の状態に関わる操作です。保持先の種類と記録された文脈を表示します。文脈の名前は識別 ID ではありません。完全な初期化順序・特殊化キャッシュは再構成しません。',
+    'Operations involving state outside the AST through the selected event, with the kind of holder and recorded context. Context names are not identities. Complete initializer order and specialization caches are not reconstructed.',
+    'Operaciones sobre estado externo al AST hasta el evento seleccionado, con el tipo de contenedor y contexto registrado. Los nombres no son identidades. No se reconstruyen el orden de inicialización ni las cachés completas.',
+    '显示所选事件之前涉及 AST 外部状态的操作、持有者类别及记录的上下文。上下文名称并非身份标识；不重建完整的初始化顺序或特化缓存。',
+    'Opérations sur l’état hors AST jusqu’à l’événement sélectionné, avec la catégorie du détenteur et le contexte enregistré. Les noms ne sont pas des identifiants. L’ordre d’initialisation et les caches complets ne sont pas reconstruits.',
+    'Operationen am Zustand außerhalb des AST bis zum gewählten Ereignis, mit Halterkategorie und aufgezeichnetem Kontext. Namen sind keine Identitäten. Vollständige Initialisierungsreihenfolgen und Caches werden nicht rekonstruiert.',
+    'Операции с состоянием вне AST до выбранного события: категория владельца и записанный контекст. Имена не являются идентификаторами. Полный порядок инициализации и кеши специализаций не восстанавливаются.',
   ),
   'state.unobserved': entry(
     'この記録には、対応する操作や計測範囲の情報がありません。',
@@ -137,15 +137,6 @@ export const stateMessages = {
     'liste d’initialisation de Program',
     'Initialisierungsliste von Program',
     'список инициализации Program',
-  ),
-  'state.holder.visitor': entry(
-    'Visitor の環境・推論情報',
-    'Visitor environment / inference data',
-    'entorno / inferencia del visitante',
-    'Visitor 环境／推断信息',
-    'environnement / données d’inférence du visiteur',
-    'Visitor-Umgebung / Inferenzdaten',
-    'окружение / данные вывода Visitor',
   ),
   'state.holder.initializers': entry(
     '初期化情報（Program / Type / Visitor）',

@@ -28,7 +28,6 @@ export function renderDeclarations(model, selectedType, callbacks) {
   root.stateTrace = model.trace;
   const groups = stateObservationsAt(model.stateObservations, model.index);
   const counts = new Map([
-    ['holders', 5],
     ['types', model.declarations.size],
     ...[...groups].map(([key, entries]) => [key, entries.length]),
   ]);
@@ -41,7 +40,7 @@ export function renderDeclarations(model, selectedType, callbacks) {
       : current === 'types'
         ? typeDeclarationsHTML(model, selectedType)
         : compilerStateHTML(model, current, expanded);
-  root.innerHTML = `<nav class="state-sections" aria-label="${esc(t('decl.title'))}">${categories.map((key) => `<button class="state-section ${key === current ? 'selected' : ''}" data-state-section="${key}" aria-pressed="${key === current}"><span>${esc(t(`state.${key}`))}</span><span class="state-count">${counts.get(key)}</span></button>`).join('')}</nav>
+  root.innerHTML = `<nav class="state-sections" aria-label="${esc(t('decl.title'))}">${categories.map((key) => `<button class="state-section ${key === current ? 'selected' : ''}" data-state-section="${key}" aria-pressed="${key === current}"><span>${esc(t(`state.${key}`))}</span>${counts.has(key) ? `<span class="state-count">${counts.get(key)}</span>` : ''}</button>`).join('')}</nav>
     <div class="state-content"><div class="state-section-heading"><h3>${esc(t(`state.${current}`))}</h3><details class="state-about" ${aboutOpen ? 'open' : ''}><summary>${icon('info', { size: 12 })}<span>${esc(t('state.about'))}</span></summary><p>${esc(current === 'types' ? t('decl.coverage') : t('state.coverage'))}</p></details></div>${content}</div>`;
   root.style?.setProperty(
     '--state-nav-height',

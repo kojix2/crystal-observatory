@@ -196,15 +196,19 @@ node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
 
 **State** opens on **Storage shelves**, with fixed places for Program, types and
-metaclasses, Visitor environments, initializer data, and specialized Defs.
+metaclasses, initializer data, and specialized Defs.
 Playback highlights the shelf and recorded entry that changed; the summary
 separates the component making the change from the holder. Type entries have
 stable type IDs and show the observed instance/class method counts. Rewinding
 removes later declarations and operations without replacing the shelves. Open a
 type or use the section buttons for the existing lists and details.
 
-The section buttons show types and methods, constant registrations, variable declarations
-and environments, initializer processing, and method specializations through the
+Visitor-owned environments and inference information use the lower inspector's
+existing **Operation** view: context, before/after values, and related nodes follow
+the selected event. These entries are excluded from State shelves, lists and counts.
+
+The section buttons show types and methods, constant registrations, variable declarations,
+initializer processing, and method specializations through the
 selected event. Use their counts to choose what to inspect.
 The types section initially selects an observed type. Operation rows show a short
 context and result; expand a row for its holder, before/after values and navigation.

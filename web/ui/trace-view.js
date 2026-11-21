@@ -16,7 +16,7 @@ import { renderTokens, TOKEN_DISPLAY_LIMIT } from './tokens.js';
 import { EventList } from './event-list.js';
 import { IRView } from './ir-view.js';
 import { renderDeclarations } from './declarations.js';
-import { stateObservation } from '../core/compiler-state.js';
+import { isStateObservation, stateObservation } from '../core/compiler-state.js';
 import { ViewLayout, comparisonTargets, viewLabel, viewLabelKey } from '../core/view-layout.js';
 import { compilerVersionSummary } from '../core/compiler-version.js';
 
@@ -320,7 +320,8 @@ export class TraceView {
       if (this.stateSection !== 'holders') this.stateSection = 'types';
     } else if (event) {
       const observation = stateObservation(event);
-      if (observation && this.stateSection !== 'holders') this.stateSection = observation.category;
+      if (observation && isStateObservation(observation) && this.stateSection !== 'holders')
+        this.stateSection = observation.category;
     }
     if ($('follow').checked) {
       this.snapshot = this.model.snapshotAt();
