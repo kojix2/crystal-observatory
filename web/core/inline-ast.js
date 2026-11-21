@@ -125,6 +125,8 @@ function scopeFrames(rows) {
 }
 
 function position(row, filename) {
+  if (row.generatedRoot)
+    return { key: `generated:${row.generatedRoot}`, line: 0, column: 1, filename: '' };
   const { line, column, filename: nodeFile } = row.node;
   if (
     (row.parent < 0 && row.node.kind === 'Expressions') ||
@@ -157,6 +159,9 @@ export function layoutInlineAST(
   const ends = flat.map((_, i) => i);
   flat.forEach((row, index) => {
     const parent = flat[row.parent];
+    row.generatedRoot =
+      parent?.generatedRoot ||
+      (row.parent < 0 && snapshot.generated?.has(row.node.id) ? row.node.id : 0);
     row.scope = parent?.scope ?? -1;
     row.scopeDepth = parent?.scopeDepth || 0;
     row.closingScopes = 0;
@@ -225,7 +230,9 @@ export function layoutInlineAST(
           ? String(group.line)
           : group.filename
             ? `${group.filename}:${group.line}`
-            : 'AST',
+            : first.generatedRoot
+              ? 'generated'
+              : 'AST',
         code,
       });
       y += headingHeight;

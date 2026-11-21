@@ -40,7 +40,7 @@ export function renderGraph(
     view,
     collapsed,
     reveal = true,
-    selectedInGeneratedTree,
+    forest,
     astLayout = 'inline',
     astZoom = 1,
     typesZoom = 1,
@@ -52,11 +52,19 @@ export function renderGraph(
   const caption = $(`${view}-caption`);
   const liveTypes = view === 'types' || $('follow').checked;
   const visit = visitation(model);
+  const revision = model.event?.generated_tree;
+  const added = new Set();
+  if (forest && revision && liveTypes) {
+    const previous = forest.generated?.get(revision.roots[0])?.previous;
+    const oldIds = new Set(previous?.nodes.map((node) => node.id));
+    for (const node of revision.nodes) if (!oldIds.has(node.id)) added.add(node.id);
+  }
   function nodeState(n) {
     const family = astFamily(n.kind);
     const type = liveTypes ? model.types.get(n.id) || '' : n.inferred_type || '';
     const activities = model.activities.get(n.id) || [];
     const changed =
+      added.has(n.id) ||
       (model.event?.kind === 'type' && model.event.node_id === n.id) ||
       activities.some(
         (event) =>
@@ -128,7 +136,7 @@ export function renderGraph(
     });
   }
   function renderAST() {
-    const s = model.trace.snapshots[snapshot];
+    const s = forest ?? model.trace.snapshots[snapshot];
     if (!s) {
       $('graph').innerHTML = `<p class="empty">${esc(t('graph.empty'))}</p>`;
       caption.textContent = t('graph.prompt');
@@ -158,16 +166,26 @@ export function renderGraph(
         name: s.name,
         count: s.nodes.length,
         time: t($('follow').checked ? 'graph.eventTypes' : 'graph.snapshotTypes'),
-        outside:
-          selected && !selectedInGeneratedTree && !s.nodes.some((n) => n.id === selected)
-            ? t('graph.outside')
-            : '',
+        outside: selected && !s.nodes.some((n) => n.id === selected) ? t('graph.outside') : '',
       }) +
       (astLayout === 'radial'
         ? ` · ${t('ast.radialHint')}`
         : astLayout === 'mindmap'
           ? ` · ${t('ast.mindmapHint')}`
           : '');
+    const generated = s.generated?.get(selected)?.event;
+    if (generated) {
+      const signature = generated.activity === 'register_initializer';
+      caption.append(` · ${t(signature ? 'ast.signatureOnly' : 'ast.newBody')}`);
+      const origin = signature ? generated.node_id : generated.related_id;
+      if (origin) {
+        const link = document.createElement('button');
+        link.className = 'link-button';
+        link.textContent = `${t('ast.newOrigin')} · initialize #${origin}`;
+        link.onclick = () => onSelect(origin);
+        caption.append(' · ', link);
+      }
+    }
   }
   function renderInline(s) {
     const graph = $('graph'),
@@ -231,7 +249,7 @@ export function renderGraph(
           shown += char;
           columns += width;
         }
-        return `<text class="inline-source-line" x="${x}" y="${y}">${esc(label)}</text>${shown ? `<text class="inline-source-code" x="${layout.sourceX}" y="${y}" xml:space="preserve">${esc(shown)}</text>` : ''}`;
+        return `<text class="inline-source-line" x="${x}" y="${y}">${esc(label === 'generated' ? t('ast.generated') : label)}</text>${shown ? `<text class="inline-source-code" x="${layout.sourceX}" y="${y}" xml:space="preserve">${esc(shown)}</text>` : ''}`;
       })
       .join('');
     for (const [index, row] of layout.rows.entries()) {
@@ -335,7 +353,8 @@ export function renderGraph(
     for (const row of rows) {
       if (row.parent >= 0)
         edges += `<path class="edge ${row.edge}" d="${radialBranch(rows[row.parent], row)}"/>`;
-      else if (row.radius > 0) edges += `<path class="edge root" d="M500 500 L${row.x} ${row.y}"/>`;
+      else if (row.radius > 0 && !s.generated)
+        edges += `<path class="edge root" d="M500 500 L${row.x} ${row.y}"/>`;
       const { family, type, changed } = nodeState(row.node),
         active = row.node.id === selected,
         label = t('graph.node', { kind: row.node.kind, type, id: row.node.id }),

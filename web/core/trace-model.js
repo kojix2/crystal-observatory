@@ -208,6 +208,32 @@ export class TraceModel {
     this.generatedCache = { start, end, trees };
     return trees;
   }
+  // Source nodes retain their snapshot values when the same ID is shared.
+  // Generated definitions are additional roots, never children of initialize.
+  astForest(snapshot, index) {
+    const source = this.trace.snapshots[snapshot];
+    const trees = this.generatedTreesAt(index);
+    if (!source || !trees.size) return source;
+    if (this.forestCache?.source === source && this.forestCache.trees === trees)
+      return this.forestCache.forest;
+    const nodes = new Map(source.nodes.map((node) => [node.id, node]));
+    const roots = [...source.roots];
+    for (const [id, { event }] of trees) {
+      const tree = event.generated_tree;
+      if (!nodes.has(id)) roots.push(id);
+      for (const node of tree.nodes) {
+        if (nodes.has(node.id)) continue;
+        if (node.id === id) {
+          const owner = tree.name.replace(/\.class$/, '');
+          const signature = (node.label || 'new').replace(/^def /, '');
+          nodes.set(id, { ...node, label: `def ${owner}.${signature}` });
+        } else nodes.set(node.id, node);
+      }
+    }
+    const forest = { ...source, roots, nodes: [...nodes.values()], generated: trees };
+    this.forestCache = { source, trees, forest };
+    return forest;
+  }
   snapshotAt(index = this.index) {
     let found = 0,
       latest = -1;

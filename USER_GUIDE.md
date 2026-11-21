@@ -196,11 +196,11 @@ node. Selecting a node does not replace the operation being inspected. Rewinding
 replays observed types and declarations, not a complete AST history.
 
 In the **08 · Structs and initialize** example, open **AST** and select the **Semantic (top level)**
-snapshot to see the generated `.new` signature below the source tree. Select
-**Semantic (new)** to inspect its body, including the `allocate` call.
-During playback, a plus marks nodes added at the selected operation. Use the
-method selector to inspect another generated constructor, or select its
-`initialize` link to inspect the source definition.
+snapshot to see the generated `Point.new` definition as a folded root after the source
+tree. Open it with the usual fold control, then switch to **Semantic (new)** to
+see the `allocate` and `initialize` calls. Selecting the generated definition
+shows its origin in the graph caption. Selecting its generation event in the
+history opens the definition directly.
 
 **State** opens on **Storage shelves**, with fixed places for Program, types and
 metaclasses, initializer data, and specialized Defs.

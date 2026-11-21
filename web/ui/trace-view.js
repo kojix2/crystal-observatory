@@ -4,7 +4,6 @@ import { $, notify, download, downloadBlob } from './dom.js';
 import { setIcon } from './icons.js';
 import { AstRecorder, astMarker } from './ast-recorder.js';
 import { TraceModel, revealASTNode } from '../core/trace-model.js';
-import { clearGeneratedTrees, renderGeneratedTrees } from './generated-trees.js';
 import { renderGraph } from './graphs.js';
 import { renderVisitorSpeech } from './visitor-speech.js';
 import { currentSpeechCue, SpeechSound } from './speech-sound.js';
@@ -101,15 +100,14 @@ export class TraceView {
     // they cannot retain a previous recording until the user opens them again.
     for (const id of ['graph', 'types', 'declarations']) $(id).replaceChildren();
     delete $('declarations').stateTrace;
-    clearGeneratedTrees();
     this.model = model;
-    this.generatedRoot = 0;
     this.selected = 0;
     this.selectedType = 0;
     this.stateSection = 'holders';
     this.stateExpanded = new Set();
     this.snapshot = 0;
     this.collapsed.clear();
+    for (const event of model.generatedChanges) this.collapsed.add(event.generated_tree.roots[0]);
     this.astZoom = 1;
     this.typesZoom = 1;
     this.editor.setRecord(trace.source, preserveEdits, trace.mode !== 'empty', trace.filename);
@@ -316,8 +314,6 @@ export class TraceView {
     if (!this.model) return;
     this.model.seek(index);
     const event = this.model.event;
-    if (event?.generated_tree && $('follow').checked)
-      this.generatedRoot = event.generated_tree.roots[0];
     this.workspace?.setDetailContext?.('event', event);
     this.selected = event?.node_id || this.selected;
     if (event?.kind === 'declaration') {
@@ -375,7 +371,8 @@ export class TraceView {
         this.renderObservation({ reveal: true });
       }
     }
-    if (this.model.event?.generated_tree && !this.layout.has('ast')) this.setView('ast');
+    if (this.model.event?.generated_tree && $('follow').checked)
+      this.selectDeclarationNode(this.model.event.generated_tree.roots[0], 'ast');
     if (node) this.showNodeEventTab();
     this.workspace?.showPane('details', { focus: true });
   }
@@ -414,7 +411,7 @@ export class TraceView {
   }
   selectDeclarationNode(id, view = 'source') {
     if (view === 'ast' && this.model.generatedTreesAt().has(id)) {
-      this.generatedRoot = id;
+      this.collapsed.delete(id);
       $('follow').checked = true;
       this.snapshot = this.model.snapshotAt();
       $('snapshot').value = this.snapshot;
@@ -531,20 +528,9 @@ export class TraceView {
         },
       });
     } else if (view === 'ast' || view === 'types') {
-      let selectedInGeneratedTree;
+      let forest;
       if (view === 'ast') {
-        const index = this.generatedIndex();
-        selectedInGeneratedTree = renderGeneratedTrees(
-          this.model.generatedTreesAt(index),
-          this.generatedRoot,
-          this.selected,
-          index,
-          (id) => {
-            this.generatedRoot = id;
-            this.selectNode(id);
-          },
-          (id) => this.selectNode(id),
-        );
+        forest = this.model.astForest(this.snapshot, this.generatedIndex());
         const radial = this.astLayout === 'radial';
         $('ast-layout').value = this.astLayout || 'inline';
         $('ast-radial-controls').hidden = !['radial', 'mindmap'].includes(this.astLayout);
@@ -552,16 +538,14 @@ export class TraceView {
         $('ast-zoom').hidden = !radial;
         $('ast-zoom').value = (this.astZoom || 1) * 100;
         $('ast-zoom-value').value = `${Number(((this.astZoom || 1) * 100).toPrecision(3))}%`;
-        $('expand').hidden =
-          radial ||
-          !this.trace.snapshots[this.snapshot]?.nodes.some((node) => this.collapsed.has(node.id));
+        $('expand').hidden = radial || !forest?.nodes.some((node) => this.collapsed.has(node.id));
       }
       if (view === 'types')
         $('types-zoom-value').value = `${Number(((this.typesZoom || 1) * 100).toPrecision(3))}%`;
       renderGraph(
         {
           model: this.model,
-          selectedInGeneratedTree,
+          forest,
           selected: this.selected,
           snapshot: this.snapshot,
           view,
