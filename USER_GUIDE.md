@@ -199,8 +199,9 @@ In the **08 · Structs and initialize** example, open **AST** and select the **S
 snapshot to see the generated `Point.new` definition as a folded root after the source
 tree. Open it with the usual fold control, then switch to **Semantic (new)** to
 see the `allocate` and `initialize` calls. Selecting the generated definition
-shows its origin in the graph caption. Selecting its generation event in the
-history opens the definition directly.
+shows its origin in the graph caption. In the history, selecting **.new generation**
+highlights the roots completed in that stage. Selecting an individual generation event
+highlights just its definition. Both actions preserve the current folds.
 
 **State** opens on **Storage shelves**, with fixed places for Program, types and
 metaclasses, initializer data, and specialized Defs.

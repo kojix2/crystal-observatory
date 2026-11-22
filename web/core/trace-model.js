@@ -189,6 +189,25 @@ export class TraceModel {
     this.event = this.trace.events[index];
     return this;
   }
+  // A stage selection shows its recorded results, including default constructors
+  // that have no signature tree before the stage begins.
+  constructorStageAt(start) {
+    const roots = new Set();
+    let index = start;
+    for (let i = start + 1; i < this.trace.events.length; i++) {
+      const event = this.trace.events[i];
+      if (event.phase !== 'Semantic (new)' || event.kind === 'phase_enter') break;
+      if (event.activity === 'complete_new' && event.generated_tree) {
+        roots.add(event.generated_tree.roots[0]);
+        index = i;
+      }
+      if (event.kind === 'phase_leave') {
+        if (roots.size) index = i;
+        break;
+      }
+    }
+    return { index, roots };
+  }
   generatedTreesAt(index = this.index) {
     const cached = this.generatedCache;
     if (cached && index >= cached.start && index < cached.end) return cached.trees;

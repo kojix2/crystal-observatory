@@ -310,12 +310,22 @@ export class TraceView {
       this.playTimer = setInterval(step, speed());
     }
   }
-  seek(index) {
+  seek(index, stageRoots) {
     if (!this.model) return;
     this.model.seek(index);
     const event = this.model.event;
     this.workspace?.setDetailContext?.('event', event);
-    this.selected = event?.node_id || this.selected;
+    if (
+      !stageRoots &&
+      event?.phase === 'Semantic (new)' &&
+      (event.kind === 'phase_enter' || event.kind === 'phase_leave')
+    ) {
+      stageRoots = new Set(this.model.generatedTreesAt().keys());
+    }
+    this.selectedStageRoots = stageRoots;
+    this.selected = stageRoots
+      ? stageRoots.values().next().value || 0
+      : event?.generated_tree?.roots[0] || event?.node_id || this.selected;
     if (event?.kind === 'declaration') {
       this.selectedType = event.type_id;
       if (this.stateSection !== 'holders') this.stateSection = 'types';
@@ -355,24 +365,33 @@ export class TraceView {
   }
   selectEvent(index) {
     this.stop();
-    if (this.trace?.events[index]?.kind === 'phase_enter') {
-      const first = nextVisit({ trace: this.trace, event: this.trace.events[index], index });
-      if (first >= 0) index = first;
+    const event = this.trace?.events[index];
+    let stageRoots;
+    if (event?.kind === 'phase_enter') {
+      if (event.phase === 'Semantic (new)') {
+        const stage = this.model.constructorStageAt(index);
+        index = stage.index;
+        stageRoots = stage.roots;
+      } else {
+        const first = nextVisit({ trace: this.trace, event, index });
+        if (first >= 0) index = first;
+      }
     }
-    this.seek(index);
+    this.seek(index, stageRoots);
     const node = this.model?.event?.node_id;
-    if ($('follow').checked && node && !this.model.event?.generated_tree) {
-      const snapshot = this.model.snapshotForNode(node, this.snapshot);
+    if ($('follow').checked) {
+      const generated = stageRoots?.size || this.model.event?.generated_tree;
+      const snapshot = !generated && node ? this.model.snapshotForNode(node, this.snapshot) : -1;
       if (snapshot >= 0) {
         this.snapshot = snapshot;
         $('snapshot').value = snapshot;
         revealASTNode(this.trace.snapshots[snapshot], node, this.collapsed);
+      }
+      if (generated || snapshot >= 0) {
         if (!this.layout.has('ast')) this.setView('ast', { reveal: false });
         this.renderObservation({ reveal: true });
       }
     }
-    if (this.model.event?.generated_tree && $('follow').checked)
-      this.selectDeclarationNode(this.model.event.generated_tree.roots[0], 'ast');
     if (node) this.showNodeEventTab();
     this.workspace?.showPane('details', { focus: true });
   }
@@ -387,6 +406,7 @@ export class TraceView {
     );
   }
   selectNode(id) {
+    this.selectedStageRoots = undefined;
     this.selected = id;
     this.workspace?.setDetailContext?.('node', this.model.nodes.get(id) || id);
     const declaration = this.trace.events.findLast(
@@ -397,6 +417,7 @@ export class TraceView {
     this.renderSelection();
   }
   selectType(id) {
+    this.selectedStageRoots = undefined;
     this.stateSection = 'types';
     this.selectedType = id;
     const state = this.model.declarations.get(id);
@@ -546,6 +567,7 @@ export class TraceView {
         {
           model: this.model,
           forest,
+          selectedStageRoots: this.selectedStageRoots,
           selected: this.selected,
           snapshot: this.snapshot,
           view,

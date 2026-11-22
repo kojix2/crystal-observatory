@@ -36,6 +36,7 @@ export function renderGraph(
   {
     model,
     selected,
+    selectedStageRoots,
     snapshot,
     view,
     collapsed,
@@ -53,6 +54,7 @@ export function renderGraph(
   const liveTypes = view === 'types' || $('follow').checked;
   const visit = visitation(model);
   const revision = model.event?.generated_tree;
+  const astSelected = (id) => selectedStageRoots?.has(id) || id === selected;
   const added = new Set();
   if (forest && revision && liveTypes) {
     const previous = forest.generated?.get(revision.roots[0])?.previous;
@@ -149,7 +151,9 @@ export function renderGraph(
     else renderInline(s);
     wireGraph($('graph'));
     const activeNode =
-      $('graph').querySelector('.node.visit-current') || $('graph').querySelector('.node.selected');
+      (revision && $('graph').querySelector('.node.selected')) ||
+      $('graph').querySelector('.node.visit-current') ||
+      $('graph').querySelector('.node.selected');
     if (activeNode && $('follow').checked && reveal) {
       const focus = activeNode.querySelector?.('.visitor-ball-current') || activeNode,
         focusRect = focus.getBoundingClientRect(),
@@ -212,7 +216,7 @@ export function renderGraph(
     });
     let hasFocus = false;
     layout.rows.forEach((row, index) => {
-      if (row.node.id !== selected) return;
+      if (!astSelected(row.node.id)) return;
       hasFocus = true;
       for (let i = index; i >= 0; i = layout.rows[i].parent) related.add(i);
       const pending = [...children[index]];
@@ -266,7 +270,7 @@ export function renderGraph(
       const card = renderASTCard(row, {
         trace: model.trace,
         state: nodeState(row.node),
-        selected,
+        selected: astSelected(row.node.id),
         collapsed,
         x: row.x,
         y: row.y,
@@ -329,7 +333,7 @@ export function renderGraph(
       nodes += renderASTCard(row, {
         trace: model.trace,
         state: nodeState(row.node),
-        selected,
+        selected: astSelected(row.node.id),
         collapsed,
         x: row.x,
         y: row.y,
@@ -356,7 +360,7 @@ export function renderGraph(
       else if (row.radius > 0 && !s.generated)
         edges += `<path class="edge root" d="M500 500 L${row.x} ${row.y}"/>`;
       const { family, type, changed } = nodeState(row.node),
-        active = row.node.id === selected,
+        active = astSelected(row.node.id),
         label = t('graph.node', { kind: row.node.kind, type, id: row.node.id }),
         dispatch = visitDecoration(row.node.id, visit, {
           radius: (active ? 4.5 : 2.5) * unit,
@@ -383,7 +387,7 @@ export function renderGraph(
           trace: model.trace,
           visit,
           state: nodeState(r.node),
-          selected,
+          selected: astSelected(r.node.id),
           collapsed,
           x,
           y,

@@ -610,5 +610,10 @@ end
   assert.equal(plain.reason, 'default_new');
   assert(labels(plain).includes('allocate'));
   assert.equal(plain.related_id, 0);
+  const stage = trace.events.find((e) => e.kind === 'phase_enter' && e.phase === body.phase);
+  const selection = model.constructorStageAt(stage.index);
+  assert.deepEqual(selection.roots, new Set([root, plain.node_id]));
+  assert.equal(trace.events[selection.index].kind, 'phase_leave');
+  assert.deepEqual(new Set(model.seek(selection.index).generatedTreesAt().keys()), selection.roots);
   assert(!changes.some((e) => !/Unused|Plain/.test(e.generated_tree.name)));
 });

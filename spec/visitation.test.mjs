@@ -296,6 +296,7 @@ test('stage selection places the Visitor ball at its first recorded visit withou
     assert.equal(view.collapsed.size, 0);
     view.selectEvent(12);
     assert.equal(view.model.index, 12);
+    assert.equal(view.selected, 0); // No constructor roots were captured in this stage.
     assert.equal(visitation(view.model).focus, undefined);
     view.selectEvent(14);
     assert.equal(view.model.index, 15);
